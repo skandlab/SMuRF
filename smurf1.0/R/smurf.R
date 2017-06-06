@@ -41,9 +41,12 @@ smurf = function(directory, model){
     if("h2o" %in% rownames(installed.packages()) == FALSE){
       if((packageVersion("h2o") == '3.10.3.3') == FALSE){
         print("h2o version 3.10.3.3 not found. Installing required h2o package.")
-        h2odir <- find.package("smurf1.0")
-        h2olibdir <- paste0(h2odir, "/data/h2o_3.10.3.3.tar.gz")
-        install.packages(h2olibdir)
+        # h2odir <- find.package("smurf1.0")
+        # h2olibdir <- paste0(h2odir, "/data/h2o_3.10.3.3.tar.gz")
+        # install.packages(h2olibdir)
+        install.packages("versions")
+        library(versions)
+        install.versions("h2o", versions = "3.10.3.3")
       }
     } else {
       print("h2o version 3.10.3.3")
