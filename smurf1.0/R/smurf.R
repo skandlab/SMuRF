@@ -71,7 +71,7 @@ smurf = function(directory, model){
     #suppressMessages(library(h2o, lib.loc="C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.0/data"))
     
     
-    h2o.init(nthreads = -1)
+    suppressWarnings(h2o.init(nthreads = -1))
 
 	#Retrieving files from the directory
     
@@ -154,6 +154,6 @@ smurf = function(directory, model){
     print("Error: Entered directory doesn't exists (or) misspelled (or) Directory section skipped")
   }
   
-  rm(first_time, envir = globalenv())
+  #rm(first_time, envir = globalenv())
   
 }  
