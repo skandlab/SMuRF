@@ -1,4 +1,4 @@
-#' smurf1.0
+#' SMuRF
 #'
 #' Somatic mutation consensus calling based on four callers:
 #' MuTect2, Freebayes, VarDict, VarScan
@@ -101,24 +101,33 @@ smurf = function(directory, model){
           a<-parsevcf(x)
           if (model == "snv") {
                       y<-snvRFparse(a)
-                      smurf_sm<<-list("smurf_snv"=y)
+                      end.time <- Sys.time()
+                      time.taken <- end.time - start.time
+                      #smurf_sm<<-list("smurf_snv"=y)
+                      return(list("smurf_snv"=y, "time.taken"=time.taken))
           }
 
           else if (model == "indel") { 
                       z<-indelRFparse(a)
-                      smurf_sm<<-list("smurf_indel"=z)
+                      end.time <- Sys.time()
+                      time.taken <- end.time - start.time
+                      #smurf_sm<<-list("smurf_indel"=z)
+                      return(list("smurf_indel"=z, "time.taken"=time.taken))
           }
     
           else if (model == "combined") {
                       y<-snvRFparse(a)
                       z<-indelRFparse(a)
-					  smurf_sm<<-list("smurf_snv"=y,"smurf_indel"=z)
+                      end.time <- Sys.time()
+                      time.taken <- end.time - start.time
+					  #smurf_sm<<-list("smurf_snv"=y,"smurf_indel"=z)
+                      return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
  
           }
           
   
-        end.time <- Sys.time()
-        time.taken <<- end.time - start.time
+        # end.time <- Sys.time()
+        # time.taken <<- end.time - start.time
       }
       else{
         print("Error: Model unrecognized.")

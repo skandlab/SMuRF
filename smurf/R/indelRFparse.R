@@ -10,7 +10,7 @@
 #' @export
 indelRFparse = function(a){
   
-  print("indelRF Parsing")
+  print("Parsing INDELs")
 
   #Filtering Indels from VRanges object
   mutect<-as.data.frame(a[[1]][!isSNV(a[[1]], singleAltOnly=FALSE)],row.names=NULL)
@@ -155,7 +155,7 @@ indelRFparse = function(a){
   
   indel_parse <- final
 
-  print("indelRF Prediction")
+  print("Predicting INDELs")
   
   df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                  "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI")]
@@ -188,7 +188,7 @@ indelRFparse = function(a){
    truth_RF[,3] <- as.logical(truth_RF[,3])
    colnames(truth_RF) <- c("X.CHROM", "START_POS_REF", "TRUTH_RF")
    table1 <- merge(table, truth_RF, by = c("X.CHROM", "START_POS_REF"))
-   names(table1)[names(table1) == 'allpredictedcalls$TRUE.'] <- 'TRUTH_confidence'
+   names(table1)[names(table1) == 'allpredictedcalls$TRUE.'] <- 'SMuRF_score'
   
   
   
@@ -196,7 +196,7 @@ indelRFparse = function(a){
    stats <- matrix(,nrow = 9, ncol = 1)
    stats <- as.data.frame(stats)
    colnames(stats) <- c("Passed_Calls")
-   rownames(stats) <- c("Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "All4", "Model")
+   rownames(stats) <- c("Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "All4", "SMuRF_INDEL")
   
    counts <- apply(table[, c(6,7,8,9)], 1, function(x) length(which(x=="TRUE")))
   
@@ -215,7 +215,8 @@ indelRFparse = function(a){
    stats$Passed_Calls[9] <- nrow(table1)
   
   # Predicted list of mutations
-   indel_predict <- unique(table1[,c("X.CHROM","START_POS_REF", "END_POS_REF","REF_MFVdVs","ALT_MFVdVs", "TRUTH_confidence")])
+   names(table1)[names(table1) == 'X.CHROM'] <- 'Chr'
+   indel_predict <- unique(table1[,c("Chr","START_POS_REF", "END_POS_REF","REF_MFVdVs","ALT_MFVdVs", "SMuRF_score")])
   
   #smbio <- as.list(indel-parse, indel-stats, indel-predict)
    stats<-as.matrix(stats)
@@ -224,7 +225,7 @@ indelRFparse = function(a){
    parse<-as.matrix(indel_parse)
    raw<-as.matrix(raw)
    z<- list(stats, predict, parse, raw)
-   names(z)<- c("stats_indel", "predict_indel", "parse_indel", "raw_indel")
+   names(z)<- c("stats_indel", "predicted_indel", "parse_indel", "raw_indel")
    return(z)
    } else{
     print("Error: There are no predicted indel calls in this sample.")

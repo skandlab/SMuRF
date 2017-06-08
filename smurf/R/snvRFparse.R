@@ -11,7 +11,7 @@
 snvRFparse = function(a){
   
   #a<-x
-  print("snvRF Parsing")
+  print("Parsing SNVs")
   
   #Filtering SNVs from VRanges object along with features
   mutect<-as.data.frame(a[[1]][isSNV(a[[1]], singleAltOnly=FALSE)],row.names=NULL)
@@ -152,7 +152,7 @@ snvRFparse = function(a){
   
   snv_parse <- final
   
-  print("snvRF Prediction")
+  print("Predicting SNVs")
 
   df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                  "m2_MQ","m2_MQRankSum","m2_TLOD","f_MQM","f_MQMR","f_ODDS","vs_SSC","vs_SPV","vd_SSF","vd_SOR")]
@@ -184,7 +184,7 @@ snvRFparse = function(a){
   truth_RF[,3] <- as.logical(truth_RF[,3])
   colnames(truth_RF) <- c("X.CHROM", "START_POS_REF", "TRUTH_RF")
   table1 <- merge(table, truth_RF, by = c("X.CHROM", "START_POS_REF"))
-  names(table1)[names(table1) == 'allpredictedcalls$TRUE.'] <- 'TRUTH_confidence'
+  names(table1)[names(table1) == 'allpredictedcalls$TRUE.'] <- 'SMuRF_score'
   
  
   
@@ -192,7 +192,7 @@ snvRFparse = function(a){
   stats <- matrix(,nrow = 9, ncol = 1)
   stats <- as.data.frame(stats)
   colnames(stats) <- c("Passed_Calls")
-  rownames(stats) <- c("Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "All4", "Model")
+  rownames(stats) <- c("Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "All4", "SMuRF_SNV")
   
   counts <- apply(table[, c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan")], 1, function(x) length(which(x=="TRUE")))
   
@@ -211,7 +211,8 @@ snvRFparse = function(a){
   stats$Passed_Calls[9] <- nrow(table1)
   
   # Predicted list of mutations
-  snv_predict <- unique(table1[,c("X.CHROM","START_POS_REF", "END_POS_REF","REF_MFVdVs","ALT_MFVdVs", "TRUTH_confidence")])
+  names(table1)[names(table1) == 'X.CHROM'] <- 'Chr'
+  snv_predict <- unique(table1[,c("Chr","START_POS_REF", "END_POS_REF","REF_MFVdVs","ALT_MFVdVs", "SMuRF_score")])
   
   #smbio <- as.list(indel-parse, indel-stats, indel-predict)
   stats<-as.matrix(stats)
@@ -221,7 +222,7 @@ snvRFparse = function(a){
   parse<-as.matrix(snv_parse)
   raw<-as.matrix(raw)
   y <- list(stats, predict, parse, raw)
-  names(y)<- c("stats_snv", "predict_snv", "parse_snv","raw_snv")
+  names(y)<- c("stats_snv", "predicted_snv", "parse_snv","raw_snv")
   return(y)
   
   } else{
