@@ -159,7 +159,7 @@ snvRFparse = function(a){
   write.csv(df, 'snv_parse.csv',row.names = F)
   df <- h2o.importFile(path = normalizePath("snv_parse.csv"),header=T)
   
-  smurfdir <- find.package("smurf1.0")
+  smurfdir <- find.package("smurf")
   smurfmodeldir <- paste0(smurfdir, "/data/snv-model-combined-grid")
   snv_model <- h2o.loadModel(path = smurfmodeldir)
   
