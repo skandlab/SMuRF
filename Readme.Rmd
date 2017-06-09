@@ -44,7 +44,7 @@ mydir <- getwd() #get current directory
 _SMuRF_ allows for the prediction of single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels). In this example we will be predicting both SNVs and INDELs and thus we will be using the "combined" import functionality (other options are "snv" and "indel" only).
 ```r
 library("smurf")
-smurf(mydir, "combined") 
+myresults <- smurf(mydir, "combined") #save output into 'myresults' variable
 #smurf(mydir, "snv") 
 #smurf(mydir, "indel") 
 #this will run SMuRF and generate predictions based on input files in 'mydir'
