@@ -77,7 +77,33 @@ myresults$smurf_indel$predicted_indel
 
 myresults$smurf_snv$stats_snv
 
-myresults$smurf_snv$predict_snv
+#            Passed_Calls
+#Mutect2             5004
+#FreeBayes            115
+#VarDict              124
+#VarScan              501
+#Atleast1            5684
+#Atleast2              42
+#Atleast3              16
+#All4                   2
+#SMuRF_SNV             12
+
+myresults$smurf_snv$predicted_snv
+
+#Chr START_POS_REF END_POS_REF REF_MFVdVs ALT_MFVdVs TRUTH_confidence
+#1  "1"     "12207135"    "12207135"  "G/G/G/G"  "A/A/A/A"  "0.9941938"     
+#2  "1"     "14955425"    "14955425"  "C/C/C/C"  "A/A/A/A"  "0.9025974"     
+#3  "1"     "18525077"    "18525077"  "G/G/G/G"  "A/A/A/A"  "0.9972492"     
+#4  "1"     "21459584"    "21459584"  "T/T/T/T"  "A/A/A/A"  "0.9919866"     
+#5  "1"     " 2180985"    " 2180985"  "A/A/A/A"  "G/G/G/G"  "0.9992510"     
+#6  "1"     "22385823"    "22385823"  "A/A/A/A"  "G/G/G/G"  "0.6207352"     
+#7  "1"     "25322776"    "25322776"  "C/C/NA/C" "T/T/NA/T" "0.8995001"     
+#8  "1"     "28317030"    "28317030"  "G/NA/G/G" "T/NA/T/T" "0.8962453"     
+#9  "1"     " 5035185"    " 5035185"  "C/C/C/C"  "T/T/T/T"  "0.9321060"     
+#10 "1"     " 8881322"    " 8881322"  "G/G/G/G"  "A/A/A/A"  "0.9116895"     
+#11 "1"     " 8929624"    " 8929624"  "A/A/A/A"  "G/G/G/G"  "0.8765643"     
+#12 "1"     " 9478609"    " 9478609"  "A/A/A/A"  "G/G/G/G"  "0.5984848"
+
 
 ```
 **Output file description/legend**
