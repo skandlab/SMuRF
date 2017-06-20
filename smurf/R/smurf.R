@@ -81,19 +81,24 @@ smurf = function(directory, model){
     #vd <- paste(directory,list.files(directory,pattern="CDS_vardict.vcf", full.names=F), sep = "")
     #coding<-list(m2,fb,vs,vd)
     
+    mutect2 <- paste(directory, Sys.glob("*mutect2*.vcf.gz"), sep = "")
+    freebayes <- paste(directory, Sys.glob("*freebayes*.vcf.gz"), sep = "")
+    varscan <- paste(directory, Sys.glob("*varscan*.vcf.gz"), sep = "")
+    vardict <- paste(directory, Sys.glob("*vardict*.vcf.gz"), sep = "")
     
-    mutect2 <- paste(directory,list.files(directory,pattern="mutect[0-9]?.vcf.gz$", full.names=F), sep = "")
-    freebayes <- paste(directory,list.files(directory,pattern="freebayes[0-9]?.vcf.gz$", full.names=F), sep = "")
-    varscan <- paste(directory,list.files(directory,pattern="varscan[0-9]?.vcf.gz$", full.names=F), sep = "")
-    vardict <- paste(directory,list.files(directory,pattern="vardict[0-9]?.vcf.gz$", full.names=F), sep = "")
+    # mutect2 <- paste(directory,list.files(directory,pattern="*mutect2*.vcf.gz$", full.names=F), sep = "")
+    # freebayes <- paste(directory,list.files(directory,pattern="*freebayes*.vcf.gz$", full.names=F), sep = "")
+    # varscan <- paste(directory,list.files(directory,pattern="*varscan*.vcf.gz$", full.names=F), sep = "")
+    # vardict <- paste(directory,list.files(directory,pattern="*vardict*.vcf.gz$", full.names=F), sep = "")
     #x<-list(mutect2,freebayes,varscan,vardict)
     
     #x<-list(mutect2,freebayes,varscan,vardict,m2,fb,vs,vd)
     x<-list(mutect2,freebayes,varscan,vardict)
     
   
-    if(length(mutect2)==1 & length(freebayes)==1 & length(varscan)==1 & length(vardict)==1){
-    
+    #if(length(mutect2)==1 & length(freebayes)==1 & length(varscan)==1 & length(vardict)==1){
+    if(length(grep("mutect2", mutect2))==1 & length(grep("freebayes", freebayes))==1 & length(grep("varscan", varscan))==1 & length(grep("vardict", vardict))==1){
+      
       #Executing smbio if correct parameters stated
       
       if (model == "snv" || model == "indel" || model == "combined") {
@@ -133,16 +138,27 @@ smurf = function(directory, model){
         print("Error: Model unrecognized.")
       }
     
-      # if (model == "totalfeatures") {  
-      #   print("Total feature extraction.")
-      #   start.time <- Sys.time()
-      #   a<-parsevcfall(x)
-      #   y<-snvRFparseall(a)
-      #   z<-indelRFparseall(a)
-      #   smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
-      #   end.time <- Sys.time()
-      #   time.taken <<- end.time - start.time
-      # }
+      if (model == "totalfeatures") {
+        print("Initializing total feature extraction.")
+        start.time <- Sys.time()
+        
+        #to include CDS calls
+        m2 <- paste(directory,list.files(directory,pattern="CDS_mutect2.vcf", full.names=F), sep = "")
+        fb <- paste(directory,list.files(directory,pattern="CDS_freebayes.vcf", full.names=F), sep = "")
+        vs <- paste(directory,list.files(directory,pattern="CDS_varscan.vcf", full.names=F), sep = "")
+        vd <- paste(directory,list.files(directory,pattern="CDS_vardict.vcf", full.names=F), sep = "")
+        
+        x<-list(mutect2,freebayes,varscan,vardict,m2,fb,vs,vd)
+        
+        a<-parsevcfall(x)
+        y<-snvRFparseall(a)
+        z<-indelRFparseall(a)
+        end.time <- Sys.time()
+        time.taken <<- end.time - start.time
+        #smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
+        return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
+        
+      }
       #   
       # if (model == "features") {  #new model with REGION column
       #   start.time <- Sys.time()
