@@ -40,8 +40,8 @@ parsevcfall = function(x){
    obj7cds<- readVcf(x[[8]], "hg19", svp_vd)
    obj8cds<-as(obj7cds, "VRanges")
    
-  # a<-list("mutect_raw"=obj2, "mutect_vcf"=obj1, "freebayes_raw"=obj4, "freebayes_vcf"=obj3, 
-  #         "varscan_raw"=obj6, "varscan_vcf"=obj5, "vardict_raw"=obj8, "vardict_vcf"=obj7 
+  # a<-list("mutect_raw"=obj2, "mutect_vcf"=obj1, "freebayes_raw"=obj4, "freebayes_vcf"=obj3,
+  #         "varscan_raw"=obj6, "varscan_vcf"=obj5, "vardict_raw"=obj8, "vardict_vcf"=obj7
   # )
   
    a<-list("mutect_raw"=obj2, "mutect_vcf"=obj1, "freebayes_raw"=obj4, "freebayes_vcf"=obj3,

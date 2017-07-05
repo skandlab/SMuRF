@@ -224,8 +224,9 @@ indelRFparse = function(a){
    predict<-as.matrix(indel_predict)
    parse<-as.matrix(indel_parse)
    raw<-as.matrix(raw)
-   z<- list(stats, predict, parse, raw)
-   names(z)<- c("stats_indel", "predicted_indel", "parse_indel", "raw_indel")
+   allpredictions <- as.matrix(allpredictedcalls)
+   z<- list(stats, predict, parse, raw, allpredictions)
+   names(z)<- c("stats_indel", "predicted_indel", "parse_indel", "raw_indel", "allpredictions")
    return(z)
    } else{
     print("Error: There are no predicted indel calls in this sample.")

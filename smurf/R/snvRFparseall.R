@@ -110,7 +110,8 @@ snvRFparseall = function(a){
   colnames(freebayes_coordinates)[1:2]<-c("X.CHROM", "POS")
   freebayes_coordinates<-freebayes_coordinates[grep("GL*", freebayes_coordinates$X.CHROM, invert = TRUE),]
   
-  varscan_clean_SNV<-rowRanges(varscan_SNV[varscan_SNV@fixed$FILTER=="PASS",])[,1]
+  #we are including the SpvFreq as PASSED calls
+  varscan_clean_SNV<-rowRanges(varscan_SNV[varscan_SNV@fixed$FILTER=="PASS" | varscan_SNV@fixed$FILTER=="SpvFreq",])[,1]
   varscan_coordinates<-as.data.frame(unlist(varscan_clean_SNV),row.names=NULL)
   varscan_coordinates<-varscan_coordinates[1:2]
   varscan_coordinates$FILTER_Varscan<-"PASS"

@@ -120,7 +120,8 @@ indelRFparseall = function(a){
   colnames(freebayes_coordinates)[1:2]<-c("X.CHROM", "POS")
   freebayes_coordinates<-freebayes_coordinates[grep("GL*", freebayes_coordinates$X.CHROM, invert = TRUE),]
   
-  varscan_clean_Indel<-rowRanges(varscan_Indel[varscan_Indel@fixed$FILTER=="PASS",])[,1]
+  #we are including the SpvFreq as PASSED calls
+  varscan_clean_Indel<-rowRanges(varscan_Indel[varscan_Indel@fixed$FILTER=="PASS" | varscan_Indel@fixed$FILTER=="SpvFreq",])[,1]
   varscan_coordinates<-as.data.frame(unlist(varscan_clean_Indel),row.names=NULL)
   varscan_coordinates<-varscan_coordinates[1:2]
   varscan_coordinates$FILTER_Varscan<-"PASS"
