@@ -165,7 +165,7 @@ snvRFparse = function(a){
   
   #snv_model <- h2o.loadModel(path = "/home/huangwt/R/x86_64-pc-linux-gnu-library/3.3/smbio/data/snv_model-combined-0221")
   #snv_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Scripts/Real-v3/Results-snv-v3/snv_model-combined-0310")
-  #snv_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.0/data/snv-model-combined-grid")
+  #snv_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/SMuRF/smurf/data/snv-model-combined-grid")
   
   predicted <- h2o.predict(object = snv_model, newdata = df)
   suppressMessages(file.remove("snv_parse.csv"))
@@ -221,8 +221,9 @@ snvRFparse = function(a){
   #parse1<-as.matrix(snv_parse1)
   parse<-as.matrix(snv_parse)
   raw<-as.matrix(raw)
-  y <- list(stats, predict, parse, raw)
-  names(y)<- c("stats_snv", "predicted_snv", "parse_snv","raw_snv")
+  allpredictions <- as.matrix(allpredictedcalls)
+  y <- list(stats, predict, parse, raw, allpredictions)
+  names(y)<- c("stats_snv", "predicted_snv", "parse_snv","raw_snv", "allpredictions")
   return(y)
   
   } else{
