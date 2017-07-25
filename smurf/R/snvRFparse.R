@@ -16,14 +16,14 @@ snvRFparse = function(a){
   #Filtering SNVs from VRanges object along with features
   mutect<-as.data.frame(a[[1]][isSNV(a[[1]], singleAltOnly=FALSE)],row.names=NULL)
   #mutect<-mutect[mutect$sampleNames == samples(header(a[[2]]))[1],]
-  mutect<-mutect[,c("seqnames","start","end", "ref", "alt", "MQ","MQRankSum","TLOD")]
+  mutect<-mutect[,c("seqnames","start","end", "ref", "alt", "MQ","MQRankSum","TLOD","NLOD")]
   mutect<-mutect[grep("GL*", mutect$seqnames, invert=TRUE),]
-  colnames(mutect)<-c("X.CHROM", "POS", "END_POS_Mutect2", "REF_Mutect2", "ALT_Mutect2", "m2_MQ","m2_MQRankSum","m2_TLOD")
+  colnames(mutect)<-c("X.CHROM", "POS", "END_POS_Mutect2", "REF_Mutect2", "ALT_Mutect2", "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD")
   
   freebayes<-as.data.frame(a[[3]][isSNV(a[[3]], singleAltOnly=FALSE)],row.names=NULL)
-  freebayes<-freebayes[,c("seqnames","start","end", "ref", "alt","MQM","MQMR","ODDS")]
+  freebayes<-freebayes[,c("seqnames","start","end", "ref", "alt","MQM","MQMR")]
   freebayes<-freebayes[grep("GL*", freebayes$seqnames, invert=TRUE),]
-  colnames(freebayes)<-c("X.CHROM", "POS", "END_POS_Freebayes", "REF_Freebayes", "ALT_Freebayes","f_MQM","f_MQMR","f_ODDS")
+  colnames(freebayes)<-c("X.CHROM", "POS", "END_POS_Freebayes", "REF_Freebayes", "ALT_Freebayes","f_MQM","f_MQMR")
   
   varscan<-as.data.frame(a[[5]][isSNV(a[[5]], singleAltOnly=FALSE)],row.names=NULL)
   varscan<-varscan[,c("seqnames","start","end", "ref", "alt", "SSC","SPV")]
@@ -32,9 +32,9 @@ snvRFparse = function(a){
   
   vardict<-as.data.frame(a[[7]][isSNV(a[[7]], singleAltOnly=FALSE)],row.names=NULL)
   #vardict<-vardict[vardict$sampleNames == samples(header(a[[2]]))[1],] #choose only the tumor sample values (1 or 2) eg.icgc_cll-T
-  vardict<-vardict[,c("seqnames","start","end", "ref", "alt", "SSF","SOR")]
+  vardict<-vardict[,c("seqnames","start","end", "ref", "alt", "SSF")]
   vardict<-vardict[grep("GL*", vardict$seqnames, invert=TRUE),]
-  colnames(vardict)<-c("X.CHROM", "POS", "END_POS_Vardict", "REF_Vardict", "ALT_Vardict", "vd_SSF","vd_SOR")
+  colnames(vardict)<-c("X.CHROM", "POS", "END_POS_Vardict", "REF_Vardict", "ALT_Vardict", "vd_SSF")
   
   #Filtering SNV's from collapsed vcf
   mutect_SNV<-a[[2]][isSNV(a[[2]], singleAltOnly=FALSE)]
@@ -57,7 +57,9 @@ snvRFparse = function(a){
   colnames(freebayes_coordinates)[1:2]<-c("X.CHROM", "POS")
   freebayes_coordinates<-freebayes_coordinates[grep("GL*", freebayes_coordinates$X.CHROM, invert = TRUE),]
   
-  varscan_clean_SNV<-rowRanges(varscan_SNV[varscan_SNV@fixed$FILTER=="PASS",])[,1]
+  #we are including the SpvFreq as PASSED calls
+  varscan_clean_SNV<-rowRanges(varscan_SNV[varscan_SNV@fixed$FILTER=="PASS" | varscan_SNV@fixed$FILTER=="SpvFreq",])[,1]
+  #varscan_clean_SNV<-rowRanges(varscan_SNV[varscan_SNV@fixed$FILTER=="PASS",])[,1]
   varscan_coordinates<-as.data.frame(unlist(varscan_clean_SNV),row.names=NULL)
   varscan_coordinates<-varscan_coordinates[1:2]
   varscan_coordinates$FILTER_Varscan<-"PASS"
@@ -78,10 +80,16 @@ snvRFparse = function(a){
   coordinates<-unique(coordinates)
 
   #Pulling out calls from VRanges object for each caller using coordinates
+  m2<-dim(mutect)[2]
   mutect<-merge(mutect, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   mutect<-unique(mutect)
-  mutect<-mutect[,1:(dim(mutect)[2]-3)]
-
+  M_2<-which( colnames(mutect)=="FILTER_Mutect2" )
+  mutect<-mutect[,c(1:m2,M_2)]
+  
+  # mutect<-merge(mutect, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
+  # mutect<-unique(mutect)
+  # mutect<-mutect[,1:(dim(mutect)[2]-3)]
+  # 
   fb<-dim(freebayes)[2]
   freebayes<-merge(freebayes, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   freebayes<-unique(freebayes)
@@ -114,15 +122,15 @@ snvRFparse = function(a){
   f<-subset(final,select=c("END_POS_Mutect2", "END_POS_Freebayes", "END_POS_Vardict", "END_POS_Varscan"))
   final$END_POS<-apply(f, MARGIN=1, function(x) max(x,na.rm=TRUE))
   final<-final[,c("X.CHROM", "POS", "END_POS", "REF", "ALT", "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
-                  "m2_MQ","m2_MQRankSum","m2_TLOD",
-                  "f_MQM","f_MQMR","f_ODDS",
-                  "vs_SSC","vs_SPV","vd_SSF","vd_SOR")]
+                  "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD",
+                  "f_MQM","f_MQMR",
+                  "vs_SSC","vs_SPV","vd_SSF")]
   colnames(final)<-c("X.CHROM", "START_POS_REF", "END_POS_REF", "REF_MFVdVs", "ALT_MFVdVs", "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
-                     "m2_MQ","m2_MQRankSum","m2_TLOD",
-                     "f_MQM","f_MQMR","f_ODDS",
-                     "vs_SSC","vs_SPV","vd_SSF","vd_SOR")
+                     "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD",
+                     "f_MQM","f_MQMR",
+                     "vs_SSC","vs_SPV","vd_SSF")
   
-  for(i in c("m2_MQ","m2_MQRankSum","m2_TLOD","f_MQM","f_MQMR","f_ODDS","vs_SSC","vs_SPV","vd_SSF","vd_SOR"))
+  for(i in c("m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF"))
       {
         final[,i]<-as.numeric(final[,i])
         }
@@ -139,7 +147,7 @@ snvRFparse = function(a){
     final[,i] <- as.logical(final[,i])
   }
   
-  final$vd_SOR[which(is.infinite(final$vd_SOR)==TRUE)] <- 0
+  #final$vd_SOR[which(is.infinite(final$vd_SOR)==TRUE)] <- 0
   
   #summary(final)
   #snv_parse1<-final
@@ -155,9 +163,10 @@ snvRFparse = function(a){
   print("Predicting SNVs")
 
   df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                 "m2_MQ","m2_MQRankSum","m2_TLOD","f_MQM","f_MQMR","f_ODDS","vs_SSC","vs_SPV","vd_SSF","vd_SOR")]
-  write.csv(df, 'snv_parse.csv',row.names = F)
-  df <- h2o.importFile(path = normalizePath("snv_parse.csv"),header=T)
+                 "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF")]
+  df <- as.h2o(df)
+  # write.csv(df, 'snv_parse.csv',row.names = F)
+  # df <- h2o.importFile(path = normalizePath("snv_parse.csv"),header=T)
   
   smurfdir <- find.package("smurf")
   smurfmodeldir <- paste0(smurfdir, "/data/snv-model-combined-grid")
@@ -165,10 +174,10 @@ snvRFparse = function(a){
   
   #snv_model <- h2o.loadModel(path = "/home/huangwt/R/x86_64-pc-linux-gnu-library/3.3/smbio/data/snv_model-combined-0221")
   #snv_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Scripts/Real-v3/Results-snv-v3/snv_model-combined-0310")
-  #snv_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/SMuRF/smurf/data/snv-model-combined-grid")
+  #snv_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/SMuRFv1.1/smurf/data/snv-model-combined-grid")
   
   predicted <- h2o.predict(object = snv_model, newdata = df)
-  suppressMessages(file.remove("snv_parse.csv"))
+  #suppressMessages(file.remove("snv_parse.csv"))
   p <- as.data.frame(predicted)
   table <- final
   
