@@ -2,7 +2,7 @@
 % Please edit documentation in R/smurf.R
 \name{smurf}
 \alias{smurf}
-\title{SMuRF}
+\title{SMuRF v1.1}
 \usage{
 smurf(directory, model)
 }

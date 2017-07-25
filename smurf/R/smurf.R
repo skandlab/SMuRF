@@ -1,4 +1,4 @@
-#' SMuRF
+#' SMuRF v1.1
 #'
 #' Somatic mutation consensus calling based on four callers:
 #' MuTect2, Freebayes, VarDict, VarScan
@@ -159,16 +159,28 @@ smurf = function(directory, model){
         return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
         
       }
-      #   
-      # if (model == "features") {  #new model with REGION column
-      #   start.time <- Sys.time()
-      #   a<-parsevcffeatures(x)
-      #   y<-snvRFparsefeatures(a)
-      #   z<-indelRFparsefeatures(a)
-      #   smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
-      #   end.time <- Sys.time()
-      #   time.taken <<- end.time - start.time
-      # }
+
+      if (model == "features") {  #new model with REGION column
+        print("Initializing CDS and feature extraction.")
+        start.time <- Sys.time()
+        
+        #to include CDS calls
+        m2 <- paste(directory,list.files(directory,pattern="CDS_mutect2.vcf", full.names=F), sep = "")
+        fb <- paste(directory,list.files(directory,pattern="CDS_freebayes.vcf", full.names=F), sep = "")
+        vs <- paste(directory,list.files(directory,pattern="CDS_varscan.vcf", full.names=F), sep = "")
+        vd <- paste(directory,list.files(directory,pattern="CDS_vardict.vcf", full.names=F), sep = "")
+        
+        x<-list(mutect2,freebayes,varscan,vardict,m2,fb,vs,vd)
+        
+        a<-parsevcffeatures(x)
+        y<-snvRFparsefeatures(a)
+        z<-indelRFparsefeatures(a)
+        end.time <- Sys.time()
+        time.taken <<- end.time - start.time
+        #smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
+        return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
+        
+      }
     }
     else {
     print("Error: Input file check failed. One or more files may be missing or duplicated.")

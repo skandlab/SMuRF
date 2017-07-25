@@ -42,9 +42,9 @@ indelRFparse = function(a){
   colnames(varscan)<-c("X.CHROM", "POS", "END_POS_Varscan", "REF_Varscan", "ALT_Varscan", "vs_SSC","vs_SPV")
   
   vardict<-as.data.frame(a[[7]][!isSNV(a[[7]], singleAltOnly=FALSE)],row.names=NULL)
-  vardict<-vardict[,c("seqnames","start","end", "ref", "alt", "SSF","MSI")]
+  vardict<-vardict[,c("seqnames","start","end", "ref", "alt", "SSF","MSI","SOR")]
   vardict<-vardict[grep("GL*", vardict$seqnames, invert=TRUE),]
-  colnames(vardict)<-c("X.CHROM", "POS", "END_POS_Vardict", "REF_Vardict", "ALT_Vardict", "vd_SSF","vd_MSI")
+  colnames(vardict)<-c("X.CHROM", "POS", "END_POS_Vardict", "REF_Vardict", "ALT_Vardict", "vd_SSF","vd_MSI","vd_SOR")
   
   #Filtering Indels from collapsed vcf
   mutect_Indel<-a[[2]][!isSNV(a[[2]], singleAltOnly=FALSE)]
@@ -67,7 +67,9 @@ indelRFparse = function(a){
   colnames(freebayes_coordinates)[1:2]<-c("X.CHROM", "POS")
   freebayes_coordinates<-freebayes_coordinates[grep("GL*", freebayes_coordinates$X.CHROM, invert = TRUE),]
   
-  varscan_clean_Indel<-rowRanges(varscan_Indel[varscan_Indel@fixed$FILTER=="PASS",])[,1]
+  #we are including the SpvFreq as PASSED calls
+  varscan_clean_Indel<-rowRanges(varscan_Indel[varscan_Indel@fixed$FILTER=="PASS" | varscan_Indel@fixed$FILTER=="SpvFreq",])[,1]
+  #varscan_clean_Indel<-rowRanges(varscan_Indel[varscan_Indel@fixed$FILTER=="PASS",])[,1]
   varscan_coordinates<-as.data.frame(unlist(varscan_clean_Indel),row.names=NULL)
   varscan_coordinates<-varscan_coordinates[1:2]
   varscan_coordinates$FILTER_Varscan<-"PASS"
@@ -88,9 +90,15 @@ indelRFparse = function(a){
   coordinates<-unique(coordinates)
 
   #Pulling out calls from VRanges object for each caller using coordinates
+  m2<-dim(mutect)[2]
   mutect<-merge(mutect, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   mutect<-unique(mutect)
-  mutect<-mutect[,1:(dim(mutect)[2]-3)]
+  M_2<-which( colnames(mutect)=="FILTER_Mutect2" )
+  mutect<-mutect[,c(1:m2,M_2)]
+  
+  # mutect<-merge(mutect, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
+  # mutect<-unique(mutect)
+  # mutect<-mutect[,1:(dim(mutect)[2]-3)]
 
   fb<-dim(freebayes)[2]
   freebayes<-merge(freebayes, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
@@ -128,16 +136,16 @@ indelRFparse = function(a){
   final<-final[,c("X.CHROM", "POS", "END_POS", "REF", "ALT", "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
                   "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD",
                   "f_LEN",
-                  "vs_SSC","vs_SPV","vd_SSF","vd_MSI")]
+                  "vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
   colnames(final)<-c("X.CHROM", "START_POS_REF", "END_POS_REF", "REF_MFVdVs", "ALT_MFVdVs", "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
                      "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD",
                      "f_LEN",
-                     "vs_SSC","vs_SPV","vd_SSF","vd_MSI")
+                     "vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")
   
   #Removing Duplicates
   for(i in c("m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD",
              "f_LEN",
-             "vs_SSC","vs_SPV","vd_SSF","vd_MSI"))
+             "vs_SSC","vs_SPV","vd_SSF","vd_MSI", "vd_SOR"))
   {
     final[,i]<-as.numeric(final[,i])
   }
@@ -153,14 +161,18 @@ indelRFparse = function(a){
     final[,i] <- as.logical(final[,i])
   }
   
+  final$vd_SOR[which(is.infinite(final$vd_SOR)==TRUE)] <- 0
+  
   indel_parse <- final
 
   print("Predicting INDELs")
   
   df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                 "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI")]
-  write.csv(df, 'indel_parse.csv',row.names = F)
-  df <- h2o.importFile(path = normalizePath("indel_parse.csv"),header=T)
+                 "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
+  df <- as.h2o(df)
+  
+  # write.csv(df, 'indel_parse.csv',row.names = F)
+  # df <- h2o.importFile(path = normalizePath("indel_parse.csv"),header=T)
 
   smurfdir <- find.package("smurf")
   smurfmodeldir <- paste0(smurfdir, "/data/indel-model-combined-grid")
@@ -168,11 +180,10 @@ indelRFparse = function(a){
   
   #indel_model <- h2o.loadModel(path = "/home/huangwt/R/x86_64-pc-linux-gnu-library/3.3/smbio/data/indel_model-combined-0205")
   #indel_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Scripts/Real-v3/Results-Indels-v3/indel_model-combined-0205")
-  #indel_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.0/data/indel-model-combined-grid")
+  #indel_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/SMuRFv1.1/smurf/data/indel-model-combined-grid")
   
   predicted <- h2o.predict(object = indel_model, newdata = df)
-  
-  suppressMessages(file.remove("indel_parse.csv"))
+  #suppressMessages(file.remove("indel_parse.csv"))
   p <- as.data.frame(predicted)
   table <- final
   
@@ -198,7 +209,7 @@ indelRFparse = function(a){
    colnames(stats) <- c("Passed_Calls")
    rownames(stats) <- c("Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "All4", "SMuRF_INDEL")
   
-   counts <- apply(table[, c(6,7,8,9)], 1, function(x) length(which(x=="TRUE")))
+   counts <- apply(table[, c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan")], 1, function(x) length(which(x=="TRUE")))
   
    stats$Passed_Calls[1] <- length(which((table$FILTER_Mutect2==TRUE)))
    stats$Passed_Calls[2] <- length(which((table$FILTER_Freebayes==TRUE)))

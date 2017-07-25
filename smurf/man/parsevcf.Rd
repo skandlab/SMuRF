@@ -2,7 +2,7 @@
 % Please edit documentation in R/parsevcf.R
 \name{parsevcf}
 \alias{parsevcf}
-\title{parse}
+\title{parsevcf}
 \usage{
 parsevcf(x)
 }
