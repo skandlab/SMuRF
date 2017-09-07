@@ -1,10 +1,10 @@
 Passed_Calls
-Mutect2	397
-FreeBayes	9
-VarDict	11
-VarScan	13
-Atleast1	399
-Atleast2	12
-Atleast3	11
-All4	8
+Mutect2	5004
+FreeBayes	115
+VarDict	124
+VarScan	535
+Atleast1	5700
+Atleast2	49
+Atleast3	19
+All4	10
 SMuRF_SNV	399
