@@ -4,7 +4,7 @@
 \alias{smurf}
 \title{SMuRF v1.1}
 \usage{
-smurf(directory, model)
+smurf(directory, model, nthreads = -1)
 }
 \arguments{
 \item{directory}{Choose directory where the files Variant Caller Format(VCF) files are located.}

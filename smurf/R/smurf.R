@@ -20,7 +20,7 @@
 #' smurf("/path/to/directory..","combined")
 #' 
 #' @export
-smurf = function(directory, model){
+smurf = function(directory, model, nthreads = -1){
   directory <-paste(directory,"/", sep="")
   if(dir.exists(directory)==TRUE){
     
@@ -71,7 +71,9 @@ smurf = function(directory, model){
     #suppressMessages(library(h2o, lib.loc="C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.0/data"))
     
     
-    suppressWarnings(h2o.init(nthreads = -1))
+    #suppressWarnings(h2o.init(nthreads = -1))
+    suppressWarnings(h2o.init(nthreads = nthreads))
+    
 
 	#Retrieving files from the directory
     
@@ -159,6 +161,30 @@ smurf = function(directory, model){
         return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
         
       }
+      
+      if (model == "totalfeaturesrejects") {
+        print("Initializing total feature extraction.")
+        start.time <- Sys.time()
+        suppressMessages(library(data.table))
+        
+        #to include CDS calls
+        m2 <- paste(directory,list.files(directory,pattern="CDS_mutect2.vcf", full.names=F), sep = "")
+        fb <- paste(directory,list.files(directory,pattern="CDS_freebayes.vcf", full.names=F), sep = "")
+        vs <- paste(directory,list.files(directory,pattern="CDS_varscan.vcf", full.names=F), sep = "")
+        vd <- paste(directory,list.files(directory,pattern="CDS_vardict.vcf", full.names=F), sep = "")
+        
+        x<-list(mutect2,freebayes,varscan,vardict,m2,fb,vs,vd)
+        
+        a<-parsevcfall(x)
+        y<-snvRFparseallrejects(a)
+        z<-indelRFparseallrejects(a)
+        end.time <- Sys.time()
+        time.taken <<- end.time - start.time
+        #smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
+        return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
+        
+      }
+      
 
       if (model == "features") {  #new model with REGION column
         print("Initializing CDS and feature extraction.")
@@ -181,6 +207,44 @@ smurf = function(directory, model){
         return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
         
       }
+      
+      if (model == "annotation") {  #re-annotated ANN field, output includes VAF and callers PASSED 
+        print("Initializing VAF and annotation extraction.")
+        start.time <- Sys.time()
+        
+        a<-parsevcfANN(x)
+        y<-snvRFparseANN(a)
+        z<-indelRFparseANN(a)
+        end.time <- Sys.time()
+        time.taken <<- end.time - start.time
+        #smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
+        return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
+        
+      }
+      
+      if (model == "cdsannotation") {  #re-annotated ANN field, output includes VAF and callers PASSED 
+        print("Initializing CDs and ANN extraction.")
+        start.time <- Sys.time()
+        
+        #to include CDS calls
+        m2 <- paste(directory,list.files(directory,pattern="CDS_mutect2.vcf", full.names=F), sep = "")
+        fb <- paste(directory,list.files(directory,pattern="CDS_freebayes.vcf", full.names=F), sep = "")
+        vs <- paste(directory,list.files(directory,pattern="CDS_varscan.vcf", full.names=F), sep = "")
+        vd <- paste(directory,list.files(directory,pattern="CDS_vardict.vcf", full.names=F), sep = "")
+        
+        x<-list(mutect2,freebayes,varscan,vardict,m2,fb,vs,vd)
+        
+        a<-parsevcfANNcds(x)
+        y<-snvRFparseANNcds(a)
+        z<-indelRFparseANNcds(a)
+        end.time <- Sys.time()
+        time.taken <<- end.time - start.time
+        #smbio_sm<<-list("smbio_snv"=y,"smbio_indel"=z)
+        return(list("smurf_snv"=y,"smurf_indel"=z,"time.taken"=time.taken))
+        
+      }
+      
+      
     }
     else {
     print("Error: Input file check failed. One or more files may be missing or duplicated.")

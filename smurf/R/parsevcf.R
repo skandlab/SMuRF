@@ -11,7 +11,9 @@
 #' 
 #' @export
 parsevcf = function(x){
-
+  
+  print("Parsing step")
+  
   #ScanVCF with required parameters
   svp_m<-ScanVcfParam(info=c("MQ","MQRankSum","TLOD","NLOD"),geno=NA)
   svp_f<-ScanVcfParam(info=c("MQM","MQMR","LEN"),geno=NA)
@@ -27,10 +29,14 @@ parsevcf = function(x){
   obj6<-suppressWarnings(as(obj5, "VRanges"))
   obj7<- suppressWarnings(readVcf(x[[4]], "hg19", svp_vd))
   obj8<-suppressWarnings(as(obj7, "VRanges"))
-   
-   a<-list("mutect_raw"=obj2, "mutect_vcf"=obj1, "freebayes_raw"=obj4, "freebayes_vcf"=obj3,
+  
+
+  a<-list("mutect_raw"=obj2, "mutect_vcf"=obj1, "freebayes_raw"=obj4, "freebayes_vcf"=obj3,
            "varscan_raw"=obj6, "varscan_vcf"=obj5, "vardict_raw"=obj8, "vardict_vcf"=obj7)
-   return(a)
+  return(a)
+   
+   
+   
 }
 
 

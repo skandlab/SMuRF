@@ -11,29 +11,16 @@
 indelRFparse = function(a){
   
   print("Parsing INDELs")
-
+  
   #Filtering Indels from VRanges object
   mutect<-as.data.frame(a[[1]][!isSNV(a[[1]], singleAltOnly=FALSE)],row.names=NULL)
-  #mutect<-mutect[mutect$sampleNames == samples(header(a[[2]]))[1],]
   mutect<-mutect[,c("seqnames","start","end", "ref", "alt", "MQ","MQRankSum","NLOD","TLOD")]
   mutect<-mutect[grep("GL*", mutect$seqnames, invert=TRUE),]
-  colnames(mutect)<-c("X.CHROM", "POS", "END_POS_Mutect2", "REF_Mutect2", "ALT_Mutect2", "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD")
+  colnames(mutect)<-c("X.CHROM", "POS", "END_POS_Mutect2", "REF_Mutect2", "ALT_Mutect2","m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD")
   
   freebayes<-as.data.frame(a[[3]][!isSNV(a[[3]], singleAltOnly=FALSE)],row.names=NULL)
   freebayes<-freebayes[,c("seqnames","start","end", "ref", "alt", "LEN")]
   freebayes<-freebayes[grep("GL*", freebayes$seqnames, invert=TRUE),]
-  #freebayes_GQT<-freebayes[freebayes$sampleNames == samples(header(a[[2]]))[1],] #[1] for tumor
-  #freebayes_GQT<-freebayes_GQT[,c("seqnames","start","end", "ref", "alt","QUAL","GQ")]
-  #colnames(freebayes_GQT)<-c("X.CHROM", "POS", "END_POS_Freebayes", "REF_Freebayes", "ALT_Freebayes","QUAL","GQ-T")
-  #freebayes_GQN<-freebayes[freebayes$sampleNames == samples(header(a[[2]]))[2],]
-  #freebayes_GQN<-freebayes_GQN[,c("sampleNames","GQ")]
-  #colnames(freebayes_GQN)<-c("sampleNames","GQ-N")
-  #freebayes<-cbind(freebayes_GQT, freebayes_GQN)
-  #freebayes_GQN<-freebayes[freebayes$sampleNames == samples(header(a[[2]]))[2],] #[2] for normal
-  #freebayes_GQN<-freebayes_GQN[,c("seqnames","start","end", "ref", "alt","QUAL","GQ")]
-  #colnames(freebayes_GQN)<-c("X.CHROM", "POS", "END_POS_Freebayes", "REF_Freebayes", "ALT_Freebayes","GQ-N")
-  #freebayes <- freebayes_GQN
-  #freebayes<-freebayes[,c("X.CHROM", "POS", "END_POS_Freebayes", "REF_Freebayes", "ALT_Freebayes")]
   colnames(freebayes)<-c("X.CHROM", "POS", "END_POS_Freebayes", "REF_Freebayes", "ALT_Freebayes","f_LEN")
   
   varscan<-as.data.frame(a[[5]][!isSNV(a[[5]], singleAltOnly=FALSE)],row.names=NULL)
@@ -45,6 +32,7 @@ indelRFparse = function(a){
   vardict<-vardict[,c("seqnames","start","end", "ref", "alt", "SSF","MSI","SOR")]
   vardict<-vardict[grep("GL*", vardict$seqnames, invert=TRUE),]
   colnames(vardict)<-c("X.CHROM", "POS", "END_POS_Vardict", "REF_Vardict", "ALT_Vardict", "vd_SSF","vd_MSI","vd_SOR")
+  
   
   #Filtering Indels from collapsed vcf
   mutect_Indel<-a[[2]][!isSNV(a[[2]], singleAltOnly=FALSE)]
@@ -82,41 +70,49 @@ indelRFparse = function(a){
   vardict_coordinates$FILTER_Vardict<-"PASS"
   colnames(vardict_coordinates)[1:2]<-c("X.CHROM", "POS")
   vardict_coordinates<-vardict_coordinates[grep("GL*", vardict_coordinates$X.CHROM, invert = TRUE),]
+  
+  #Caller names
+  mutect_coordinates$m_caller <- "Mutect2"
+  freebayes_coordinates$f_caller <- "Freebayes"
+  varscan_coordinates$vs_caller <- "Varscan"
+  vardict_coordinates$vd_caller <- "Vardict"
 
   #All Pass coordinates(i.e., coordinates passed by at least one caller)
   f1<-merge(mutect_coordinates, freebayes_coordinates, by=c("X.CHROM", "POS"), all=TRUE, sort=TRUE)
   f2<-merge(varscan_coordinates, vardict_coordinates, by=c("X.CHROM", "POS"), all=TRUE, sort=TRUE)
   coordinates<-merge(f1, f2, by=c("X.CHROM", "POS"), all=TRUE, sort=TRUE)
   coordinates<-unique(coordinates)
-
+  
+  #### Filtering for PASSED INDELS ####
+  
   #Pulling out calls from VRanges object for each caller using coordinates
   m2<-dim(mutect)[2]
   mutect<-merge(mutect, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   mutect<-unique(mutect)
   M_2<-which( colnames(mutect)=="FILTER_Mutect2" )
-  mutect<-mutect[,c(1:m2,M_2)]
+  M_call<-which( colnames(mutect)=="m_caller" )
+  mutect<-mutect[,c(1:m2,M_2,M_call)]
   
-  # mutect<-merge(mutect, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
-  # mutect<-unique(mutect)
-  # mutect<-mutect[,1:(dim(mutect)[2]-3)]
-
   fb<-dim(freebayes)[2]
   freebayes<-merge(freebayes, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   freebayes<-unique(freebayes)
   F_B<-which( colnames(freebayes)=="FILTER_Freebayes" )
-  freebayes<-freebayes[,c(1:fb,F_B)]
+  F_call<-which( colnames(freebayes)=="f_caller" )
+  freebayes<-freebayes[,c(1:fb,F_B,F_call)]
   
   vs<-dim(varscan)[2]
   varscan<-merge(varscan, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   varscan<-unique(varscan)
   V_S<-which( colnames(varscan)=="FILTER_Varscan" )
-  varscan<-varscan[,c(1:vs,V_S)]
+  VS_call<-which( colnames(varscan)=="vs_caller" )
+  varscan<-varscan[,c(1:vs,V_S,VS_call)]
   
   vd<-dim(vardict)[2]
   vardict<-merge(vardict, coordinates, by=c("X.CHROM", "POS"), all.y=TRUE, sort=TRUE)
   vardict<-unique(vardict)
   V_D<-which( colnames(vardict)=="FILTER_Vardict" )
-  vardict<-vardict[,c(1:vd,V_D)]
+  VD_call<-which( colnames(vardict)=="vd_caller" )
+  vardict<-vardict[,c(1:vd,V_D,VD_call)]
   
   #Merging all calls from each caller 
   f1<-merge(mutect, freebayes, by = c("X.CHROM", "POS"), all=TRUE, sort=TRUE)
@@ -124,20 +120,49 @@ indelRFparse = function(a){
   
   final<-merge(f1,f2,  by = c("X.CHROM", "POS"), all=TRUE, sort=TRUE)
   
-  raw <- final
+  #Compiling REF
+  for (i in 1:nrow(final)){
+    if (!is.na(final$REF_Mutect2[i])){
+      final$REF[i] <- final$REF_Mutect2[i]
+    } else if (!is.na(final$REF_Freebayes[i])){
+      final$REF[i] <- final$REF_Freebayes[i]
+    } else if (!is.na(final$REF_Vardict[i])){
+      final$REF[i] <- final$REF_Vardict[i]
+    } else if (!is.na(final$REF_Varscan[i])){
+      final$REF[i] <- final$REF_Varscan[i]
+    } 
+  }
+  
+  #Compiling ALT
+  for (i in 1:nrow(final)){
+    if (!is.na(final$ALT_Mutect2[i])){
+      final$ALT[i] <- final$ALT_Mutect2[i]
+    } else if (!is.na(final$ALT_Freebayes[i])){
+      final$ALT[i] <- final$ALT_Freebayes[i]
+    } else if (!is.na(final$ALT_Vardict[i])){
+      final$ALT[i] <- final$ALT_Vardict[i]
+    } else if (!is.na(final$ALT_Varscan[i])){
+      final$ALT[i] <- final$ALT_Varscan[i]
+    } 
+  }
   
   
+  final$CALLS<-paste(final$m_caller,final$f_caller,final$vs_caller,final$vd_caller, sep ="/")
   
   #Formatting
-  final$REF<-paste(final$REF_Mutect2,final$REF_Freebayes,final$REF_Vardict,final$REF_Varscan, sep ="/")
-  final$ALT<-paste(final$ALT_Mutect2,final$ALT_Freebayes,final$ALT_Vardict,final$ALT_Varscan, sep ="/")
+  final$REF2<-paste(final$REF_Mutect2,final$REF_Freebayes,final$REF_Vardict,final$REF_Varscan, sep ="/")
+  final$ALT2<-paste(final$ALT_Mutect2,final$ALT_Freebayes,final$ALT_Vardict,final$ALT_Varscan, sep ="/")
   f<-subset(final,select=c("END_POS_Mutect2", "END_POS_Freebayes", "END_POS_Vardict", "END_POS_Varscan"))
   final$END_POS<-apply(f, MARGIN=1, function(x) max(x,na.rm=TRUE))
-  final<-final[,c("X.CHROM", "POS", "END_POS", "REF", "ALT", "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
+  final<-final[,c("X.CHROM", "POS", "END_POS", "REF", "ALT", "REF2", "ALT2", 
+                  "CALLS",
+                  "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
                   "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD",
                   "f_LEN",
                   "vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
-  colnames(final)<-c("X.CHROM", "START_POS_REF", "END_POS_REF", "REF_MFVdVs", "ALT_MFVdVs", "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
+  colnames(final)<-c("X.CHROM", "START_POS_REF", "END_POS_REF", "REF", "ALT", "REF_MFVdVs", "ALT_MFVdVs", 
+                     "CALLS",
+                     "FILTER_Mutect2", "FILTER_Freebayes", "FILTER_Vardict", "FILTER_Varscan",
                      "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD",
                      "f_LEN",
                      "vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")
@@ -163,44 +188,45 @@ indelRFparse = function(a){
   
   final$vd_SOR[which(is.infinite(final$vd_SOR)==TRUE)] <- 0
   
+  raw <- final
+  
   indel_parse <- final
+
 
   print("Predicting INDELs")
   
   df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                  "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
   df <- as.h2o(df)
-  
-  # write.csv(df, 'indel_parse.csv',row.names = F)
-  # df <- h2o.importFile(path = normalizePath("indel_parse.csv"),header=T)
 
   smurfdir <- find.package("smurf")
   smurfmodeldir <- paste0(smurfdir, "/data/indel-model-combined-grid")
   indel_model <- h2o.loadModel(path = smurfmodeldir)
   
-  #indel_model <- h2o.loadModel(path = "/home/huangwt/R/x86_64-pc-linux-gnu-library/3.3/smbio/data/indel_model-combined-0205")
-  #indel_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Scripts/Real-v3/Results-Indels-v3/indel_model-combined-0205")
-  #indel_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/SMuRFv1.1/smurf/data/indel-model-combined-grid")
+  #indel_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Sscripts/smurf/smurf1.2/smurf/data/indel-model-combined-grid")
   
   predicted <- h2o.predict(object = indel_model, newdata = df)
-  #suppressMessages(file.remove("indel_parse.csv"))
   p <- as.data.frame(predicted)
   table <- final
   
-  allpredictedcalls <- cbind(table[,c("X.CHROM","START_POS_REF","END_POS_REF","REF_MFVdVs","ALT_MFVdVs")],p)
-  results<- allpredictedcalls[which(allpredictedcalls$predict==TRUE), c(1,2)]
+  indel_parse <- cbind(indel_parse, p)
   
-   if (dim(results)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only.
-   table<-cbind(table, allpredictedcalls$TRUE.)
-   truth_RF <- results
+  results<- indel_parse[which(indel_parse$predict==TRUE),]
   
-  # Merge the predicted indels to the sample
-   truth_RF <- cbind(truth_RF, 1)
-   truth_RF[,3] <- as.logical(truth_RF[,3])
-   colnames(truth_RF) <- c("X.CHROM", "START_POS_REF", "TRUTH_RF")
-   table1 <- merge(table, truth_RF, by = c("X.CHROM", "START_POS_REF"))
-   names(table1)[names(table1) == 'allpredictedcalls$TRUE.'] <- 'SMuRF_score'
   
+  if (dim(results)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 
+    
+    
+    table <- results
+    
+    names(table)[names(table) == 'TRUE.'] <- 'SMuRF_score'
+    
+    # Predicted list of mutations
+    names(table)[names(table) == 'X.CHROM'] <- 'Chr'
+    indel_predict <- unique(table[, !names(table) %in% c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+                                                         "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR",
+                                                         "predict","FALSE.")])
+    
   
   
   # Generate stats
@@ -216,29 +242,25 @@ indelRFparse = function(a){
    stats$Passed_Calls[3] <- length(which((table$FILTER_Vardict==TRUE)))
    stats$Passed_Calls[4] <- length(which((table$FILTER_Varscan==TRUE)))
    
-   
    stats$Passed_Calls[5] <- length(which(counts>=1))
    stats$Passed_Calls[6] <- length(which(counts>=2))
    stats$Passed_Calls[7] <- length(which(counts>=3))
    stats$Passed_Calls[8] <- length(which(counts>=4))
   
+   stats$Passed_Calls[9] <- nrow(table)
   
-   stats$Passed_Calls[9] <- nrow(table1)
-  
-  # Predicted list of mutations
-   names(table1)[names(table1) == 'X.CHROM'] <- 'Chr'
-   indel_predict <- unique(table1[,c("Chr","START_POS_REF", "END_POS_REF","REF_MFVdVs","ALT_MFVdVs", "SMuRF_score")])
-  
-  #smbio <- as.list(indel-parse, indel-stats, indel-predict)
+   
+   
    stats<-as.matrix(stats)
-  #parse<-as.matrix(table)
    predict<-as.matrix(indel_predict)
    parse<-as.matrix(indel_parse)
    raw<-as.matrix(raw)
-   allpredictions <- as.matrix(allpredictedcalls)
-   z<- list(stats, predict, parse, raw, allpredictions)
-   names(z)<- c("stats_indel", "predicted_indel", "parse_indel", "raw_indel", "allpredictions")
+   z<- list(stats, predict, parse, raw)
+   names(z)<- c("stats_indel", "predicted_indel", "parse_indel", "raw_indel")
+   
+   
    return(z)
+   
    } else{
     print("Error: There are no predicted indel calls in this sample.")
     
@@ -248,5 +270,6 @@ indelRFparse = function(a){
      names(z)<- c("parse_indel", "raw_indel")
      return(z)
    } 
+  
   
 }
