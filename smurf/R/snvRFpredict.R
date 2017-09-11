@@ -42,7 +42,7 @@ snvRFpredict = function(b){
     
     snv_predict <- unique(table[, !names(table) %in% c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                                                        "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF",
-                                                       "predict","FALSE.")])
+                                                       "predict","FALSE.","T_altDepth", "T_refDepth","N_altDepth", "N_refDepth")])
     
   # Generate stats
   stats <- matrix(,nrow = 9, ncol = 1)

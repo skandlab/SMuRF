@@ -2,9 +2,9 @@
 % Please edit documentation in R/smurf.R
 \name{smurf}
 \alias{smurf}
-\title{SMuRF v1.1}
+\title{SMuRF v1.2}
 \usage{
-smurf(directory, model, nthreads = -1)
+smurf(directory, model, nthreads = -1, ncores = 1)
 }
 \arguments{
 \item{directory}{Choose directory where the files Variant Caller Format(VCF) files are located.}

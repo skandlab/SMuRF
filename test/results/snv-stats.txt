@@ -2,8 +2,8 @@ Passed_Calls
 Mutect2	5004
 FreeBayes	115
 VarDict	124
-VarScan	535
-Atleast1	5700
+VarScan	534
+Atleast1	5699
 Atleast2	49
 Atleast3	19
 All4	10

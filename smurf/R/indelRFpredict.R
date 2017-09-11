@@ -43,7 +43,7 @@ indelRFpredict = function(c){
     
     indel_predict <- unique(table[, !names(table) %in% c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                                                          "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR",
-                                                         "predict","FALSE.")])
+                                                         "predict","FALSE.","T_altDepth", "T_refDepth","N_altDepth", "N_refDepth")])
     
   
   
