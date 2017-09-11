@@ -2,7 +2,7 @@
 ### SMuRF vignette
 by Huang Weitai 
 
-9th June 2017
+11th Sept 2017
 
 </br>SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a random forest machine learning classification model. To run these functions, you will need output data from the bcbio-nextgen pipeline http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling containing the VCF output for algorithms MuTect2, FreeBayes, VarDict and VarScan. 
 
@@ -62,18 +62,18 @@ myresults$smurf_indel$stats_indel
 #            Passed_Calls
 #Mutect2              383
 #FreeBayes             85
-#VarDict              166
-#VarScan              208
-#Atleast1             810
-#Atleast2              30
+#VarDict              149
+#VarScan              189
+#Atleast1             775
+#Atleast2              29
 #Atleast3               2
 #All4                   0
 #SMuRF_INDEL            1
 
 myresults$smurf_indel$predicted_indel
 
-#Chr START_POS_REF END_POS_REF REF_MFVdVs    ALT_MFVdVs SMuRF_score
-#1 "1" "17820432"    "17820433"  "AT/AT/AT/AT" "A/A/A/A"  "0.6210418"
+#Chr	START_POS_REF	END_POS_REF	REF	ALT	REF_MFVdVs	ALT_MFVdVs	CALLS	                Sample_Name	Alt_Allele_Freq	SMuRF_score
+#1	  17820432	    17820433	  AT	A	  AT/AT/AT/AT	A/A/A/A	    NA/NA/Varscan/Vardict	icgc_cll	  0.495	          0.6210418
 
 myresults$smurf_snv$stats_snv
 
@@ -81,8 +81,8 @@ myresults$smurf_snv$stats_snv
 #Mutect2           5004
 #FreeBayes          115
 #VarDict            124
-#VarScan            535
-#Atleast1          5700
+#VarScan            534
+#Atleast1          5699
 #Atleast2            49
 #Atleast3            19
 #All4                10
@@ -90,13 +90,12 @@ myresults$smurf_snv$stats_snv
 
 head(myresults$smurf_snv$predicted_snv)
 
-#Chr START_POS_REF END_POS_REF REF_MFVdVs   ALT_MFVdVs   SMuRF_score
-#1 "1" "100080141"   "100080141" "T/NA/NA/NA" "A/NA/NA/NA" "0.5449806"
-#2 "1" "100418794"   "100418794" "G/NA/NA/NA" "T/NA/NA/NA" "0.4698960"
-#3 "1" "100444255"   "100444255" "A/NA/NA/NA" "T/NA/NA/NA" "0.4725965"
-#4 "1" "100470006"   "100470006" "C/NA/NA/NA" "A/NA/NA/NA" "0.4074448"
-#5 "1" "100494646"   "100494646" "G/NA/NA/NA" "T/NA/NA/NA" "0.3901333"
-#6 "1" "100997475"   "100997475" "C/NA/NA/NA" "A/NA/NA/NA" "0.4804897"
+#Chr	START_POS_REF	END_POS_REF	REF	ALT	REF_MFVdVs	ALT_MFVdVs	CALLS	Sample_Name	Alt_Allele_Freq	SMuRF_score
+#1	  1614895	  1614895	G	T	G/NA/NA/NA	T/NA/NA/NA	Mutect2/NA/NA/NA	icgc_cll	0.063	0.4036097
+#1	  1945135	  1945135	C	A	C/NA/NA/NA	A/NA/NA/NA	Mutect2/NA/NA/NA	icgc_cll	0.037	0.4314701
+#1	  2119800	  2119800	C	A	C/NA/NA/NA	A/NA/NA/NA	Mutect2/NA/NA/NA	icgc_cll	0.052	0.4926129
+#1	  2180985	  2180985	A	G	A/A/A/A	G/G/G/G	Mutect2/Freebayes/Varscan/Vardict	icgc_cll	0.479	0.9950507
+#1	  2762363	  2762363	G	T	G/NA/NA/NA	T/NA/NA/NA	Mutect2/NA/NA/NA	icgc_cll	0.053	0.4889364
 
 
 ```
@@ -106,7 +105,11 @@ Column Name | Description
 ----------- | -------------------------------------------------------------------------------------------------
 Chr         | Chromosome number
 START_POS_REF/END_POS_REF         | Start and End nucleotide position of the somatic mutation
+REF/ALT     | Consensus Ref and Alt nucleotide changes of the highest likelihood
 REF_MFVdVs/ALT_MFVdVs        | Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs)
+CALLS       | List of callers which the mutation is detected
+Sample_Name | Sample name is extracted based on your labeled samples in the vcf files
+Alt_Allele_Freq | Mean Variant allele frequency calculated from the tumor reads of the callers
 SMuRF_score      | SMuRF confidence score of the predicted mutation
 
 

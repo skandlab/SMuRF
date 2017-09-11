@@ -8,7 +8,8 @@ parsevcf(x)
 }
 \arguments{
 \item{filedir}{Sets the working directory containing the vcf.gz files from 
-callers MuTect2, Freebayes, VarDict and VarScan.}
+callers MuTect2, Freebayes, VarDict and VarScan.  
+include Allele frequency here}
 }
 \description{
 Initial file parse and preparation before filtering
