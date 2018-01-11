@@ -2,9 +2,9 @@
 % Please edit documentation in R/indelRFpredict.R
 \name{indelRFpredict}
 \alias{indelRFpredict}
-\title{indelRF-Parse}
+\title{indelRF-Predict}
 \usage{
-indelRFpredict(c)
+indelRFpredict(parsevcf)
 }
 \description{
 Indel prediction model

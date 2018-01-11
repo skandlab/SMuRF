@@ -2,9 +2,9 @@
 % Please edit documentation in R/snvRFpredict.R
 \name{snvRFpredict}
 \alias{snvRFpredict}
-\title{snvRF-Parse}
+\title{snvRF-Predict}
 \usage{
-snvRFpredict(b)
+snvRFpredict(parsevcf)
 }
 \description{
 snv prediction model

@@ -1,10 +1,10 @@
 Package: smurf
-Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Title: Somatic Mutation Calling using a RandomForest Model
+Version: 1.3
+Authors@R: person("Weitai", "Huang", email = "huangwt@gis.a-star.edu.sg", role = c("aut", "cre"))
+Description: https://github.com/skandlab/SMuRF
 Depends: R (>= 3.3.1)
-License: What license is it under?
+License: MIT
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
