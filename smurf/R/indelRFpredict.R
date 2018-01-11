@@ -1,4 +1,4 @@
-#' indelRF-Parse
+#' indelRF-Predict
 #'
 #' Indel prediction model
 #' Step 2 Predict
@@ -8,29 +8,42 @@
 #' 
 #' 
 #' @export
-indelRFpredict = function(c){
+indelRFpredict = function(parsevcf){
   
-  final <- c[[1]]
+  final <- parsevcf[[2]]
   
   print("Predicting INDELs")
   
   
-  df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                 "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
-  df <- as.h2o(df)
+  # df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+  #                "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
+  
+  df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
   smurfmodeldir <- paste0(smurfdir, "/data/indel-model-combined-grid")
   indel_model <- h2o.loadModel(path = smurfmodeldir)
   
-  #indel_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Sscripts/smurf/smurf1.2/smurf/data/indel-model-combined-grid")
+  #indel_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/indel-model-combined-grid")
   
   predicted <- h2o.predict(object = indel_model, newdata = df)
   p <- as.data.frame(predicted)
 
   indel_parse <- cbind(final, p)
   
+  #set our threshold for SMuRF passing score based on 0.9 Recall
+  # indel_parse$predict_adjusted <- FALSE
+  # indel_parse[which(indel_parse$TRUE.>=0.005),"predict_adjusted"] <- TRUE
+  # results<- indel_parse[which(indel_parse$TRUE.>=0.005),] 
+  
   results<- indel_parse[which(indel_parse$predict==TRUE),]
+  
+  # indel_parse <- unique(indel_parse[, !names(indel_parse) %in% c("m2_refDepth", "m2_altDepth", "m2_AF",
+  #                                                          "f_refDepth", "f_altDepth",
+  #                                                          "vs_totalDepth", "vs_AF",
+  #                                                          "vd_refDepth", "vd_altDepth", "vd_AF",
+  #                                                          "REF_Mutect2", "REF_Freebayes", "REF_Varscan", "REF_Vardict",
+  #                                                          "ALT_Mutect2", "ALT_Freebayes", "ALT_Varscan", "ALT_Vardict")])
   
   
   if (dim(results)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 
@@ -39,11 +52,17 @@ indelRFpredict = function(c){
     table <- results
     
     names(table)[names(table) == 'TRUE.'] <- 'SMuRF_score'
-    names(table)[names(table) == 'X.CHROM'] <- 'Chr'
+    #names(table)[names(table) == 'X.CHROM'] <- 'Chr'
     
-    indel_predict <- unique(table[, !names(table) %in% c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                                                         "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR",
-                                                         "predict","FALSE.","T_altDepth", "T_refDepth","N_altDepth", "N_refDepth")])
+    # indel_predict <- unique(table[, !names(table) %in% c("m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","m2_BaseQRankSum","m2_ReadPosRankSum","m2_FS",
+    #                                                      "f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI",
+    #                                                      "predict","FALSE.")]) #remove unnecessary columns
+    
+    indel_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
+                              "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+                              "Alt_Allele_Freq",
+                              "N_refDepth","N_altDepth","T_refDepth","T_altDepth",
+                              "SMuRF_score")]
     
   
   
@@ -70,23 +89,24 @@ indelRFpredict = function(c){
    
    
    stats<-as.matrix(stats)
-   predict<-as.matrix(indel_predict)
+   #predict<-as.matrix(indel_predict)
    parse<-as.matrix(indel_parse)
-   raw<-as.matrix(final)
-   z<- list(stats, predict, parse, raw)
-   names(z)<- c("stats_indel", "predicted_indel", "parse_indel", "raw_indel")
+   #raw<-as.matrix(final)
+   # z<- list(stats, indel_predict, parse)
+   # names(z)<- c("stats_indel", "predicted_indel", "parse_indel")
    
    
-   return(z)
+   return(list(stats_indel=stats, predicted_indel=indel_predict, parse_indel=parse))
    
    } else{
-    print("Error: There are no predicted indel calls in this sample.")
+    print("Warning: There are no predicted indel calls in this sample.")
     
      parse<-as.matrix(indel_parse)
-     raw<-as.matrix(final)
-     z<- list(parse, raw)
-     names(z)<- c("parse_indel", "raw_indel")
-     return(z)
+     #raw<-as.matrix(final)
+     # z<- list(parse)
+     # names(z)<- c("parse_indel")
+     return(list(parse_indel=parse))
+     #return()
    } 
   
   

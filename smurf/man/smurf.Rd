@@ -2,7 +2,7 @@
 % Please edit documentation in R/smurf.R
 \name{smurf}
 \alias{smurf}
-\title{SMuRF v1.2}
+\title{SMuRF v1.3}
 \usage{
 smurf(directory, model, nthreads = -1, ncores = 1)
 }
@@ -24,8 +24,7 @@ Input files containing variant calls should be ".vcf.gz" format of each caller.
 Supported for R (>=3.3.1)
 }
 \examples{
-smurf("/path/to/directory..","snv")
-smurf("/path/to/directory..","indel")
 smurf("/path/to/directory..","combined")
+smurf("/path/to/directory..","cdsannotation")
 
 }

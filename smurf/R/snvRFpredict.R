@@ -1,4 +1,4 @@
-#' snvRF-Parse
+#' snvRF-Predict
 #'
 #' snv prediction model
 #' Step 2 Predict
@@ -8,29 +8,43 @@
 #' 
 #' 
 #' @export
-snvRFpredict = function(b){
+snvRFpredict = function(parsevcf){
   
-  final <- b[[1]]
+  final <- parsevcf[[1]]
+  #final <- parse_snv
   
   print("Predicting SNVs")
   
-
-  df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                 "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF")]
-  df <- as.h2o(df)
+  # df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+  #                "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF")]
+  
+  df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
   smurfmodeldir <- paste0(smurfdir, "/data/snv-model-combined-grid")
   snv_model <- h2o.loadModel(path = smurfmodeldir)
   
-  #snv_model <- h2o.loadModel(path = "D:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/snv-model-combined-grid")
+  #h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.01860056
+  #snv_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/snv-model-combined-grid")
   
   predicted <- h2o.predict(object = snv_model, newdata = df)
   p <- as.data.frame(predicted)
 
   snv_parse <- cbind(final, p)
   
+  #set our threshold for SMuRF passing score based on 0.9 Recall
+  # snv_parse$predict_adjusted <- FALSE
+  # snv_parse[which(snv_parse$TRUE.>=0.005),"predict_adjusted"] <- TRUE
+  # results<- snv_parse[which(snv_parse$TRUE.>=0.005),] 
+  
   results<- snv_parse[which(snv_parse$predict==TRUE),]
+  
+  # snv_parse <- unique(snv_parse[, !names(snv_parse) %in% c("m2_refDepth", "m2_altDepth", "m2_AF",
+  #                                                  "f_refDepth", "f_altDepth",
+  #                                                  "vs_totalDepth", "vs_AF",
+  #                                                  "vd_refDepth", "vd_altDepth", "vd_AF",
+  #                                                  "REF_Mutect2", "REF_Freebayes", "REF_Varscan", "REF_Vardict",
+  #                                                  "ALT_Mutect2", "ALT_Freebayes", "ALT_Varscan", "ALT_Vardict")])
   
   
   if (dim(results)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 
@@ -38,11 +52,18 @@ snvRFpredict = function(b){
     table <- results
     
     names(table)[names(table) == 'TRUE.'] <- 'SMuRF_score'
-    names(table)[names(table) == 'X.CHROM'] <- 'Chr'
+    #names(table)[names(table) == 'X.CHROM'] <- 'Chr'
     
-    snv_predict <- unique(table[, !names(table) %in% c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                                                       "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF",
-                                                       "predict","FALSE.","T_altDepth", "T_refDepth","N_altDepth", "N_refDepth")])
+    # snv_predict <- unique(table[, !names(table) %in% c("m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_BaseQRankSum","m2_FS",
+    #                                                    "f_MQM","f_ODDS","vs_SSC","vd_SSF",
+    #                                                    "predict","FALSE.")])
+    
+    snv_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
+                            "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+                            "Alt_Allele_Freq",
+                            "N_refDepth","N_altDepth","T_refDepth","T_altDepth",
+                            "SMuRF_score")]
+    
     
   # Generate stats
   stats <- matrix(,nrow = 9, ncol = 1)
@@ -68,24 +89,25 @@ snvRFpredict = function(b){
   
 
   stats<-as.matrix(stats)
-  predict<-as.matrix(snv_predict)
+  #predict<-as.matrix(snv_predict)
   parse<-as.matrix(snv_parse)
-  raw<-as.matrix(final)
-  y <- list(stats, predict, parse, raw)
-  names(y)<- c("stats_snv", "predicted_snv", "parse_snv","raw_snv")
+  #raw<-as.matrix(final)
+  #y <- list(stats, snv_predict, parse)
+  #names(y)<- c("stats_snv", "predicted_snv", "parse_snv")
   
-  return(y)
+  return(list(stats_snv=stats, predicted_snv=snv_predict, parse_snv=parse))
   
   } else{
     
-    print("Error: There are no predicted SNV calls in this sample.")
+    print("Warning: There are no predicted SNV calls in this sample.")
     
     parse<-as.matrix(snv_parse)
-    raw<-as.matrix(final)
-    y<- list(parse, raw)
-    names(y)<- c("parse_snv", "raw_snv")
+    #raw<-as.matrix(final)
+    # y<- list(parse)
+    # names(y)<- c("parse_snv")
     
-    return(y)
+    return(list(parse_snv=parse))
+    #return()
   } 
   
   
