@@ -21,7 +21,7 @@ indelRFpredict = function(parsevcf){
   df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
-  smurfmodeldir <- paste0(smurfdir, "/data/indel-model-combined-grid")
+  smurfmodeldir <- paste0(smurfdir, "/data/indel_nofeatunion_model_cv1train1")
   indel_model <- h2o.loadModel(path = smurfmodeldir)
   
   #indel_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/indel-model-combined-grid")
@@ -58,8 +58,8 @@ indelRFpredict = function(parsevcf){
     #                                                      "f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI",
     #                                                      "predict","FALSE.")]) #remove unnecessary columns
     
-    indel_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
-                              "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+    indel_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
+                              "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","Sample_Name",
                               "Alt_Allele_Freq",
                               "N_refDepth","N_altDepth","T_refDepth","T_altDepth",
                               "SMuRF_score")]
