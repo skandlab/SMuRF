@@ -1,16 +1,22 @@
 
 ### SMuRF vignette
-by Huang Weitai 
+by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
-11th Jan 2018
+23rd Aug 2018
 
-</br>SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a random forest machine learning classification model. To run these functions, you will need output data from the bcbio-nextgen pipeline http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling containing the VCF output for algorithms MuTect2, FreeBayes, VarDict and VarScan. 
+</br>SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a Random Forest machine learning approach. SMuRF generates a set of point mutations and insertions/deletions (indels) trained based on the latest community-curated tumor whole genome sequencing data. Our method is fast and accurate that could be applied to data from different cancer types as well as whole genome or exome data. For more information see our BioRxiv preprint doi: https://doi.org/10.1101/270413   
 
-In this vignette, we will be using a partial output dataset (https://github.com/skandlab/SMuRF/tree/master/test) derived from the chronic lymphocytic leukemia data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539.
+Before you run SMuRF, you will need output data from the bcbio-nextgen pipeline http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling containing the VCF output for algorithms MuTect2, FreeBayes, VarDict and VarScan. Alternatively, you may run these callers individually if you are familiar with their pipelines. We would recommend the bcbio-nextgen pipeline for a better user experience.  
 
-Requirements for package:
+In this vignette, we will be using a partial output dataset (https://github.com/skandlab/SMuRF/tree/master/test) derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. You may download the test set for testing SMuRF's functions.
 
-Dependencies: https://github.com/skandlab/SMuRF/wiki/Running-SMuRF
+<br/>**Requirements for package:**
+
+Dependencies: R >=3.3.1
+Packages: data.table
+          VariantAnnotation
+          h2o 3.10.3.3 (must be this version)
+_These packages will be installed the first time you run SMuRF._          
 
 <br/>**Installation instructions:**
 
@@ -24,7 +30,7 @@ install_github("skandlab/SMuRF", subdir="smurf")
 ```
 (*Alternative option*) SMuRF installation via downloading of the package from Github: 
 ```r
-#Clone or download package from Github https://github.com/skandlab/SMuRF/tree/master/smurf
+#Clone or download package from Github https://github.com/skandlab/SMuRF/tree/master/smurf and save to your local directory
 install.packages("my/current/directory/smurf", repos = NULL, type = "source")
 ```
 
@@ -36,22 +42,29 @@ download.file('https://github.com/skandlab/SMuRF/raw/master/test/mutect2.vcf.gz'
 download.file('https://github.com/skandlab/SMuRF/raw/master/test/freebayes.vcf.gz','freebayes.vcf.gz')
 ```
 
-<br/>Before we start using the package's functions, set your designated file directory containing your sample
+Before we start using the package's functions, set your designated file directory containing your sample/test files
 ```r
 mydir <- getwd() #get current directory
+# alternative option
+# mydir <- setwd("my/local/directory/for/test/files")
 
 ```
-_SMuRF_ allows for the prediction of single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels). In this example we will be predicting both SNVs and INDELs and thus we will be using the "combined" import functionality (other options are "snv" and "indel" only).
+_SMuRF_ will predict both single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels). In this example we will be using the "combined" import functionality.
 ```r
-library("smurf")
+library("smurf") #load SMuRF package
 myresults <- smurf(mydir, "combined") #save output into 'myresults' variable
 
 #this will run SMuRF and generate predictions based on input files in 'mydir'
 
 ```
-_The first time you run SMuRF, required packages may be installed._
+_The first time you run SMuRF, required packages that are missing will be installed._
 
-Output files saved includes variant statistics (_stats_) and the predicted reads (_predicted_)
+Output files saved includes:
+1. Variant statistics (_stats_) 
+2. Predicted reads (_predicted_)
+3. Parsed-raw file (_parse_)
+4. Predicted reads with annotations (_annotated_)* #for smurf's "annotation" function only
+5. Time taken (_time_)
 
 ```r
 # myresults <- smurf(mydir, "combined") 
@@ -59,74 +72,61 @@ Output files saved includes variant statistics (_stats_) and the predicted reads
 myresults$smurf_indel$stats_indel
 
 <!--             Passed_Calls -->
-<!-- Mutect2             1524 -->
-<!-- FreeBayes            349 -->
-<!-- VarDict              531 -->
-<!-- VarScan             1450 -->
-<!-- Atleast1            3657 -->
-<!-- Atleast2             166 -->
-<!-- Atleast3              27 -->
+<!-- Mutect2             1546 -->
+<!-- FreeBayes            339 -->
+<!-- VarDict              515 -->
+<!-- VarScan             2228 -->
+<!-- Atleast1            4343 -->
+<!-- Atleast2             244 -->
+<!-- Atleast3              37 -->
 <!-- All4                   4 -->
-<!-- SMuRF_INDEL            5 -->
+<!-- SMuRF_INDEL            4 -->
 
 myresults$smurf_indel$predicted_indel
 
-<!-- Chr START_POS_REF END_POS_REF REF ALT  REF_MFVdVs ALT_MFVdVs Sample_Name -->
-<!-- 27     1      17820432    17820433  AT   A AT/AT/AT/AT    A/A/A/A    icgc_cll -->
-<!-- 53     1      81654021    81654022  CA   C CA/CA/CA/CA    C/C/C/C    icgc_cll -->
-<!-- 61     1      91134042    91134043  CT   C CT/CT/CT/CT    C/C/C/C    icgc_cll -->
-<!-- 1628   1      32639063    32639064  TA   T TA/TA/NA/TA   T/T/NA/T    icgc_cll -->
-<!-- 1749   1      71747307    71747308  AT   A NA/AT/AT/AT   NA/A/A/A    icgc_cll -->
-<!--      FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan -->
-<!-- 27             TRUE            FALSE           TRUE           TRUE -->
-<!-- 53             TRUE             TRUE           TRUE           TRUE -->
-<!-- 61             TRUE             TRUE           TRUE           TRUE -->
-<!-- 1628          FALSE             TRUE          FALSE           TRUE -->
-<!-- 1749          FALSE             TRUE          FALSE           TRUE -->
-<!--      Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth SMuRF_score -->
-<!-- 27            0.5650         24          1         13         13   0.6233728 -->
-<!-- 53            0.4640         26          0         15         13   0.9799784 -->
-<!-- 61            0.4850         31          0         18         16   0.9608392 -->
-<!-- 1628          0.3810         20          0         13          7   0.9294872 -->
-<!-- 1749          0.4615         74          4         57         51   0.4692025 -->
-
+<!-- Chr START_POS_REF END_POS_REF REF ALT  REF_MFVdVs ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan -->
+<!--   1      17820432    17820433  AT   A AT/AT/AT/AT    A/A/A/A           TRUE            FALSE           TRUE           TRUE -->
+<!--   1      81654021    81654022  CA   C CA/CA/CA/CA    C/C/C/C           TRUE             TRUE           TRUE           TRUE -->
+<!--   1      91134042    91134043  CT   C CT/CT/CT/CT    C/C/C/C           TRUE             TRUE           TRUE           TRUE -->
+<!--   1      32639063    32639064  TA   T TA/TA/NA/TA   T/T/NA/T          FALSE             TRUE          FALSE           TRUE -->
+   
+<!-- Sample_Name Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth SMuRF_score -->
+<!--    icgc_cll           0.565         24          1         12         13   0.8727273 -->
+<!--    icgc_cll           0.464         26          0         15         13   0.5454545 -->
+<!--    icgc_cll           0.485         32          0         17         16   0.7090909 -->
+<!--    icgc_cll           0.381         21          0         13          8   0.6701292 -->
+     
 myresults$smurf_snv$stats_snv
 
 <!--           Passed_Calls -->
-<!-- Mutect2           4892 -->
-<!-- FreeBayes          284 -->
-<!-- VarDict            310 -->
-<!-- VarScan           5533 -->
-<!-- Atleast1         10748 -->
+<!-- Mutect2           4906 -->
+<!-- FreeBayes          247 -->
+<!-- VarDict            315 -->
+<!-- VarScan           5101 -->
+<!-- Atleast1         10302 -->
 <!-- Atleast2           170 -->
-<!-- Atleast3            59 -->
-<!-- All4                42 -->
-<!-- SMuRF_SNV          204 -->
+<!-- Atleast3            58 -->
+<!-- All4                39 -->
+<!-- SMuRF_SNV          417 -->
 
 head(myresults$smurf_snv$predicted_snv)
 
-<!--    Chr START_POS_REF END_POS_REF REF ALT REF_MFVdVs ALT_MFVdVs Sample_Name -->
-<!-- 16   1       2180985     2180985   A   G    A/A/A/A    G/G/G/G    icgc_cll -->
-<!-- 31   1       5035185     5035185   C   T    C/C/C/C    T/T/T/T    icgc_cll -->
-<!-- 37   1       8881322     8881322   G   A    G/G/G/G    A/A/A/A    icgc_cll -->
-<!-- 38   1       8929624     8929624   A   G    A/A/A/A    G/G/G/G    icgc_cll -->
-<!-- 39   1       9196716     9196716   C   T   C/NA/C/C   T/NA/T/T    icgc_cll -->
-<!-- 40   1       9478609     9478609   A   G    A/A/A/A    G/G/G/G    icgc_cll -->
-<!--    FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan -->
-<!-- 16           TRUE             TRUE           TRUE           TRUE -->
-<!-- 31           TRUE             TRUE           TRUE           TRUE -->
-<!-- 37           TRUE             TRUE           TRUE           TRUE -->
-<!-- 38           TRUE             TRUE           TRUE           TRUE -->
-<!-- 39           TRUE            FALSE           TRUE           TRUE -->
-<!-- 40           TRUE             TRUE           TRUE           TRUE -->
-<!--    Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth SMuRF_score -->
-<!-- 16           0.512         90          0         56         53   0.9950507 -->
-<!-- 31           0.309         82          1         41         17   0.9942729 -->
-<!-- 37           0.348         40          0         16          8   0.9692672 -->
-<!-- 38           0.375         58          1         12          7   0.9240989 -->
-<!-- 39           0.200         35          0         17          3   0.5476332 -->
-<!-- 40           0.393         37          0         20         16   0.5114379 -->
-
+<!-- Chr START_POS_REF END_POS_REF REF ALT REF_MFVdVs ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan -->
+<!--   1       5035185     5035185   C   T    C/C/C/C    T/T/T/T           TRUE             TRUE           TRUE           TRUE -->
+<!--   1       8929624     8929624   A   G    A/A/A/A    G/G/G/G           TRUE             TRUE           TRUE           TRUE -->
+<!--   1      11398873    11398873   T   C  T/NA/NA/T  C/NA/NA/C           TRUE            FALSE          FALSE           TRUE -->
+<!--   1      12207135    12207135   G   A    G/G/G/G    A/A/A/A           TRUE             TRUE           TRUE           TRUE -->
+<!--   1      14955425    14955425   C   A    C/C/C/C    A/A/A/A           TRUE             TRUE           TRUE           TRUE -->
+<!--   1      22385823    22385823   A   G    A/A/A/A    G/G/G/G           TRUE             TRUE           TRUE           TRUE -->
+    
+<!--  Sample_Name Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth SMuRF_score -->
+<!-- icgc_cll           0.309         86          2         42         18   0.9861111 -->
+<!-- icgc_cll           0.375         60          1         13          8   0.9722222 -->
+<!-- icgc_cll           0.147         76          1         59         10   0.9136776 -->
+<!-- icgc_cll           0.250         74          1         37         14   0.9861111 -->
+<!-- icgc_cll           0.385         33          1         12          7   0.9305556 -->
+<!-- icgc_cll           0.559         40          2         16         20   1.0000000 -->
+       
 ```
 **Output file description/legend**
 
@@ -136,8 +136,8 @@ Chr         | Chromosome number
 START_POS_REF/END_POS_REF         | Start and End nucleotide position of the somatic mutation
 REF/ALT     | Consensus Ref and Alt nucleotide changes of the highest likelihood
 REF_MFVdVs/ALT_MFVdVs        | Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs)
-Sample_Name | Sample name is extracted based on your labeled samples in the vcf files
 FILTER | Passed (TRUE) or Reject (FALSE) [boolean] mutation calls from the individual callers
+Sample_Name | Sample name is extracted based on your labeled samples in the vcf files
 Alt_Allele_Freq | Mean Variant allele frequency calculated from the tumor reads of the callers
 Depth ref/alt N/T | Mean read depth from the N/T sample for ref/alt alleles
 SMuRF_score      | SMuRF confidence score of the predicted mutation
@@ -192,7 +192,9 @@ a<- myresults$time.taken
 write(a, file = "time.txt")
 ```
 
-As an additional function, we have added gene annotations using SnpEff (from bcbio) and SMuRF extracts the coding annotations from the canonical transcripts with the highest impact for your convenience:
+<br/>**Extracting Gene Annotations for somatic mutations in the coding transcripts**
+
+As an additional function, we have added gene annotations using SnpEff (from bcbio) and SMuRF extracts the coding annotations from the canonical transcripts with the highest impact for your convenience. Note that your vcf.gz files should ready been tab-indexed (.tbi files required).
 ```r
 myresults <- smurf(mydir, "cdsannotation") #runs SMuRF for SNV and indels + generate annotations
 

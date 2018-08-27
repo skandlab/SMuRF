@@ -2,17 +2,21 @@
 % Please edit documentation in R/smurf.R
 \name{smurf}
 \alias{smurf}
-\title{SMuRF v1.3}
+\title{SMuRF v1.4}
 \usage{
-smurf(directory, model, nthreads = -1, ncores = 1)
+smurf(directory, model, nthreads = -1)
 }
 \arguments{
 \item{directory}{Choose directory where the files Variant Caller Format(VCF) files are located.}
 
-\item{model}{Choose either "snv" or "indel" or "combined"
+\item{model}{Choose either "combined" or "cdsannotation"
 The appropriate parsing and prediction model will be performed
 to obtain a list of somatic mutation calls. 
-Choose "combined" to generate both SNV and Indel outputs}
+Choose "combined" to generate both SNV and Indel outputs
+Choose "cdsannotation" to run "combined" + add annotations to coding regions (from the respective coding transcripts)}
+
+\item{nthreads}{Default as "-1", where all available cores will be used for RandomForest prediction. 
+Specify any integer from 1 to x, depending on your resources available.}
 }
 \description{
 Somatic mutation consensus calling based on four callers:

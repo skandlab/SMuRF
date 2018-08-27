@@ -1,4 +1,4 @@
-#' SMuRF v1.3
+#' SMuRF v1.4
 #'
 #' Somatic mutation consensus calling based on four callers:
 #' MuTect2, Freebayes, VarDict, VarScan
@@ -10,16 +10,20 @@
 #' 
 #' @param directory Choose directory where the files Variant Caller Format(VCF) files are located.
 #'
-#' @param model Choose either "snv" or "indel" or "combined"
+#' @param model Choose either "combined" or "cdsannotation"
 #' The appropriate parsing and prediction model will be performed
 #' to obtain a list of somatic mutation calls. 
 #' Choose "combined" to generate both SNV and Indel outputs
+#' Choose "cdsannotation" to run "combined" + add annotations to coding regions (from the respective coding transcripts)
+#' 
+#' @param nthreads Default as "-1", where all available cores will be used for RandomForest prediction. 
+#' Specify any integer from 1 to x, depending on your resources available.
 #' @examples
 #' smurf("/path/to/directory..","combined")
 #' smurf("/path/to/directory..","cdsannotation")
 #' 
 #' @export
-smurf = function(directory, model, nthreads = -1, ncores = 1){
+smurf = function(directory, model, nthreads = -1){
   directory <-paste(directory,"/", sep="")
   if(dir.exists(directory)==TRUE){
     
@@ -95,11 +99,11 @@ smurf = function(directory, model, nthreads = -1, ncores = 1){
       
       #Executing smurf if correct parameters stated
       
-      if (model == "combined" || model == "cdsannotation" || model == "featureselection" || model == "parseraw" || model == "annotationonly" || model == "parserawmutect") {
+      if (model == "combined" || model == "cdsannotation" || model == "featureselectionall") {
           start.time <- Sys.time()
           
           if (model == "combined") {
-            parsevcf<-parsevcf_allfeatures(x)
+            parsevcf<-parsevcf_allfeaturesall(x)
             snvpredict<-snvRFpredict(parsevcf)
             indelpredict<-indelRFpredict(parsevcf)
                       end.time <- Sys.time()
@@ -111,14 +115,14 @@ smurf = function(directory, model, nthreads = -1, ncores = 1){
 
           else if (model == "cdsannotation") {
             
-            parsevcf<-parsevcf_allfeatures(x)
+            parsevcf<-parsevcf_allfeaturesall(x)
             
             snvpredict<-snvRFpredict(parsevcf)
             indelpredict<-indelRFpredict(parsevcf)
             
             if (length(snvpredict)>1) {
               print("SNV annotation")
-              snvannotation<-CDSannotation(x,snvpredict)
+              snvannotation<-CDSannotation_snv(x,snvpredict)
             } else {
               print("No snv predictions. Skipping snv annotation step.")
               snvannotation=NULL
@@ -126,7 +130,7 @@ smurf = function(directory, model, nthreads = -1, ncores = 1){
             
             if (length(indelpredict)>1) {
               print("Indel annotation")
-              indelannotation<-CDSannotation(x,indelpredict)
+              indelannotation<-CDSannotation_indel(x,indelpredict)
             } else {
               print("No indel predictions. Skipping indel annotation step.")
               indelannotation=NULL
@@ -140,8 +144,9 @@ smurf = function(directory, model, nthreads = -1, ncores = 1){
  
           }
           
-          else if (model == "featureselection") {
-            parsevcf<-parsevcf_allfeatures(x)
+
+          else if (model == "featureselectionall") {
+            parsevcf<-parsevcf_allfeaturesall(x)
             end.time <- Sys.time()
             time.taken <- end.time - start.time
             print(time.taken)
@@ -150,88 +155,7 @@ smurf = function(directory, model, nthreads = -1, ncores = 1){
             
           }
           
-          else if (model == "parseraw") { #for Mutectv1
-            parsevcf<-parsevcf_raw(x)
-            end.time <- Sys.time()
-            time.taken <- end.time - start.time
-            print(time.taken)
-            
-            return(list("parsevcf_raw"=parsevcf, "time.taken"=time.taken))
-            
-          }
-          
-          else if (model == "parserawmutect") { #for Mutectv1
-            parsevcf<-parsevcf_raw_mutect(x)
-            end.time <- Sys.time()
-            time.taken <- end.time - start.time
-            print(time.taken)
-            
-            return(list("parsevcf_raw"=parsevcf, "time.taken"=time.taken))
-            
-          }
-          
-          else if (model == "annotationonly") { #for Mutectv1
-            
-            suppressWarnings(suppressMessages(library(data.table)))
-            
-            print("reading snv-raw.txt")
-            snvpredict <- fread(paste(directory, "snv-raw.txt", sep = ""), stringsAsFactors=F, skip = 1, drop = 1) #row.names=T
-            colnames(snvpredict) <- c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
-                                      "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                                      "Alt_Allele_Freq",
-                                      "N_refDepth","N_altDepth","T_refDepth","T_altDepth")
-            
-            print("reading indel-raw.txt")
-            indelpredict <- fread(paste(directory, "indel-raw.txt", sep = ""), stringsAsFactors=F) #row.names=F
-            colnames(indelpredict) <- c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
-                                      "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                                      "Alt_Allele_Freq",
-                                      "N_refDepth","N_altDepth","T_refDepth","T_altDepth")
-            
-            #generating vcf subset from bed-granges
-            print("merge snv-raw.txt")
-            smurfdir <- find.package("smurf")
-            beddir <- paste0(smurfdir, "/data/gastric_RF.rds")
-            bedfile <- readRDS(beddir)
-            sample.name <- snvpredict$Sample_Name[1]
-            samplebed <- subset(bedfile, V6==sample.name)
-            samplebed <- as.data.frame(samplebed)
-            samplebed <- samplebed[,c("V1","V2")]
-            colnames(samplebed) <- c("Chr","START_POS_REF")
-            snvpredict=merge(samplebed,snvpredict,by=c("Chr","START_POS_REF"),all.x=TRUE)
-            
-            print("merge indel-raw.txt")
-            beddir <- paste0(smurfdir, "/data/gastric_RF_indel.rds")
-            bedfile <- readRDS(beddir)
-            sample.name <- indelpredict$Sample_Name[1]
-            samplebed <- subset(bedfile, V6==sample.name)
-            samplebed <- as.data.frame(samplebed)
-            samplebed <- samplebed[,c("V1","V2")]
-            colnames(samplebed) <- c("Chr","START_POS_REF")
-            indelpredict=merge(samplebed,indelpredict,by=c("Chr","START_POS_REF"),all.x=TRUE)
-            
-            
-            if (nrow(snvpredict)>1) {
-              print("SNV annotation")
-              snvannotation<-CDSannotation_raw(x,snvpredict)
-            } else {
-              print("No snv predictions. Skipping snv annotation step.")
-              snvannotation=NULL
-            }
-            
-            if (nrow(indelpredict)>1) {
-              print("Indel annotation")
-              indelannotation<-CDSannotation_raw(x,indelpredict)
-            } else {
-              print("No indel predictions. Skipping indel annotation step.")
-              indelannotation=NULL
-            }
-            
-            return(list("smurf_snv_annotation"=snvannotation, "smurf_indel_annotation"=indelannotation))
-            
-          }
-          
-          
+
           
           
   

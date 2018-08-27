@@ -1,0 +1,5 @@
+Chr	START_POS_REF	END_POS_REF	REF	ALT	REF_MFVdVs	ALT_MFVdVs	FILTER_Mutect2	FILTER_Freebayes	FILTER_Vardict	FILTER_Varscan	Sample_Name	Alt_Allele_Freq	T_altDepth	T_refDepth	N_refDepth	N_altDepth	Allele	Annotation	Impact	Gene_name	Gene_ID	Feature_Type	Feature_ID	Transcript_BioType	Rank	HGVS.c	HGVS.p	cDNA.pos	CDS.pos	AA.pos	Distance	REGION	SMuRF_score
+1	17820432	17820433	AT	A	AT/AT/AT/AT	A/A/A/A	TRUE	FALSE	TRUE	TRUE	icgc_cll	0.565	13	12	24	1	.	.	.	.	.	.	.	.	.	.	.	.	.	.	.	Non-coding	0.872727272727273
+1	81654021	81654022	CA	C	CA/CA/CA/CA	C/C/C/C	TRUE	TRUE	TRUE	TRUE	icgc_cll	0.464	13	15	26	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.	.	Non-coding	0.545454545454545
+1	91134042	91134043	CT	C	CT/CT/CT/CT	C/C/C/C	TRUE	TRUE	TRUE	TRUE	icgc_cll	0.485	16	17	32	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.	.	Non-coding	0.709090909090909
+1	32639063	32639064	TA	T	TA/TA/NA/TA	T/T/NA/T	FALSE	TRUE	FALSE	TRUE	icgc_cll	0.381	8	13	21	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.	.	Non-coding	0.670129237391732

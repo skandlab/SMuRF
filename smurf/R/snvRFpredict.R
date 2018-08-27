@@ -21,7 +21,7 @@ snvRFpredict = function(parsevcf){
   df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
-  smurfmodeldir <- paste0(smurfdir, "/data/snv-model-combined-grid")
+  smurfmodeldir <- paste0(smurfdir, "/data/snv_nofeatunion_model_cv1train1")
   snv_model <- h2o.loadModel(path = smurfmodeldir)
   
   #h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.01860056
@@ -58,8 +58,8 @@ snvRFpredict = function(parsevcf){
     #                                                    "f_MQM","f_ODDS","vs_SSC","vd_SSF",
     #                                                    "predict","FALSE.")])
     
-    snv_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
-                            "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
+    snv_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
+                            "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","Sample_Name",
                             "Alt_Allele_Freq",
                             "N_refDepth","N_altDepth","T_refDepth","T_altDepth",
                             "SMuRF_score")]
