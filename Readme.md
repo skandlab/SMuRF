@@ -59,7 +59,7 @@ _These packages will be installed the first time you run SMuRF._
 
 #### <br/>4. Installation instructions
 
-<br/>1. The latest version of the package is updated on Github https://github.com/skandlab/SMuRF
+1. The latest version of the package is updated on Github https://github.com/skandlab/SMuRF
 <br/>2. You can install the current SMuRF directly from Github via the following R command: 
 ```r
 #devtools is required
@@ -274,7 +274,7 @@ for(i in 1:length(sample_directories))
 ```
 
 <br/>
-_For errors and bugs, please report on our Github page._
+For errors and bugs, please report on our Github page.
 
   
   
