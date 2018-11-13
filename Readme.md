@@ -4,6 +4,12 @@ by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang)
 
 13th Nov 2018
 
+#### <br/>Introduction
+
+SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a Random Forest machine learning approach. SMuRF generates a set of point mutations and insertions/deletions (indels) trained based on the latest community-curated tumor whole genome sequencing data. Our method is fast and accurate that could be applied to data from different cancer types as well as whole genome or exome data. 
+
+For more information see our BioRxiv preprint doi: https://doi.org/10.1101/270413   
+
 #### <br/>Table of contents
 
 [1. Input from bcbio-nextgen pipeline](#input-bcbio)
@@ -15,11 +21,6 @@ by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang)
 </br>[6. Extracting Gene Annotations for somatic mutations in the coding transcripts](#annotation)
 </br>[7. Running on multiple samples](#multiple-samples)
 
-#### <br/>Introduction
-
-SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a Random Forest machine learning approach. SMuRF generates a set of point mutations and insertions/deletions (indels) trained based on the latest community-curated tumor whole genome sequencing data. Our method is fast and accurate that could be applied to data from different cancer types as well as whole genome or exome data. 
-
-For more information see our BioRxiv preprint doi: https://doi.org/10.1101/270413   
 
 <a name="input-bcbio"></a>
 
