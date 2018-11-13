@@ -2,15 +2,52 @@
 ### SMuRF vignette
 by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
-23rd Aug 2018
+13th Nov 2018
 
-</br>SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a Random Forest machine learning approach. SMuRF generates a set of point mutations and insertions/deletions (indels) trained based on the latest community-curated tumor whole genome sequencing data. Our method is fast and accurate that could be applied to data from different cancer types as well as whole genome or exome data. For more information see our BioRxiv preprint doi: https://doi.org/10.1101/270413   
+#### <br/>Introduction
 
-Before you run SMuRF, you will need output data from the bcbio-nextgen pipeline http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling containing the VCF output for algorithms MuTect2, FreeBayes, VarDict and VarScan. Alternatively, you may run these callers individually if you are familiar with their pipelines. We would recommend the bcbio-nextgen pipeline for a better user experience.  
+SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a Random Forest machine learning approach. SMuRF generates a set of point mutations and insertions/deletions (indels) trained based on the latest community-curated tumor whole genome sequencing data. Our method is fast and accurate that could be applied to data from different cancer types as well as whole genome or exome data. 
 
-In this vignette, we will be using a partial output dataset (https://github.com/skandlab/SMuRF/tree/master/test) derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. You may download the test set for testing SMuRF's functions.
+For more information see our BioRxiv preprint doi: https://doi.org/10.1101/270413   
 
-<br/>**Requirements for package:**
+#### <br/>Table of contents
+
+[1. Input from bcbio-nextgen pipeline](#input-bcbio)
+</br>[1a. Input directly from VCF Callers (optional)](#input-alt)
+</br>[2. Test Dataset](#test)
+</br>[3. Requirements for package](#requirements)
+</br>[4. Installation instructions](#installation)
+</br>[5. Output file description/legend](#output)
+</br>[6. Extracting Gene Annotations for somatic mutations in the coding transcripts](#annotation)
+</br>[7. Running on multiple samples](#multiple-samples)
+
+
+<a name="input-bcbio"></a>
+
+#### <br/>1. Input from bcbio-nextgen pipeline
+
+Before you run SMuRF, you will need output data from the [bcbio-nextgen pipeline](http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling) containing the VCF output for algorithms MuTect2, FreeBayes, VarDict and VarScan. Note that the tabix (.tbi) files will be required for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience.  
+
+<a name="input-alt"></a>
+
+#### <br/>1a. Input directly from VCF Callers (optional)
+
+**For Users not running bcbio-nextgen pipeline:**
+Alternatively, you may run these callers individually. The VCF outputs from each caller (.vcf.gz) is required for SMuRF to run. Refer to the installation and instructions for each caller:
+<br/>- [VarDict](https://github.com/AstraZeneca-NGS/VarDict)
+<br/>- [VarScan](https://github.com/dkoboldt/varscan)
+<br/>- [MuTect2](https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php)
+<br/>- [FreeBayes](https://github.com/ekg/freebayes)
+
+<a name="test"></a>
+
+#### <br/>2. Test Dataset
+
+In this vignette, we will be using a [partial output dataset](https://github.com/skandlab/SMuRF/tree/master/test) derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. You may download the test set for testing SMuRF's functions.
+
+<a name="requirements"></a>
+
+#### <br/>3. Requirements for package
 
 Dependencies: R >=3.3.1
 Packages: data.table
@@ -18,9 +55,11 @@ Packages: data.table
           h2o 3.10.3.3 (must be this version)
 _These packages will be installed the first time you run SMuRF._          
 
-<br/>**Installation instructions:**
+<a name="installation"></a>
 
-<br/>1. The latest version of the package is updated on Github https://github.com/skandlab/SMuRF
+#### <br/>4. Installation instructions
+
+1. The latest version of the package is updated on Github https://github.com/skandlab/SMuRF
 <br/>2. You can install the current SMuRF directly from Github via the following R command: 
 ```r
 #devtools is required
@@ -128,7 +167,10 @@ head(myresults$smurf_snv$predicted_snv)
 <!-- icgc_cll           0.559         40          2         16         20   1.0000000 -->
        
 ```
-**Output file description/legend**
+
+<a name="output"></a>
+
+#### </br>5. Output file description/legend
 
 Column Name | Description
 ----------- | -------------------------------------------------------------------------------------------------
@@ -191,8 +233,9 @@ if(!is.null(a)){
 a<- myresults$time.taken
 write(a, file = "time.txt")
 ```
+<a name="annotation"></a>
 
-<br/>**Extracting Gene Annotations for somatic mutations in the coding transcripts**
+#### <br/>6. Extracting Gene Annotations for somatic mutations in the coding transcripts
 
 As an additional function, we have added gene annotations using SnpEff (from bcbio) and SMuRF extracts the coding annotations from the canonical transcripts with the highest impact for your convenience. Note that your vcf.gz files should ready been tab-indexed (.tbi files required).
 ```r
@@ -203,8 +246,9 @@ myresults <- smurf(mydir, "cdsannotation") #runs SMuRF for SNV and indels + gene
 You may check the output files generated by the test samples in this section to the expected results we provided located in the _results_ folder https://github.com/skandlab/SMuRF/tree/master/test/results.
 
 
+<a name="multiple-samples"></a>
 
-<br/>**Running on multiple samples**
+#### <br/>7. Running on multiple samples
 
 Use our R package to efficiently do somatic mutation predictions on multiple matched tumor-normal samples by providing the list of directories of where your sample files are located. 
 ```r
@@ -229,8 +273,8 @@ for(i in 1:length(sample_directories))
 #Time difference of 15.18325 secs
 ```
 
-For errors and bugs, 
-please report on our Github page.
+<br/>
+For errors and bugs, please report on our Github page.
 
   
   
