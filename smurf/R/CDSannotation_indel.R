@@ -1,4 +1,4 @@
-#' snvRF-Annotations
+#' indelRF-Annotations
 #'
 #' 
 #' Step 3 Annotations

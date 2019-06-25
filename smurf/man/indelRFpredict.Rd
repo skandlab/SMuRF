@@ -4,10 +4,10 @@
 \alias{indelRFpredict}
 \title{indelRF-Predict}
 \usage{
-indelRFpredict(parsevcf)
+indelRFpredict(parsevcf, indel.cutoff)
 }
 \description{
-Indel prediction model
+Indel prediction model SMuRFv1.5
 Step 2 Predict
 }
 \examples{

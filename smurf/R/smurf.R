@@ -1,4 +1,4 @@
-#' SMuRF v1.4
+#' SMuRF v1.5
 #'
 #' Somatic mutation consensus calling based on four callers:
 #' MuTect2, Freebayes, VarDict, VarScan
@@ -18,13 +18,23 @@
 #' 
 #' @param nthreads Default as "-1", where all available cores will be used for RandomForest prediction. 
 #' Specify any integer from 1 to x, depending on your resources available.
+#' 
+#' @param snv.cutoff Default SNV model cutoff, unless a number between 0 to 1 is stated.
+#' @param indel.cutoff Default indel model cutoff, unless a number between 0 to 1 is stated.
 #' @examples
 #' smurf("/path/to/directory..","combined")
 #' smurf("/path/to/directory..","cdsannotation")
 #' 
 #' @export
-smurf = function(directory, model, nthreads = -1){
+smurf = function(directory=NULL, model, nthreads = -1, snv.cutoff = 'default', indel.cutoff = 'default'){
+  #SMuRF version announcement
+  # print("Running SMuRFv1.5 (11th Oct 2018)...")
+  print("SMuRFv1.5 (11th June 2019)")
+
+  if(!is.null(directory)) {
   directory <-paste(directory,"/", sep="")
+  
+  
   if(dir.exists(directory)==TRUE){
     
 
@@ -58,8 +68,6 @@ smurf = function(directory, model, nthreads = -1){
       #print("h2o version 3.10.3.3 found")
     }
     
-    
-  
     #load packages
     suppressWarnings(suppressMessages(library(VariantAnnotation)))
     #suppressMessages(library(GenomicRanges))
@@ -104,8 +112,8 @@ smurf = function(directory, model, nthreads = -1){
           
           if (model == "combined") {
             parsevcf<-parsevcf_allfeaturesall(x)
-            snvpredict<-snvRFpredict(parsevcf)
-            indelpredict<-indelRFpredict(parsevcf)
+            snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
+            indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
                       end.time <- Sys.time()
                       time.taken <- end.time - start.time
                       print(time.taken)
@@ -117,8 +125,8 @@ smurf = function(directory, model, nthreads = -1){
             
             parsevcf<-parsevcf_allfeaturesall(x)
             
-            snvpredict<-snvRFpredict(parsevcf)
-            indelpredict<-indelRFpredict(parsevcf)
+            snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
+            indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
             
             if (length(snvpredict)>1) {
               print("SNV annotation")
@@ -145,7 +153,7 @@ smurf = function(directory, model, nthreads = -1){
           }
           
 
-          else if (model == "featureselectionall") {
+          else if (model == "featureselectionall") { #debug mode, only parse feature matrix
             parsevcf<-parsevcf_allfeaturesall(x)
             end.time <- Sys.time()
             time.taken <- end.time - start.time
@@ -181,6 +189,14 @@ smurf = function(directory, model, nthreads = -1){
     write("Error: Entered directory doesn't exists (or) misspelled (or) Directory section skipped", stderr())
     
   }
+  
+  }
+  else{
+    # print("Enter path to an existing directory containing VCF files to run SMuRF")
+    write("Function: smurf(directory, model, nthreads=-1, snv.cutoff='default', indel.cutoff='default')", stderr())
+    
+  }
+  
   
   #rm(first_time, envir = globalenv())
   

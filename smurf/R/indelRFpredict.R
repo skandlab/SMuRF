@@ -1,6 +1,6 @@
 #' indelRF-Predict
 #'
-#' Indel prediction model
+#' Indel prediction model SMuRFv1.5
 #' Step 2 Predict
 #'
 #'  
@@ -8,7 +8,7 @@
 #' 
 #' 
 #' @export
-indelRFpredict = function(parsevcf){
+indelRFpredict = function(parsevcf, indel.cutoff){
   
   final <- parsevcf[[2]]
   
@@ -21,10 +21,17 @@ indelRFpredict = function(parsevcf){
   df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
-  smurfmodeldir <- paste0(smurfdir, "/data/indel_nofeatunion_model_cv1train1")
+  # smurfmodeldir <- paste0(smurfdir, "/data/indel_nofeatunion_model_cv1train1") #SMuRFv1.4
+  smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-nofeat-relcov-v108") #SMuRFv1.5
   indel_model <- h2o.loadModel(path = smurfmodeldir)
   
   #indel_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/indel-model-combined-grid")
+  
+  if (indel.cutoff == 'default') {
+    cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1")
+  } else if (indel.cutoff != 'default') {
+    cutoff = indel.cutoff
+  }
   
   predicted <- h2o.predict(object = indel_model, newdata = df)
   p <- as.data.frame(predicted)
@@ -36,7 +43,8 @@ indelRFpredict = function(parsevcf){
   # indel_parse[which(indel_parse$TRUE.>=0.005),"predict_adjusted"] <- TRUE
   # results<- indel_parse[which(indel_parse$TRUE.>=0.005),] 
   
-  results<- indel_parse[which(indel_parse$predict==TRUE),]
+  # results<- indel_parse[which(indel_parse$predict==TRUE),]
+  results<- indel_parse[which(indel_parse$TRUE.>cutoff),]
   
   # indel_parse <- unique(indel_parse[, !names(indel_parse) %in% c("m2_refDepth", "m2_altDepth", "m2_AF",
   #                                                          "f_refDepth", "f_altDepth",
