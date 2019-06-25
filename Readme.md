@@ -77,15 +77,8 @@ install_github("skandlab/SMuRF", subdir="smurf")
 install.packages("my/current/directory/smurf", repos = NULL, type = "source")
 ```
 
-Download the test files into your designated directory: https://github.com/skandlab/SMuRF/tree/master/test 
-```r
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/varscan.vcf.gz','varscan.vcf.gz')
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/vardict.vcf.gz','vardict.vcf.gz')
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/mutect2.vcf.gz','mutect2.vcf.gz')
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/freebayes.vcf.gz','freebayes.vcf.gz')
-```
-
-Before we start using the package's functions, set your designated file directory containing your sample/test files
+Before we start using the package's functions, set your designated file directory containing your sample files.
+Here, we will use the test files as an example.
 ```r
 mydir <- paste0(find.package("smurf"), "/data") #test data dir
 setwd(mydir)
