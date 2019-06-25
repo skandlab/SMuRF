@@ -2,9 +2,10 @@
 % Please edit documentation in R/smurf.R
 \name{smurf}
 \alias{smurf}
-\title{SMuRF v1.4}
+\title{SMuRF v1.5}
 \usage{
-smurf(directory, model, nthreads = -1)
+smurf(directory = NULL, model, nthreads = -1, snv.cutoff = "default",
+  indel.cutoff = "default")
 }
 \arguments{
 \item{directory}{Choose directory where the files Variant Caller Format(VCF) files are located.}
@@ -17,6 +18,10 @@ Choose "cdsannotation" to run "combined" + add annotations to coding regions (fr
 
 \item{nthreads}{Default as "-1", where all available cores will be used for RandomForest prediction. 
 Specify any integer from 1 to x, depending on your resources available.}
+
+\item{snv.cutoff}{Default SNV model cutoff, unless a number between 0 to 1 is stated.}
+
+\item{indel.cutoff}{Default indel model cutoff, unless a number between 0 to 1 is stated.}
 }
 \description{
 Somatic mutation consensus calling based on four callers:

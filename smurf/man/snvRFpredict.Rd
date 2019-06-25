@@ -4,10 +4,10 @@
 \alias{snvRFpredict}
 \title{snvRF-Predict}
 \usage{
-snvRFpredict(parsevcf)
+snvRFpredict(parsevcf, snv.cutoff)
 }
 \description{
-snv prediction model
+snv prediction model SMuRFv1.5
 Step 2 Predict
 }
 \examples{

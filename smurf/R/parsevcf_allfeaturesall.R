@@ -25,7 +25,7 @@ parsevcf_allfeaturesall = function(x){
   start.time=Sys.time()
 
   #ScanVCF with required parameters
-  svp_m<-ScanVcfParam(info=c("ClippingRankSum","FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=scanVcfHeader(x[[1]])@samples, geno=c("AD", "AF", "DP"))
+  svp_m<-ScanVcfParam(info=c("FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=scanVcfHeader(x[[1]])@samples, geno=c("AD", "AF", "DP"))
   svp_f<-ScanVcfParam(info=c("GTI","LEN","MQM","MQMR","ODDS"),samples=scanVcfHeader(x[[2]])@samples, geno=c("RO","DP"))
   svp_vs<-ScanVcfParam(info=c("SSC","GPV","SS","SPV"), samples=scanVcfHeader(x[[3]])@samples, geno=c("AD","FREQ", "DP"))
   svp_vd<-ScanVcfParam(info=c("SSF","MSI","SOR"), samples=scanVcfHeader(x[[4]])@samples, geno=c("AD", "AF", "DP"))
@@ -129,7 +129,7 @@ parsevcf_allfeaturesall = function(x){
     gr_m2@elementMetadata@listData$MQRankSum <- NA
     gr_m2@elementMetadata@listData$NLOD <- NA
     gr_m2@elementMetadata@listData$TLOD <- NA
-    gr_m2@elementMetadata@listData$ClippingRankSum <- NA
+    # gr_m2@elementMetadata@listData$ClippingRankSum <- NA
     gr_m2@elementMetadata@listData$ReadPosRankSum <- NA
     gr_m2@elementMetadata@listData$FS <- NA
     gr_m2@elementMetadata@listData$AF <- NA
@@ -367,35 +367,38 @@ parsevcf_allfeaturesall = function(x){
   # sample name
   meta_data$Sample_Name <- substrLeft(sampleid.t, 2)
   
-  #insert missing feature
-  meta_data$BaseQRankSum_Mutect2 <- NA
+  #insert missing feature(s)
+  # meta_data$BaseQRankSum_Mutect2 <- NA
+  meta_data$relcov <- (meta_data$T_refDepth+meta_data$T_altDepth+meta_data$N_refDepth+meta_data$N_altDepth)/median(meta_data$T_refDepth+meta_data$T_altDepth+meta_data$N_refDepth+meta_data$N_altDepth)
   
   #numerical
-  meta_data[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
+  meta_data[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
                "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
-               "SSF_Vardict","MSI_Vardict","SOR_Vardict")] <- lapply (meta_data[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
+               "SSF_Vardict","MSI_Vardict","SOR_Vardict",
+               "relcov")] <- lapply (meta_data[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
                                                                                    "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                                                                                    "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
-                                                                                   "SSF_Vardict","MSI_Vardict","SOR_Vardict")], as.numeric)
+                                                                                   "SSF_Vardict","MSI_Vardict","SOR_Vardict",
+                                                  "relcov")], as.numeric)
   
   #keep important columns and rename columns
   parse_snv <- meta_data[,c("seqnames","start","end","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
                             "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                            "MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
+                            "MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
                             "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                             "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
                             "SSF_Vardict","MSI_Vardict","SOR_Vardict",
                             "AF",
-                            "N_refDepth","N_altDepth","T_refDepth","T_altDepth")]
+                            "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")]
   colnames(parse_snv) <- c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
                            "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                           "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_BaseQRankSum","m2_ClippingRankSum","m2_FS","m2_ReadPosRankSum",
+                           "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_FS","m2_ReadPosRankSum",
                            "f_MQM","f_MQMR","f_GTI","f_LEN","f_ODDS",
                            "vs_SSC","vs_SPV","vs_GPV","vs_SS",
                            "vd_SSF","vd_MSI","vd_SOR",
                            "Alt_Allele_Freq",
-                           "N_refDepth","N_altDepth","T_refDepth","T_altDepth")
+                           "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")
   
   
   ### continue from here to format the output
@@ -447,7 +450,7 @@ parsevcf_allfeaturesall = function(x){
     gr_m2@elementMetadata@listData$MQRankSum <- NA
     gr_m2@elementMetadata@listData$NLOD <- NA
     gr_m2@elementMetadata@listData$TLOD <- NA
-    gr_m2@elementMetadata@listData$ClippingRankSum <- NA
+    # gr_m2@elementMetadata@listData$ClippingRankSum <- NA
     gr_m2@elementMetadata@listData$ReadPosRankSum <- NA
     gr_m2@elementMetadata@listData$FS <- NA
     gr_m2@elementMetadata@listData$AF <- NA
@@ -690,33 +693,36 @@ parsevcf_allfeaturesall = function(x){
   meta_indel$Sample_Name <- substrLeft(sampleid.t, 2)
   
   #insert missing feature
-  meta_indel$BaseQRankSum_Mutect2 <- NA
+  # meta_indel$BaseQRankSum_Mutect2 <- NA
+  meta_indel$relcov <- (meta_indel$T_refDepth+meta_indel$T_altDepth+meta_indel$N_refDepth+meta_indel$N_altDepth)/median(meta_indel$T_refDepth+meta_indel$T_altDepth+meta_indel$N_refDepth+meta_indel$N_altDepth)
   
   #numerical
-  meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
+  meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
                 "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                 "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
-                "SSF_Vardict","MSI_Vardict","SOR_Vardict")] <- lapply (meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
+                "SSF_Vardict","MSI_Vardict","SOR_Vardict",
+                "relcov")] <- lapply (meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
                                                                                      "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                                                                                      "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
-                                                                                     "SSF_Vardict","MSI_Vardict","SOR_Vardict")], as.numeric)
+                                                                                     "SSF_Vardict","MSI_Vardict","SOR_Vardict",
+                                                    "relcov")], as.numeric)
   
   parse_indel <- meta_indel[,c("seqnames","start","end","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
                                "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                               "MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
+                               "MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2",
                                "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                                "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
                                "SSF_Vardict","MSI_Vardict","SOR_Vardict",
                                "AF",
-                               "N_refDepth","N_altDepth","T_refDepth","T_altDepth")]
+                               "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")]
   colnames(parse_indel) <- c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
                              "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-                             "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_BaseQRankSum","m2_ClippingRankSum","m2_FS","m2_ReadPosRankSum",
+                             "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_FS","m2_ReadPosRankSum",
                              "f_MQM","f_MQMR","f_GTI","f_LEN","f_ODDS",
                              "vs_SSC","vs_SPV","vs_GPV","vs_SS",
                              "vd_SSF","vd_MSI","vd_SOR",
                              "Alt_Allele_Freq",
-                             "N_refDepth","N_altDepth","T_refDepth","T_altDepth")
+                             "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")
   
   
   return(list(snv=parse_snv, indel=parse_indel))

@@ -2,7 +2,7 @@
 % Please edit documentation in R/CDSannotation_indel.R
 \name{CDSannotation_indel}
 \alias{CDSannotation_indel}
-\title{snvRF-Annotations}
+\title{indelRF-Annotations}
 \usage{
 CDSannotation_indel(x, predicted)
 }

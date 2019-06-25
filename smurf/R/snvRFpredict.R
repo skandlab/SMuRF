@@ -1,6 +1,6 @@
 #' snvRF-Predict
 #'
-#' snv prediction model
+#' snv prediction model SMuRFv1.5
 #' Step 2 Predict
 #'
 #'  
@@ -8,7 +8,7 @@
 #' 
 #' 
 #' @export
-snvRFpredict = function(parsevcf){
+snvRFpredict = function(parsevcf, snv.cutoff){
   
   final <- parsevcf[[1]]
   #final <- parse_snv
@@ -21,10 +21,16 @@ snvRFpredict = function(parsevcf){
   df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
-  smurfmodeldir <- paste0(smurfdir, "/data/snv_nofeatunion_model_cv1train1")
+  # smurfmodeldir <- paste0(smurfdir, "/data/snv_nofeatunion_model_cv1train1") #SMuRFv1.4
+  smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-nofeat-relcov-v108") #SMuRFv1.5
   snv_model <- h2o.loadModel(path = smurfmodeldir)
   
-  #h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.01860056
+  if (snv.cutoff == 'default') {
+    cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
+  } else if (snv.cutoff != 'default') {
+    cutoff = snv.cutoff
+  }
+  #h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.4620076
   #snv_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/snv-model-combined-grid")
   
   predicted <- h2o.predict(object = snv_model, newdata = df)
@@ -37,7 +43,8 @@ snvRFpredict = function(parsevcf){
   # snv_parse[which(snv_parse$TRUE.>=0.005),"predict_adjusted"] <- TRUE
   # results<- snv_parse[which(snv_parse$TRUE.>=0.005),] 
   
-  results<- snv_parse[which(snv_parse$predict==TRUE),]
+  # results<- snv_parse[which(snv_parse$predict==TRUE),]
+  results<- snv_parse[which(snv_parse$TRUE.>cutoff),]
   
   # snv_parse <- unique(snv_parse[, !names(snv_parse) %in% c("m2_refDepth", "m2_altDepth", "m2_AF",
   #                                                  "f_refDepth", "f_altDepth",
