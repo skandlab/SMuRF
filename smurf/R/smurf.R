@@ -49,21 +49,34 @@ smurf = function(directory=NULL, model, nthreads = -1, snv.cutoff = 'default', i
       biocLite("VariantAnnotation")
     }
     
+    if (! ("methods" %in% rownames(installed.packages()))) { install.packages("methods") }
+    if (! ("statmod" %in% rownames(installed.packages()))) { install.packages("statmod") }
+    if (! ("stats" %in% rownames(installed.packages()))) { install.packages("stats") }
+    if (! ("graphics" %in% rownames(installed.packages()))) { install.packages("graphics") }
+    if (! ("RCurl" %in% rownames(installed.packages()))) { install.packages("RCurl") }
+    if (! ("jsonlite" %in% rownames(installed.packages()))) { install.packages("jsonlite") }
+    if (! ("tools" %in% rownames(installed.packages()))) { install.packages("tools") }
+    if (! ("utils" %in% rownames(installed.packages()))) { install.packages("utils") }
+    
     #check for h2o version 3.10.3.3
     if("h2o" %in% rownames(installed.packages()) == FALSE){
         print("h2o version 3.10.3.3 not found. Installing required h2o package.")
-        install.packages("versions")
-        library(versions)
-        install.versions("h2o", versions = "3.10.3.3")
-        print("Running h2o version 3.10.3.3")
+        install.packages(paste0(find.package("smurf"), "/data/h2o_3.10.3.3.tar.gz"), type="source", repos=NULL)
+        # install.packages("versions")
+        # library(versions)
+        # install.versions("h2o", versions = "3.10.3.3")
+        print("h2o version 3.10.3.3 installed.")
   
     } else {
       if((packageVersion("h2o") == '3.10.3.3') == FALSE){
-        print("h2o version 3.10.3.3 not found. Installing required h2o package.")
-        install.packages("versions")
-        library(versions)
-        install.versions("h2o", versions = "3.10.3.3")
-        print("h2o version 3.10.3.3")
+        print("Incorrect h2o version found. Installing h2o version 3.10.3.3.")
+        if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
+        if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
+        install.packages(paste0(find.package("smurf"), "/data/h2o_3.10.3.3.tar.gz"), type="source", repos=NULL)
+        # install.packages("versions")
+        # library(versions)
+        # install.versions("h2o", versions = "3.10.3.3")
+        print("h2o version 3.10.3.3 installed.")
       }  
       #print("h2o version 3.10.3.3 found")
     }
