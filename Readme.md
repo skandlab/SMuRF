@@ -1,9 +1,3 @@
----
-output:
-  html_document: default
-  pdf_document: default
----
-
 ### SMuRF vignette
 by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
