@@ -1,71 +1,80 @@
 #' indelRF-Predict
 #'
-#' Indel prediction model SMuRFv1.5
+#' Indel prediction model SMuRFv1.6 (R-3.3.1, R-3.5.1)
 #' Step 2 Predict
 #'
-#'  
+#'@param parsevcf List object containing 1.snv-parse and 2.indel-parse matrices.
+#'@param indel.cutoff Threshold for true predictions by SMuRF
+#'@param fixed.indel.cutoff debug for when threshold is zero. 
+#'
 #' @examples
 #' 
 #' 
 #' @export
-indelRFpredict = function(parsevcf, indel.cutoff){
+indelRFpredict = function(parsevcf, indel.cutoff, fixed.indel.cutoff=F){
   
   final <- parsevcf[[2]]
   
   print("Predicting INDELs")
   
-  
-  # df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-  #                "m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI","vd_SOR")]
-  
   df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
-  # smurfmodeldir <- paste0(smurfdir, "/data/indel_nofeatunion_model_cv1train1") #SMuRFv1.4
+  
+  if (getRversion()<3.5) {
+    
+    #Define cutoffs
+      if (indel.cutoff == 'default') {
+        # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1")
+        cutoff = 0.352 #High sensitivity Recall >0.80
+      } else if (indel.cutoff != 'default') {
+        cutoff = indel.cutoff
+      } else if (indel.cutoff == 0) {
+        cutoff = 0
+        fixed.indel.cutoff = T
+      } 
+
   smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-nofeat-relcov-v108") #SMuRFv1.5
   indel_model <- h2o.loadModel(path = smurfmodeldir)
   
-  #indel_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/indel-model-combined-grid")
-  
-  if (indel.cutoff == 'default') {
-    cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1")
-  } else if (indel.cutoff != 'default') {
-    cutoff = indel.cutoff
+  } else { #(R>=3.5)
+    
+    #Define cutoffs
+      if (indel.cutoff == 'default') {
+        # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1")
+        cutoff = 0.348 #High sensitivity Recall >0.80
+      } else if (indel.cutoff != 'default') {
+        cutoff = indel.cutoff
+      } else if (indel.cutoff == 0) {
+        cutoff = 0
+        fixed.indel.cutoff = T
+      } 
+
+    smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-model-v6") #SMuRFv1.6
+    indel_model <- h2o.loadModel(path = smurfmodeldir)
+    
   }
+  
   
   predicted <- h2o.predict(object = indel_model, newdata = df)
   p <- as.data.frame(predicted)
 
   indel_parse <- cbind(final, p)
   
-  #set our threshold for SMuRF passing score based on 0.9 Recall
-  # indel_parse$predict_adjusted <- FALSE
-  # indel_parse[which(indel_parse$TRUE.>=0.005),"predict_adjusted"] <- TRUE
-  # results<- indel_parse[which(indel_parse$TRUE.>=0.005),] 
-  
-  # results<- indel_parse[which(indel_parse$predict==TRUE),]
   results<- indel_parse[which(indel_parse$TRUE.>cutoff),]
   
-  # indel_parse <- unique(indel_parse[, !names(indel_parse) %in% c("m2_refDepth", "m2_altDepth", "m2_AF",
-  #                                                          "f_refDepth", "f_altDepth",
-  #                                                          "vs_totalDepth", "vs_AF",
-  #                                                          "vd_refDepth", "vd_altDepth", "vd_AF",
-  #                                                          "REF_Mutect2", "REF_Freebayes", "REF_Varscan", "REF_Vardict",
-  #                                                          "ALT_Mutect2", "ALT_Freebayes", "ALT_Varscan", "ALT_Vardict")])
+  if (fixed.indel.cutoff == T) {
+    results<- indel_parse
+  }
   
-  
+
   if (dim(results)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 
     
     
     table <- results
     
     names(table)[names(table) == 'TRUE.'] <- 'SMuRF_score'
-    #names(table)[names(table) == 'X.CHROM'] <- 'Chr'
-    
-    # indel_predict <- unique(table[, !names(table) %in% c("m2_MQ","m2_MQRankSum","m2_NLOD","m2_TLOD","m2_BaseQRankSum","m2_ReadPosRankSum","m2_FS",
-    #                                                      "f_LEN","vs_SSC","vs_SPV","vd_SSF","vd_MSI",
-    #                                                      "predict","FALSE.")]) #remove unnecessary columns
-    
+
     indel_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
                               "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","Sample_Name",
                               "Alt_Allele_Freq",
@@ -97,24 +106,17 @@ indelRFpredict = function(parsevcf, indel.cutoff){
    
    
    stats<-as.matrix(stats)
-   #predict<-as.matrix(indel_predict)
    parse<-as.matrix(indel_parse)
-   #raw<-as.matrix(final)
-   # z<- list(stats, indel_predict, parse)
-   # names(z)<- c("stats_indel", "predicted_indel", "parse_indel")
-   
+
    
    return(list(stats_indel=stats, predicted_indel=indel_predict, parse_indel=parse))
    
    } else{
-    print("Warning: There are no predicted indel calls in this sample.")
+    print("Warning: There are no predicted indel calls in this sample. Re-examine myresults$smurf_snv$parse_snv and set a lower indel.cutoff.")
     
      parse<-as.matrix(indel_parse)
-     #raw<-as.matrix(final)
-     # z<- list(parse)
-     # names(z)<- c("parse_indel")
+     
      return(list(parse_indel=parse))
-     #return()
    } 
   
   

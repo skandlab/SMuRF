@@ -4,10 +4,17 @@
 \alias{snvRFpredict}
 \title{snvRF-Predict}
 \usage{
-snvRFpredict(parsevcf, snv.cutoff)
+snvRFpredict(parsevcf, snv.cutoff, fixed.snv.cutoff = F)
+}
+\arguments{
+\item{parsevcf}{List object containing 1.snv-parse and 2.indel-parse matrices.}
+
+\item{snv.cutoff}{Threshold for true predictions by SMuRF}
+
+\item{fixed.snv.cutoff}{debug for when threshold is zero.}
 }
 \description{
-snv prediction model SMuRFv1.5
+snv prediction model SMuRFv1.6 (R-3.3.1, R-3.5.1)
 Step 2 Predict
 }
 \examples{

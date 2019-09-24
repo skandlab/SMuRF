@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
@@ -69,9 +70,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type="text/css">
 .main-container {
@@ -85,7 +84,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -96,22 +94,80 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
 
-<div class="container-fluid main-container">
-
 <!-- tabsets -->
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-</script>
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
 
 <!-- code folding -->
 
 
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
 
 
 
@@ -127,42 +183,67 @@ $(document).ready(function () {
 <div id="smurf-vignette" class="section level3">
 <h3>SMuRF vignette</h3>
 <p>by <a href="https://www.researchgate.net/profile/Weitai_Huang">Huang Weitai</a></p>
-<p>25th Jun 2019</p>
+<p>24th Sept 2019</p>
 <div id="introduction" class="section level4">
 <h4><br />Introduction</h4>
-<p>SMuRF is an R package that contains functions for the prediction of a consensus set of somatic mutation calls based on a Random Forest machine learning approach. SMuRF generates a set of point mutations and insertions/deletions (indels) trained based on the latest community-curated tumor whole genome sequencing data. Our fast and accurate can be applied to both whole genome and exome sequencing data across different cancer types.</p>
-<p>For more information see our Bioinformatics paper doi: <a href="https://doi.org/10.1093/bioinformatics/btz018" class="uri">https://doi.org/10.1093/bioinformatics/btz018</a></p>
+<p><em>SMuRF</em> R package predicts a consensus set of somatic mutation calls using RandomForest machine learning. SMuRF generates a set of point mutations and insertions/deletions (indels) trained on the latest community-curated tumor whole genome sequencing data (Alioto <em>et. al.</em>, 2015, Nat. Comms.). Our method is fast and accurate and analyses both whole-genome and whole-exome sequencing data from different cancer types.</p>
+<p>For more information see our Bioinformatics paper: <a href="https://doi.org/10.1093/bioinformatics/btz018" class="uri">https://doi.org/10.1093/bioinformatics/btz018</a></p>
+<p><strong>Citation</strong> </br>Huang, W., et al., SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics, 2019: p. 3157-3159</p>
 </div>
 <div id="table-of-contents" class="section level4">
 <h4><br />Table of contents</h4>
-<p><a href="#input-bcbio">1. Input from bcbio-nextgen pipeline</a> </br><a href="#input-alt">1a. Input directly from VCF Callers (optional)</a> </br><a href="#test">2. Test Dataset</a> </br><a href="#requirements">3. Requirements for package</a> </br><a href="#installation">4. Installation instructions</a> </br><a href="#output">5. Output file description/legend</a> </br><a href="#annotation">6. Extracting Gene Annotations for somatic mutations in the coding transcripts</a> </br><a href="#cut-off">7. Adjusting SMuRF score cut-offs</a> </br><a href="#multiple-samples">8. Running on multiple samples</a></p>
+<p><a href="#input-bcbio">Input from bcbio-nextgen pipeline</a> </br><a href="#input-alt">Input directly from VCF Callers (optional)</a> </br><a href="#test">Test Dataset</a> </br><a href="#requirements">Requirements</a> </br><a href="#installation">Installation</a> </br><a href="#functions">Functions</a> </br>-Get SNV and indel predictions </br>-Annotate genes </br>-Subset region-of-interest </br>-Change prediction cutoffs </br><a href="#output">Output format</a> </br><a href="#multiple-samples">Running on multiple samples</a></p>
+<hr />
 <p><a name="input-bcbio"></a></p>
 </div>
 <div id="input-from-bcbio-nextgen-pipeline" class="section level4">
-<h4><br />1. Input from bcbio-nextgen pipeline</h4>
-<p>Before you run SMuRF, you will need output data from the <a href="http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling">bcbio-nextgen pipeline</a> containing the VCF output for algorithms MuTect2, FreeBayes, VarDict and VarScan. Note that your vcf.gz files need to be tab-indexed (.tbi files required) for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience.</p>
+<h4><br />Input from bcbio-nextgen pipeline</h4>
+<p>Before running <em>SMuRF</em>, you require output data from the <a href="http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling">bcbio-nextgen pipeline</a> that generates the VCF output for the variant callers: MuTect2, FreeBayes, VarDict and VarScan. Note that your vcf.gz files need to be tab-indexed (.tbi files required) for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience.</p>
+<p><em>SMuRF</em> requires the VCF output from each caller (.vcf.gz) to be placed in the same directory and files tagged with the caller (eg. sample1-mutect.vcf.gz, sample1-freebayes.vcf.gz, sample1-vardict.vcf.gz, sample1-varscan.vcf.gz)</p>
 <p><a name="input-alt"></a></p>
 </div>
-<div id="a.-input-directly-from-vcf-callers-optional" class="section level4">
-<h4><br />1a. Input directly from VCF Callers (optional)</h4>
-<p><strong>For Users not running bcbio-nextgen pipeline:</strong> Alternatively, you may run these callers individually. The VCF outputs from each caller (.vcf.gz) is required for SMuRF to run. Output files should be placed in the same directory and named accordingly (eg. sample1-mutect.vcf.gz, sample1-freebayes.vcf.gz, sample1-vardict.vcf.gz, sample1-varscan.vcf.gz)</p>
+<div id="input-directly-from-vcf-callers-optional" class="section level4">
+<h4><br />Input directly from VCF Callers (optional)</h4>
+<p><strong>For Users not running bcbio-nextgen pipeline:</strong> Alternatively, install and execute the individual callers.</p>
 <p>Refer to the installation and instructions for each caller: <br />- <a href="https://github.com/AstraZeneca-NGS/VarDict">VarDict</a> <br />- <a href="https://github.com/dkoboldt/varscan">VarScan</a> <br />- <a href="https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php">MuTect2</a> <br />- <a href="https://github.com/ekg/freebayes">FreeBayes</a></p>
 <p><a name="test"></a></p>
 </div>
 <div id="test-dataset" class="section level4">
-<h4><br />2. Test Dataset</h4>
-<p>In this vignette, we will be using a <a href="https://github.com/skandlab/SMuRF/tree/master/test">partial output dataset</a> derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. You may download the test set for testing SMuRF’s functions.</p>
+<h4><br />Test Dataset</h4>
+<p>In this vignette, we utilise a <a href="https://github.com/skandlab/SMuRF/tree/master/test">partial output dataset</a> derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. This test dataset is provided in the SMuRF package.</p>
 <p><a name="requirements"></a></p>
 </div>
-<div id="requirements-for-package" class="section level4">
-<h4><br />3. Requirements for package</h4>
-<p>Dependencies: R &gt;=3.3.1 Packages: data.table VariantAnnotation h2o 3.10.3.3 (must be this version) <em>These packages will be installed the first time you run SMuRF.</em></p>
+<div id="requirements" class="section level4">
+<h4><br />Requirements</h4>
+<table>
+<thead>
+<tr class="header">
+<th align="center">R 3.3 &amp; 3.4</th>
+<th align="center">R &gt;=3.5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Java 7 or 8</td>
+<td align="center">Java 7 or higher (tested on Java 11)</td>
+</tr>
+<tr class="even">
+<td align="center">h2o-3.10.3.3 (included in package)</td>
+<td align="center">h2o-3.26.0.2 (requires download*)</td>
+</tr>
+<tr class="odd">
+<td align="center">bioconductor::VariantAnnotation</td>
+<td align="center">BiocManager::VariantAnnotation</td>
+</tr>
+</tbody>
+</table>
+<p><em>If h2o-3.26.0.2 takes a long time to install, try manually installing from their <a href="https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html">AWS page.</a></em></p>
 <p><a name="installation"></a></p>
 </div>
-<div id="installation-instructions" class="section level4">
-<h4><br />4. Installation instructions</h4>
+<div id="installation" class="section level4">
+<h4><br />Installation</h4>
 <p><br />1. The latest version of the package is updated on Github <a href="https://github.com/skandlab/SMuRF" class="uri">https://github.com/skandlab/SMuRF</a></p>
-<p><br />2. You can install the current SMuRF directly from Github via the following R command:</p>
+<p><br />2. You can install the current SMuRF directly from Github via the following R commands:</p>
 <pre class="r"><code>#devtools is required
 install.packages(&quot;devtools&quot;)
 library(devtools)
@@ -170,92 +251,147 @@ install_github(&quot;skandlab/SMuRF&quot;, subdir=&quot;smurf&quot;)</code></pre
 <p>(<em>Alternative option</em>) SMuRF installation via downloading of the package from Github:</p>
 <pre class="r"><code>#Clone or download package from Github https://github.com/skandlab/SMuRF/tree/master/smurf and save to your local directory
 install.packages(&quot;my/current/directory/smurf&quot;, repos = NULL, type = &quot;source&quot;)</code></pre>
-<p>Download the test files into your designated directory: <a href="https://github.com/skandlab/SMuRF/tree/master/test" class="uri">https://github.com/skandlab/SMuRF/tree/master/test</a></p>
-<pre class="r"><code>download.file('https://github.com/skandlab/SMuRF/raw/master/test/varscan.vcf.gz','varscan.vcf.gz')
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/vardict.vcf.gz','vardict.vcf.gz')
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/mutect2.vcf.gz','mutect2.vcf.gz')
-download.file('https://github.com/skandlab/SMuRF/raw/master/test/freebayes.vcf.gz','freebayes.vcf.gz')</code></pre>
-<p>Before we start using the package’s functions, set your designated file directory containing your sample/test files</p>
-<pre class="r"><code>mydir &lt;- paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;) #test data dir
-setwd(mydir)
-
-# alternative option
-# mydir &lt;- setwd(&quot;my/local/directory/for/test/files&quot;)
-</code></pre>
-<p><em>SMuRF</em> will predict both single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels). In this example we will be using the “combined” import functionality.</p>
+<p><em>SMuRF</em> concurrently predicts single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels) and saves time by parsing the VCF files once.</p>
 <pre class="r"><code>library(&quot;smurf&quot;) #load SMuRF package
 
-smurf()
-# &quot;SMuRFv1.5 (11th June 2019)&quot;
+smurf() #check version and parameters
 
-myresults &lt;- smurf(mydir, &quot;combined&quot;) #save output into 'myresults' variable
-
-#this will run SMuRF and generate predictions based on input files in 'mydir'
+# &quot;SMuRFv1.6 (9th Sept 2019)&quot;
+# smurf(directory=NULL, model=NULL, nthreads = -1,
+                 save.files=F,  output.dir=NULL, parse.dir=NULL, roi.dir=NULL,
+                 snv.cutoff = 'default', indel.cutoff = 'default',
+                 t.label='-T', build='hg19', change.build=F,
+                 check.packages=T)
+myresults = smurf(mydir, &quot;combined&quot;) #save output into 'myresults' variable
 </code></pre>
-<p><em>The first time you run SMuRF, required packages that are missing will be installed.</em></p>
-<p>Output files saved includes: 1. Variant statistics (<em>stats</em>) 2. Predicted reads (<em>predicted</em>) 3. Parsed-raw file (<em>parse</em>) 4. Predicted reads with annotations (<em>annotated</em>)* #for smurf’s “annotation” function only 5. Time taken (<em>time</em>)</p>
-<pre class="r"><code># myresults &lt;- smurf(mydir, &quot;combined&quot;) 
+<p><a name="functions"></a></p>
+</div>
+<div id="functions" class="section level4">
+<h4><br />Functions</h4>
+<table style="width:90%;">
+<colgroup>
+<col width="9%"></col>
+<col width="80%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">model</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">combined</td>
+<td align="left">SNVs + indels</td>
+</tr>
+<tr class="even">
+<td align="left">cdsannotation</td>
+<td align="left">SNVs + indels + Gene annotations</td>
+</tr>
+<tr class="odd">
+<td align="left">newcutoff.cdsannotation</td>
+<td align="left">Re-adjusts cutoffs for (SNVs + indels) + Gene annotations</td>
+</tr>
+<tr class="even">
+<td align="left">ROI</td>
+<td align="left">Analyse a region based on a set of genomic coordinates (.BED or .txt)</td>
+</tr>
+<tr class="odd">
+<td align="left">featureselectionall</td>
+<td align="left"><em>Debug mode</em>: retrieve parse file without <em>SMuRF</em> predictions</td>
+</tr>
+</tbody>
+</table>
+<p><em>Missing packages will be installed the first time you run <em>SMuRF</em>.</em></p>
+<p></br><strong><em>Debug options</em></strong></p>
+<table style="width:53%;">
+<colgroup>
+<col width="6%"></col>
+<col width="45%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th>options</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>build=‘hg19’</td>
+<td>Specifies genomic build=‘hg38’ for correct gene annotations</td>
+</tr>
+<tr class="even">
+<td>change.build=F</td>
+<td>Choose the conversion from ‘hg19.to.hg38’ or ‘hg38.to.hg19’ for your snv- and indel- annotated output</td>
+</tr>
+<tr class="odd">
+<td>check.packages=T</td>
+<td>Developer mode</td>
+</tr>
+</tbody>
+</table>
+<p>For more information on the parameters see R documentation:</p>
+<pre class="r"><code>help(smurf)</code></pre>
+<p></br> Examples:</p>
+<pre class="r"><code>library(&quot;smurf&quot;) #load SMuRF package
 
-myresults$smurf_indel$stats_indel
+myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;), #test dataset
+                  model=&quot;combined&quot;) #model
+                  
+myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  model=&quot;cdsannotation&quot;,
+                  nthreads=1, #no. of cores
+                  save.files = T, #save output as .txt files
+                  output.dir = 'C:/Users/admin/myresults') #output dir</code></pre>
+<p></br><em>SMuRF</em> is fine-tuned to achieve higher sensitivity. Re-adjust the stringency of the prediction with a specific cut-off value. </br>Use parameters ‘snv.cutoff’ or ‘indel.cutoff’ to adjust the thresholds. </br>To re-adjust the cut-off value of an <strong>existing</strong> SMuRF output, simply provide the path to the snv-parse and indel-parse files for immediate re-processing.</p>
+<pre class="r"><code>#start with a specific cutoff
+myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  model=&quot;combined&quot;, #change cutoffs
+                  snv.cutoff=0.2, indel.cutoff=0.1, #specify new cutoffs
+                  save.files = T, 
+                  output.dir = 'C:/Users/admin/myresults') 
 
-#             Passed_Calls
-# Mutect2             1546
-# FreeBayes            339
-# VarDict              515
-# VarScan             2228
-# Atleast1            4343
-# Atleast2             244
-# Atleast3              37
-# All4                   4
-# SMuRF_INDEL            4
+#modify cutoff from existing SMuRF parse files
+myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  model=&quot;newcutoff.cdsannotation&quot;, #change cutoffs only
+                  snv.cutoff=0.2, indel.cutoff=0.1,
+                  parse.dir = 'C:/Users/admin/myresults', #SMuRF output path to existing parse.txt files
+                  save.files = T, 
+                  output.dir = 'C:/Users/admin/myresults2') 
 
-head(myresults$smurf_indel$predicted_indel)
+#Plot histogram
+hist(as.numeric(myresults$smurf_indel$predicted_indel[,'SMuRF_score']), main = 'Re-adjusted predicted indels', xlab = 'SMuRF_score', col = 'grey50')</code></pre>
+<p></br>SMuRF can extract variant calls from a BED or (.txt) file containing the genomic coordinates of your region of interest. Use genomic coordinates referencing hg19/GRCh37. Specify the BED file path using ‘roi.dir’</p>
+<pre class="r"><code># roi.df = read.delim(roi.dir, header = F)
+# roi.df
+#   chrom    start      end
+# 1     1        1    25000
+# 2     1     1000   100000
+# 3     1 77000000 78000000
 
-#      Chr START_POS_REF END_POS_REF REF ALT  REF_MFVdVs ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan
-#      1      17820432    17820433  AT   A AT/AT/AT/AT    A/A/A/A           TRUE            FALSE           TRUE           TRUE
-#      1      81654021    81654022  CA   C CA/CA/CA/CA    C/C/C/C           TRUE             TRUE           TRUE           TRUE
-#      1      91134042    91134043  CT   C CT/CT/CT/CT    C/C/C/C           TRUE             TRUE           TRUE           TRUE
-#      1      32639063    32639064  TA   T TA/TA/NA/TA   T/T/NA/T          FALSE             TRUE          FALSE           TRUE
-#      Sample_Name Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth SMuRF_score
-#       icgc_cll           0.565         24          1         12         13   0.8695652
-#       icgc_cll           0.464         26          0         15         13   0.4782609
-#       icgc_cll           0.485         32          0         17         16   0.5652174
-#       icgc_cll           0.381         21          0         13          8   0.8300347
-
-myresults$smurf_snv$stats_snv
-
-#           Passed_Calls
-# Mutect2           4906
-# FreeBayes          247
-# VarDict            315
-# VarScan           5101
-# Atleast1         10302
-# Atleast2           170
-# Atleast3            58
-# All4                39
-# SMuRF_SNV         1048
-
-head(myresults$smurf_snv$predicted_snv)
-
-   # Chr START_POS_REF END_POS_REF REF ALT REF_MFVdVs ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan
-   # 1       2180985     2180985   A   G    A/A/A/A    G/G/G/G           TRUE             TRUE           TRUE           TRUE
-   # 1       5035185     5035185   C   T    C/C/C/C    T/T/T/T           TRUE             TRUE           TRUE           TRUE
-   # 1       8881322     8881322   G   A    G/G/G/G    A/A/A/A           TRUE             TRUE           TRUE           TRUE
-   # 1       8929624     8929624   A   G    A/A/A/A    G/G/G/G           TRUE             TRUE           TRUE           TRUE
-   # 1       9196716     9196716   C   T   C/NA/C/C   T/NA/T/T           TRUE            FALSE           TRUE           TRUE
-   # 1      11398873    11398873   T   C  T/NA/NA/T  C/NA/NA/C           TRUE            FALSE          FALSE           TRUE
-   # Sample_Name Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth SMuRF_score
-   #  icgc_cll           0.512         91          0         57         54        0.92
-   #  icgc_cll           0.309         86          2         42         18        1.00
-   #  icgc_cll           0.348         40          0         17          9        0.90
-   #  icgc_cll           0.375         60          1         13          8        0.96
-   #  icgc_cll           0.200         36          0         16          3        0.60
-   #  icgc_cll           0.147         76          1         59         10        0.96
-</code></pre>
+myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  model=&quot;ROI&quot;, #retrieve SNVs + indels from regions-of-interest
+                  roi.dir = paste0(find.package(&quot;smurf&quot;), &quot;/data/roi.bed&quot;), #BED file containing ROIs
+                  save.files = T, 
+                  output.dir = 'C:/Users/admin/myresults3')</code></pre>
 <p><a name="output"></a></p>
 </div>
-<div id="output-file-descriptionlegend" class="section level4">
-<h4></br>5. Output file description/legend</h4>
+<div id="output-format" class="section level4">
+<h4></br>Output format</h4>
+<p>Output files saved include:</p>
+<ol style="list-style-type: decimal">
+<li><p>Variant statistics (<em>stats</em>)</p></li>
+<li><p>Predicted reads (<em>predicted</em>)</p></li>
+<li><p>Parsed-raw file (<em>parse</em>)</p></li>
+<li><p>Predicted reads with annotations (<em>annotated</em>)* #for smurf’s “cdsannotation” function only</p></li>
+<li><p>Time taken (<em>time</em>)</p></li>
+</ol>
+<p></br></p>
+<pre class="r"><code>#Main predicted file (SNV &amp; indel)
+
+myresults$smurf_snv$predicted_snv
+
+myresults$smurf_indel$predicted_indel</code></pre>
 <table>
 <colgroup>
 <col width="10%"></col>
@@ -263,7 +399,7 @@ head(myresults$smurf_snv$predicted_snv)
 </colgroup>
 <thead>
 <tr class="header">
-<th>Column Name</th>
+<th>Column</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -306,64 +442,8 @@ head(myresults$smurf_snv$predicted_snv)
 </tr>
 </tbody>
 </table>
-<p></br>You may also retrieve the time taken for your run.</p>
-<pre class="r"><code>myresults$time.taken
-
-&lt;!-- Time difference of 20.52405 secs --&gt;</code></pre>
-<p>You can check the parsed output used for the prediction:</p>
-<pre class="r"><code>myresults$smurf_indel$parse_indel
-
-myresults$smurf_snv$parse_snv
-</code></pre>
-<p>Proceed to save the output in your desired formats Example:</p>
-<pre class="r"><code>a&lt;- myresults$smurf_indel$stats_indel
-write.table(a , file = &quot;indel-stats.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = TRUE, na = &quot;.&quot;)
-
-a&lt;- myresults$smurf_indel$predicted_indel
-write.table(a , file = &quot;indel-predicted.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, na = &quot;.&quot;)
-
-a&lt;- myresults$smurf_indel$parse_indel
-write.table(a , file = &quot;indel-parse.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, na = &quot;.&quot;)
-
-a&lt;- myresults$smurf_snv$stats_snv
-write.table(a , file = &quot;snv-stats.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = TRUE, na = &quot;.&quot;)
-
-a&lt;- myresults$smurf_snv$predicted_snv
-write.table(a , file = &quot;snv-predicted.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, na = &quot;.&quot;)
-
-a&lt;- myresults$smurf_snv$parse_snv
-write.table(a , file = &quot;snv-parse.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, na = &quot;.&quot;)
-
-a&lt;- myresults$smurf_snv_annotation$annotated
-if(!is.null(a)){
-  write.table(a , file = &quot;snv-annotated.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, na = &quot;.&quot;)
-}
-
-a&lt;- myresults$smurf_indel_annotation$annotated
-if(!is.null(a)){
-  write.table(a , file = &quot;indel-annotated.txt&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, na = &quot;.&quot;)
-}
-
-a&lt;- myresults$time.taken
-write(a, file = &quot;time.txt&quot;)</code></pre>
-<p><a name="annotation"></a></p>
-</div>
-<div id="extracting-gene-annotations-for-somatic-mutations-in-the-coding-transcripts" class="section level4">
-<h4><br />6. Extracting Gene Annotations for somatic mutations in the coding transcripts</h4>
-<p>As an additional function, we have added gene annotations using SnpEff (from bcbio) and SMuRF extracts the coding annotations from the canonical transcripts with the highest impact for your convenience. Note that your vcf.gz files should ready been tab-indexed (.tbi files required).</p>
-<pre class="r"><code>myresults &lt;- smurf(mydir, &quot;cdsannotation&quot;) #runs SMuRF for SNV and indels + generate annotations
-</code></pre>
-<p>You may check the output files generated by the test samples in this section against the expected results we provided located in the <em>results</em> folder <a href="https://github.com/skandlab/SMuRF/tree/master/test/results" class="uri">https://github.com/skandlab/SMuRF/tree/master/test/results</a>.</p>
-<p><a name="cut-off"></a></p>
-</div>
-<div id="adjusting-smurf-score-cut-offs" class="section level4">
-<h4><br />7. Adjusting SMuRF score cut-offs</h4>
-<p>Often SMuRF predicts SNVs and indels at the highest F1 performance of the model. To re-adjust the stringency of the prediction, a cut-off value can be specified. Use parameters ‘snv.cutoff’ or ‘indel.cutoff’ to adjust the thresholds.</p>
-<pre class="r"><code># Adjusting the indel cutoff score
-
-myresults&lt;-smurf(mydir, &quot;combined&quot;, indel.cutoff=0.2) #indel.cutoff='default'
-
-myresults$smurf_indel$stats_indel
+<p></br></p>
+<pre class="r"><code>myresults$smurf_indel$stats_indel
 
 #             Passed_Calls
 # Mutect2             1546
@@ -374,35 +454,67 @@ myresults$smurf_indel$stats_indel
 # Atleast2             244
 # Atleast3              37
 # All4                   4
-# SMuRF_INDEL           10
+# SMuRF_INDEL            6
 
-#Plot histogram
-hist(as.numeric(myresults$smurf_indel$predicted_indel[,'SMuRF_score']), main = 'Re-adjusted predicted indels', xlab = 'SMuRF_score', col = 'grey50')
+
+myresults$smurf_snv$stats_snv
+
+#           Passed_Calls
+# Mutect2           4906
+# FreeBayes          247
+# VarDict            315
+# VarScan           5101
+# Atleast1         10302
+# Atleast2           170
+# Atleast3            58
+# All4                39
+# SMuRF_SNV         1345
+</code></pre>
+<p></br>We added gene annotations using SnpEff (from bcbio) and <em>SMuRF</em> extracts the coding annotations from the canonical transcripts with the highest impact. Take note that your vcf.gz files should be tab-indexed (.tbi files required).</p>
+<pre class="r"><code>myresults = smurf(mydir, &quot;cdsannotation&quot;) #runs SMuRF for SNV and indels + generate annotations
+
+myresults$smurf_snv_annotation$annotated
+#   Chr START_POS_REF END_POS_REF REF ALT REF_MFVdVs ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan Sample_Name Alt_Allele_Freq
+# 1   1      77712621    77712621   G   A    G/G/G/G    A/A/A/A           TRUE             TRUE           TRUE           TRUE    icgc_cll           0.296
+# 2   1      77806132    77806132   G   A    G/G/G/G    A/A/A/A           TRUE             TRUE           TRUE           TRUE    icgc_cll           0.483
+
+#   T_altDepth T_refDepth N_refDepth N_altDepth Allele       Annotation   Impact Gene_name         Gene_ID Feature_Type      Feature_ID Transcript_BioType
+# 1          8         19         40          0   &lt;NA&gt;             &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;            &lt;NA&gt;         &lt;NA&gt;            &lt;NA&gt;               &lt;NA&gt;
+# 2         15         16         22          0      A missense_variant MODERATE       AK5 ENSG00000154027   transcript ENST00000354567     protein_coding
+
+#   Rank   HGVS.c      HGVS.p  cDNA.pos  CDS.pos  AA.pos Distance     REGION SMuRF_score
+# 1 &lt;NA&gt;     &lt;NA&gt;        &lt;NA&gt;      &lt;NA&gt;     &lt;NA&gt;    &lt;NA&gt;     &lt;NA&gt; Non-coding   0.8148148
+# 2 6/14 c.770G&gt;A p.Arg257His 1033/3248 770/1689 257/562        .        CDS   0.7777778
+</code></pre>
+<p></br>Time taken for your run:</p>
+<pre class="r"><code>myresults$time.taken
+
+&lt;!-- Time difference of 20.52405 secs --&gt;</code></pre>
+<p></br>The raw parsed output:</p>
+<pre class="r"><code>myresults$smurf_indel$parse_indel
+
+myresults$smurf_snv$parse_snv
+</code></pre>
+<p></br>Proceed to save the output in your desired formats Use ‘save.files=T’ to generate .txt outputs in your output directory Example:</p>
+<pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                           model =&quot;cdsannotation&quot;, nthreads = 1,
+                           output.dir = 'C:/Users/admin/myresults', save.files = T)
 </code></pre>
 <p><a name="multiple-samples"></a></p>
 </div>
 <div id="running-on-multiple-samples" class="section level4">
-<h4><br />8. Running on multiple samples</h4>
-<p>Use our R package to efficiently do somatic mutation predictions on multiple matched tumor-normal samples by providing the list of directories of where your sample files are located.</p>
+<h4><br />Running on multiple samples</h4>
+<p>Iterate over multiple samples by providing the list of directories of where your sample files are located.</p>
 <pre class="r"><code>#Example
 
-sample_directories &lt;- list(&quot;my/dir/sample_A&quot;, &quot;my/dir/sample_B&quot;, &quot;my/dir/sample_C&quot;)
+project.dir = 'path/to/my/dir'
+samples = c('sample_A', 'sample_B', 'sample_C') #sample dir where vcf files are located
 
-myresults &lt;- list()
-
-for(i in 1:length(sample_directories))
- {
- myresults[[i]] &lt;- smurf(sample_directories[i], &quot;combined&quot;)
- } 
- 
-#myresults[[1]]$time.taken
-#Time difference of 9.973997 secs
-
-#myresults[[2]]$time.taken
-#Time difference of 11.1712 secs
-
-#myresults[[3]]$time.taken
-#Time difference of 15.18325 secs</code></pre>
+for(i in 1:length(samples)) {
+ smurf(directory=paste0(project.dir, '/', samples[i]),
+        model=&quot;cdsannotation&quot;,
+        output.dir = paste0('C:/Users/admin/myresults-',sample[i]), save.files = T))
+ } </code></pre>
 <p><br /> For errors and bugs, please report on our Github page.</p>
 </div>
 </div>
@@ -424,6 +536,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

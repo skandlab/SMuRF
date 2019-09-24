@@ -4,7 +4,17 @@
 \alias{CDSannotation_indel}
 \title{indelRF-Annotations}
 \usage{
-CDSannotation_indel(x, predicted)
+CDSannotation_indel(x, predicted, build, change.build)
+}
+\arguments{
+\item{x}{List object containing the four vcf.gz files from 
+callers MuTect2, Freebayes, VarDict and VarScan.}
+
+\item{predicted}{List object containing 1.stats, 2.predicted-indel and 3.parse-indel matrices}
+
+\item{build}{Your current genomic build}
+
+\item{change.build}{Choose 'hg19.to.hg38' or 'hg38.to.hg19' to convert annotation output}
 }
 \description{
 Step 3 Annotations

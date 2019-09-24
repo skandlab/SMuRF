@@ -1,57 +1,72 @@
 #' snvRF-Predict
 #'
-#' snv prediction model SMuRFv1.5
+#' snv prediction model SMuRFv1.6 (R-3.3.1, R-3.5.1)
 #' Step 2 Predict
 #'
+#'@param parsevcf List object containing 1.snv-parse and 2.indel-parse matrices.
+#'@param snv.cutoff Threshold for true predictions by SMuRF
+#'@param fixed.snv.cutoff debug for when threshold is zero. 
 #'  
-#' @examples
+#'@examples
 #' 
 #' 
-#' @export
-snvRFpredict = function(parsevcf, snv.cutoff){
+#'@export
+snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
   
   final <- parsevcf[[1]]
-  #final <- parse_snv
   
   print("Predicting SNVs")
-  
-  # df <- final[,c("X.CHROM","START_POS_REF","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
-  #                "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","f_MQM","f_MQMR","vs_SSC","vs_SPV","vd_SSF")]
   
   df <- as.h2o(final)
 
   smurfdir <- find.package("smurf")
-  # smurfmodeldir <- paste0(smurfdir, "/data/snv_nofeatunion_model_cv1train1") #SMuRFv1.4
+  
+  if (getRversion()<3.5) {
+  
+    #Define cutoffs
+      if (snv.cutoff == 'default') {
+        # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
+        cutoff = 0.24 #High sensitivity Recall >0.95
+      } else if (snv.cutoff != 'default') {
+        cutoff = snv.cutoff
+      } else if (snv.cutoff == 0) {
+        cutoff = 0
+        fixed.snv.cutoff = T
+      } 
+    
   smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-nofeat-relcov-v108") #SMuRFv1.5
   snv_model <- h2o.loadModel(path = smurfmodeldir)
   
-  if (snv.cutoff == 'default') {
-    cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
-  } else if (snv.cutoff != 'default') {
-    cutoff = snv.cutoff
+  } else { #(R>=3.5)
+      
+      #Define cutoffs
+        if (snv.cutoff == 'default') {
+          # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
+          cutoff = 0.254 #High sensitivity Recall >0.95
+        } else if (snv.cutoff != 'default') {
+          cutoff = snv.cutoff
+        } else if (snv.cutoff == 0) {
+          cutoff = 0
+          fixed.snv.cutoff = T
+        } 
+  
+
+      smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6") #SMuRFv1.6
+      snv_model <- h2o.loadModel(path = smurfmodeldir)
+      
   }
-  #h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.4620076
-  #snv_model <- h2o.loadModel(path = "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/snv-model-combined-grid")
+  
   
   predicted <- h2o.predict(object = snv_model, newdata = df)
   p <- as.data.frame(predicted)
 
   snv_parse <- cbind(final, p)
   
-  #set our threshold for SMuRF passing score based on 0.9 Recall
-  # snv_parse$predict_adjusted <- FALSE
-  # snv_parse[which(snv_parse$TRUE.>=0.005),"predict_adjusted"] <- TRUE
-  # results<- snv_parse[which(snv_parse$TRUE.>=0.005),] 
-  
-  # results<- snv_parse[which(snv_parse$predict==TRUE),]
   results<- snv_parse[which(snv_parse$TRUE.>cutoff),]
   
-  # snv_parse <- unique(snv_parse[, !names(snv_parse) %in% c("m2_refDepth", "m2_altDepth", "m2_AF",
-  #                                                  "f_refDepth", "f_altDepth",
-  #                                                  "vs_totalDepth", "vs_AF",
-  #                                                  "vd_refDepth", "vd_altDepth", "vd_AF",
-  #                                                  "REF_Mutect2", "REF_Freebayes", "REF_Varscan", "REF_Vardict",
-  #                                                  "ALT_Mutect2", "ALT_Freebayes", "ALT_Varscan", "ALT_Vardict")])
+  if (fixed.snv.cutoff == T) {
+    results<- snv_parse
+  }
   
   
   if (dim(results)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 
@@ -59,12 +74,7 @@ snvRFpredict = function(parsevcf, snv.cutoff){
     table <- results
     
     names(table)[names(table) == 'TRUE.'] <- 'SMuRF_score'
-    #names(table)[names(table) == 'X.CHROM'] <- 'Chr'
-    
-    # snv_predict <- unique(table[, !names(table) %in% c("m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_BaseQRankSum","m2_FS",
-    #                                                    "f_MQM","f_ODDS","vs_SSC","vd_SSF",
-    #                                                    "predict","FALSE.")])
-    
+
     snv_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
                             "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","Sample_Name",
                             "Alt_Allele_Freq",
@@ -96,27 +106,17 @@ snvRFpredict = function(parsevcf, snv.cutoff){
   
 
   stats<-as.matrix(stats)
-  #predict<-as.matrix(snv_predict)
   parse<-as.matrix(snv_parse)
-  #raw<-as.matrix(final)
-  #y <- list(stats, snv_predict, parse)
-  #names(y)<- c("stats_snv", "predicted_snv", "parse_snv")
-  
+
   return(list(stats_snv=stats, predicted_snv=snv_predict, parse_snv=parse))
   
   } else{
     
-    print("Warning: There are no predicted SNV calls in this sample.")
+    print("Warning: There are no predicted SNV calls in this sample. Re-examine myresults$smurf_snv$parse_snv and set a lower snv.cutoff.")
     
     parse<-as.matrix(snv_parse)
-    #raw<-as.matrix(final)
-    # y<- list(parse)
-    # names(y)<- c("parse_snv")
-    
+
     return(list(parse_snv=parse))
-    #return()
-  } 
-  
-  
+  }
   
 }
