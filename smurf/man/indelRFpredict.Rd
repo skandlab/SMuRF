@@ -4,10 +4,17 @@
 \alias{indelRFpredict}
 \title{indelRF-Predict}
 \usage{
-indelRFpredict(parsevcf, indel.cutoff)
+indelRFpredict(parsevcf, indel.cutoff, fixed.indel.cutoff = F)
+}
+\arguments{
+\item{parsevcf}{List object containing 1.snv-parse and 2.indel-parse matrices.}
+
+\item{indel.cutoff}{Threshold for true predictions by SMuRF}
+
+\item{fixed.indel.cutoff}{debug for when threshold is zero.}
 }
 \description{
-Indel prediction model SMuRFv1.5
+Indel prediction model SMuRFv1.6 (R-3.3.1, R-3.5.1)
 Step 2 Predict
 }
 \examples{

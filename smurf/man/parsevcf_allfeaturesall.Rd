@@ -4,12 +4,13 @@
 \alias{parsevcf_allfeaturesall}
 \title{parsevcf}
 \usage{
-parsevcf_allfeaturesall(x)
+parsevcf_allfeaturesall(x, t.label)
 }
 \arguments{
-\item{filedir}{Sets the working directory containing the vcf.gz files from 
-callers MuTect2, Freebayes, VarDict and VarScan.  
-include Allele frequency here}
+\item{x}{List object containing the four vcf.gz files from 
+callers MuTect2, Freebayes, VarDict and VarScan.}
+
+\item{t.label}{Default='-T'. Identify your tumour sample label correctly.}
 }
 \description{
 Step 1 Initial parse and filtering

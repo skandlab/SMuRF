@@ -3,20 +3,22 @@
 \name{CDSannotation_snv}
 \alias{CDSannotation_snv}
 \title{snvRF-Annotations
-Avoid tabix file error by placing the file in the same directory as your vcf
-Tabix (tbi) is required for annotations or you will get this error:
-"Error in (function (classes, fdef, mtable)  :
-unable to find an inherited method for function âscanVcfâ for signature â"character", "GRanges"â"
 Step 3 Annotations}
 \usage{
-CDSannotation_snv(x, predicted)
+CDSannotation_snv(x, predicted, build, change.build)
+}
+\arguments{
+\item{x}{List object containing the four vcf.gz files from 
+callers MuTect2, Freebayes, VarDict and VarScan.}
+
+\item{predicted}{List object containing 1.stats, 2.predicted-snv and 3.parse-snv matrices}
+
+\item{build}{Your current genomic build}
+
+\item{change.build}{Choose 'hg19.to.hg38' or 'hg38.to.hg19' to convert annotation output}
 }
 \description{
 snvRF-Annotations
-Avoid tabix file error by placing the file in the same directory as your vcf
-Tabix (tbi) is required for annotations or you will get this error:
-"Error in (function (classes, fdef, mtable)  :
-unable to find an inherited method for function âscanVcfâ for signature â"character", "GRanges"â"
 Step 3 Annotations
 }
 \examples{

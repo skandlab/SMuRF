@@ -2,16 +2,16 @@
 #'
 #' Step 1 Initial parse and filtering
 #'
-#' @param x List object containing the four vcf.gz files from 
-#' callers MuTect2, Freebayes, VarDict and VarScan.  
-#' 
-#' @param t.label Default='-T'. Identify your tumour sample label correctly.
-#'   
+#'@param x List object containing the four vcf.gz files from 
+#'callers MuTect2, Freebayes, VarDict and VarScan.
+#'@param roi set to TRUE to enable this function. Alternatively read.vcf is a VCF parser in development.
+#'@param roi.dir Directory to BED file of genomic coordinates.
+#'@param t.label Tumor sample name label     
 #' @examples
 #' 
 #' 
 #' @export
-parsevcf_allfeaturesall = function(x, t.label){
+read.vcf = function(x, roi=F, roi.dir=NULL, t.label){
   
   print("Parsing step")
   
@@ -26,21 +26,21 @@ parsevcf_allfeaturesall = function(x, t.label){
   start.time=Sys.time()
 
   #ScanVCF with required parameters
-  svp_m<-ScanVcfParam(info=c("FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=suppressWarnings(scanVcfHeader(x[[1]])@samples), geno=c("AD", "AF", "DP"))
-  svp_f<-ScanVcfParam(info=c("GTI","LEN","MQM","MQMR","ODDS"),samples=suppressWarnings(scanVcfHeader(x[[2]])@samples), geno=c("RO","DP"))
-  svp_vs<-ScanVcfParam(info=c("SSC","GPV","SS","SPV"), samples=suppressWarnings(scanVcfHeader(x[[3]])@samples), geno=c("AD","FREQ", "DP"))
-  svp_vd<-ScanVcfParam(info=c("SSF","MSI","SOR"), samples=suppressWarnings(scanVcfHeader(x[[4]])@samples), geno=c("AD", "AF", "DP"))
+  svp_m<-ScanVcfParam(info=c("FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=scanVcfHeader(x[[1]])@samples, geno=c("AD", "AF", "DP"))
+  svp_f<-ScanVcfParam(info=c("GTI","LEN","MQM","MQMR","ODDS"),samples=scanVcfHeader(x[[2]])@samples, geno=c("RO","DP"))
+  svp_vs<-ScanVcfParam(info=c("SSC","GPV","SS","SPV"), samples=scanVcfHeader(x[[3]])@samples, geno=c("AD","FREQ", "DP"))
+  svp_vd<-ScanVcfParam(info=c("SSF","MSI","SOR"), samples=scanVcfHeader(x[[4]])@samples, geno=c("AD", "AF", "DP"))
   
   
   ## read only chromosomes 1-22, X, Y and M
   print("reading mutect2")
-  vcf_m2<- suppressWarnings(readVcf(x[[1]], "hg19", svp_m))
+  vcf_m2<- readVcf(x[[1]], "hg19", svp_m)
   print("reading freebayes")
-  vcf_f<- suppressWarnings(readVcf(x[[2]], "hg19", svp_f))
+  vcf_f<- readVcf(x[[2]], "hg19", svp_f)
   print("reading varscan")
-  vcf_vs<- suppressWarnings(readVcf(x[[3]], "hg19", svp_vs))
+  vcf_vs<- readVcf(x[[3]], "hg19", svp_vs)
   print("reading vardict")
-  vcf_vd<- suppressWarnings(readVcf(x[[4]], "hg19", svp_vd))
+  vcf_vd<- readVcf(x[[4]], "hg19", svp_vd)
   
   
   # remove duplicates from vcfs
@@ -68,7 +68,7 @@ parsevcf_allfeaturesall = function(x, t.label){
     stop('t.label for tumor sample is duplicated or missing')
   }
   
-  print("extracting calls passed by at least 1 caller")
+  # print("extracting calls passed by at least 1 caller")
   start.time=Sys.time()
   # get rows that are SNVs
   snv_m2<-isSNV(vcf_m2, singleAltOnly=FALSE)
@@ -76,16 +76,70 @@ parsevcf_allfeaturesall = function(x, t.label){
   snv_vs<-isSNV(vcf_vs, singleAltOnly=FALSE)
   snv_vd<-isSNV(vcf_vd, singleAltOnly=FALSE)  
   
+  if (roi==F) { 
+  
   # extract passed calls from each caller
   pass_m2<- vcf_m2@fixed$FILTER=="PASS"
   pass_f<- vcf_f@fixed$FILTER=="PASS" 
   pass_vs<- vcf_vs@fixed$FILTER=="PASS" | vcf_vs@fixed$FILTER=="SpvFreq" | vcf_vs@fixed$FILTER=="REJECT;SpvFreq"
   pass_vd<- vcf_vd@fixed$FILTER=="PASS"
   
+  } else if (roi==T) {
+    
+    # if (is.null(roi.dir)) {
+    #   
+    #   print('Subsetting genomic coordinate')
+    #   
+    #   pass_m2<- as.numeric(seqnames(vcf_m2@rowRanges))==chr & start(vcf_m2@rowRanges)==start & end(vcf_m2@rowRanges)==end
+    #   pass_f<- as.numeric(seqnames(vcf_f@rowRanges))==chr & start(vcf_f@rowRanges)==start & end(vcf_f@rowRanges)==end
+    #   pass_vs<- as.numeric(seqnames(vcf_vs@rowRanges))==chr & start(vcf_vs@rowRanges)==start & end(vcf_vs@rowRanges)==end
+    #   pass_vd<- as.numeric(seqnames(vcf_vd@rowRanges))==chr & start(vcf_vd@rowRanges)==start & end(vcf_vd@rowRanges)==end
+    # 
+    # } else {
+      
+    print('Subsetting ROI region')
+    
+    roi.df = read.delim(roi.dir, header = F, colClasses = c('factor','integer','integer'))
+    colnames(roi.df) = c('chrom','start','end')
+    roi.df$chrom = gsub('chr', '', roi.df$chrom)
+    roi.gr <- with(roi.df, GRanges(chrom, IRanges(start, end)))
+    roi.gr = GenomicRanges::reduce(roi.gr)
+    
+    ovl_m2 = suppressWarnings(IRanges::findOverlaps(vcf_m2@rowRanges, roi.gr))
+    ovl_f = suppressWarnings(IRanges::findOverlaps(vcf_f@rowRanges, roi.gr))
+    ovl_vs = suppressWarnings(IRanges::findOverlaps(vcf_vs@rowRanges, roi.gr))
+    ovl_vd = suppressWarnings(IRanges::findOverlaps(vcf_vd@rowRanges, roi.gr))
+    
+    # pass_m2 = suppressWarnings(vcf_m2@rowRanges == vcf_m2@rowRanges[queryHits(ovl_m2),])
+    # pass_f = suppressWarnings(vcf_f@rowRanges == vcf_f@rowRanges[queryHits(ovl_f),])
+    # pass_vs = suppressWarnings(vcf_vs@rowRanges == vcf_vs@rowRanges[queryHits(ovl_vs),])
+    # pass_vd = suppressWarnings(vcf_vd@rowRanges == vcf_vd@rowRanges[queryHits(ovl_vd),])
+    
+    # pass_m2 = names(vcf_m2@rowRanges) %in% names(vcf_m2@rowRanges[queryHits(ovl_m2),])
+    # pass_f = names(vcf_f@rowRanges) %in% names(vcf_f@rowRanges[queryHits(ovl_f),])
+    # pass_vs = names(vcf_vs@rowRanges) %in% names(vcf_vs@rowRanges[queryHits(ovl_vs),])
+    # pass_vd = names(vcf_vd@rowRanges) %in% names(vcf_vd@rowRanges[queryHits(ovl_vd),])
+    
+    pass_m2 = rep(F, length(vcf_m2@rowRanges))
+    pass_f = rep(F, length(vcf_f@rowRanges))
+    pass_vs = rep(F, length(vcf_vs@rowRanges))
+    pass_vd = rep(F, length(vcf_vd@rowRanges))
+    
+    pass_m2[queryHits(ovl_m2)] = T 
+    pass_f[queryHits(ovl_f)] = T
+    pass_vs[queryHits(ovl_vs)] = T 
+    pass_vd[queryHits(ovl_vd)] = T
+
+  # }
+
+  }
+  
   # get passed snv calls from all callers
   snv_pass=c(rowRanges(vcf_m2[pass_m2&snv_m2]), rowRanges(vcf_f[pass_f&snv_f]),  rowRanges(vcf_vs[pass_vs&snv_vs]), rowRanges(vcf_vd[pass_vd&snv_vd]),ignore.mcols=T)
   snv_pass= unique(snv_pass)
   
+  if(length(snv_pass)!=0) {
+    
   ###### parsing SNVs
   # get the row numbers of calls that are passed by at least 1 caller in each vcf
   snv.m2.index <- subjectHits(findOverlaps(snv_pass, rowRanges(vcf_m2), type="equal"))
@@ -315,15 +369,8 @@ parsevcf_allfeaturesall = function(x, t.label){
   meta_data$ALT=alt[alt.ind]  
   
   # calculate alt allele frequency
-  
-  if(all(is.na(meta_data$T_altDepth_Varscan))==F & all(is.na(meta_data$T_refDepth_Varscan))==T) {
-    meta_data$T_refDepth_Varscan <- meta_data$T_totalDepth_Varscan-meta_data$T_altDepth_Varscan
-    meta_data$N_refDepth_Varscan <- meta_data$N_totalDepth_Varscan-meta_data$N_altDepth_Varscan
-  } else if(all(is.na(meta_data$T_altDepth_Varscan))==T & all(is.na(meta_data$T_refDepth_Varscan))==F) {
-    meta_data$T_altDepth_Varscan <- meta_data$T_totalDepth_Varscan-meta_data$T_refDepth_Varscan
-    meta_data$N_altDepth_Varscan <- meta_data$N_totalDepth_Varscan-meta_data$N_refDepth_Varscan
-  }
-  
+  meta_data$T_refDepth_Varscan <- meta_data$T_totalDepth_Varscan-meta_data$T_altDepth_Varscan
+  meta_data$N_refDepth_Varscan <- meta_data$N_totalDepth_Varscan-meta_data$N_altDepth_Varscan
   meta_data$T_altDepth_Freebayes <- meta_data$T_totalDepth_Freebayes-meta_data$RO_Freebayes
   meta_data$T_refDepth_Freebayes <- meta_data$RO_Freebayes
   meta_data$AF_Freebayes <- meta_data$T_altDepth_Freebayes/meta_data$T_totalDepth_Freebayes
@@ -335,10 +382,6 @@ parsevcf_allfeaturesall = function(x, t.label){
   af.ind=af.ind[!duplicated(af.ind[,1]),]# take the first non-NA allele freq of each row
   meta_data$AF=af[af.ind]
   meta_data$AF[is.na(meta_data$AF)] <- 0
-  
-  # if(class(meta_data$AF)=='list') {
-  #   meta_data$AF = as.numeric(meta_data$AF)
-  # }
   
   # meta_data$AF <- rowMeans(meta_data[, c("AF_Mutect2", "AF_Freebayes", "FREQ_Varscan", "AF_Vardict")],na.rm = TRUE)
   
@@ -391,7 +434,6 @@ parsevcf_allfeaturesall = function(x, t.label){
   meta_data$relcov <- (meta_data$T_refDepth+meta_data$T_altDepth+meta_data$N_refDepth+meta_data$N_altDepth)/median(meta_data$T_refDepth+meta_data$T_altDepth+meta_data$N_refDepth+meta_data$N_altDepth)
   
   #numerical
-  meta_data$seqnames = gsub('chr','',meta_data$seqnames)
   
   #add "m2_BaseQRankSum" and "m2_ClippingRankSum" for long-term support
   meta_data$BaseQRankSum_Mutect2 = NA
@@ -401,13 +443,11 @@ parsevcf_allfeaturesall = function(x, t.label){
                "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
                "SSF_Vardict","MSI_Vardict","SOR_Vardict",
-               "AF",
-               "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")] <- lapply (meta_data[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2",
-                                                                                                      "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
-                                                                                                      "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
-                                                                                                      "SSF_Vardict","MSI_Vardict","SOR_Vardict",
-                                                                                                      "AF",
-                                                                                                      "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")], as.numeric)
+               "relcov")] <- lapply (meta_data[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2",
+                                                                                   "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
+                                                                                   "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
+                                                                                   "SSF_Vardict","MSI_Vardict","SOR_Vardict",
+                                                  "relcov")], as.numeric)
   
   #keep important columns and rename columns
   parse_snv <- meta_data[,c("seqnames","start","end","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
@@ -427,6 +467,9 @@ parsevcf_allfeaturesall = function(x, t.label){
                            "Alt_Allele_Freq",
                            "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")
   
+  } else { 
+    parse_snv=NULL
+    print('There are no SNVs in the region.')}
   
   ### continue from here to format the output
   
@@ -436,6 +479,8 @@ parsevcf_allfeaturesall = function(x, t.label){
   # get passed indel calls from all callers
   indel_pass=c(rowRanges(vcf_m2[pass_m2&!snv_m2]), rowRanges(vcf_f[pass_f&!snv_f]),  rowRanges(vcf_vs[pass_vs&!snv_vs]), rowRanges(vcf_vd[pass_vd&!snv_vd]),ignore.mcols=T)
   indel_pass= unique(indel_pass)
+  
+  if(length(indel_pass)!=0) {
   
   # get the row numbers of calls that are passed by at least 1 caller in each vcf
   indel.m2.index <- subjectHits(findOverlaps(indel_pass, rowRanges(vcf_m2), type="equal"))
@@ -678,10 +723,6 @@ parsevcf_allfeaturesall = function(x, t.label){
   meta_indel$AF=af[af.ind]  
   meta_indel$AF[is.na(meta_indel$AF)] <- 0
   
-  if(class(meta_indel$AF)=='list') {
-    meta_indel$AF = as.numeric(meta_indel$AF)
-  }
-  
   # calculate mean depth
   meta_indel$N_refDepth <- round(rowMeans(meta_indel[, c("N_refDepth_Mutect2", "N_refDepth_Freebayes", "N_refDepth_Varscan", "N_refDepth_Vardict")],na.rm = TRUE))
   meta_indel$N_altDepth <- round(rowMeans(meta_indel[, c("N_altDepth_Mutect2", "N_altDepth_Freebayes", "N_altDepth_Varscan", "N_altDepth_Vardict")],na.rm = TRUE))
@@ -733,19 +774,15 @@ parsevcf_allfeaturesall = function(x, t.label){
   meta_indel$ClippingRankSum_Mutect2 = NA
   
   #numerical
-  meta_indel$seqnames = gsub('chr','',meta_indel$seqnames)
-  
   meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2",
                 "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
                 "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
                 "SSF_Vardict","MSI_Vardict","SOR_Vardict",
-                "AF",
-                "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")] <- lapply (meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2",
-                                                                                                        "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
-                                                                                                        "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
-                                                                                                        "SSF_Vardict","MSI_Vardict","SOR_Vardict",
-                                                                                                        "AF",
-                                                                                                        "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")], as.numeric)
+                "relcov")] <- lapply (meta_indel[,c("MQ_Mutect2","MQRankSum_Mutect2","TLOD_Mutect2","NLOD_Mutect2","FS_Mutect2","ReadPosRankSum_Mutect2","BaseQRankSum_Mutect2","ClippingRankSum_Mutect2",
+                                                                                     "MQM_Freebayes","MQMR_Freebayes","GTI_Freebayes","LEN_Freebayes","ODDS_Freebayes",
+                                                                                     "SSC_Varscan","SPV_Varscan","GPV_Varscan","SS_Varscan",
+                                                                                     "SSF_Vardict","MSI_Vardict","SOR_Vardict",
+                                                    "relcov")], as.numeric)
   
   parse_indel <- meta_indel[,c("seqnames","start","end","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
                                "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
@@ -755,7 +792,6 @@ parsevcf_allfeaturesall = function(x, t.label){
                                "SSF_Vardict","MSI_Vardict","SOR_Vardict",
                                "AF",
                                "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")]
-  
   colnames(parse_indel) <- c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
                              "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                              "m2_MQ","m2_MQRankSum","m2_TLOD","m2_NLOD","m2_FS","m2_ReadPosRankSum","m2_BaseQRankSum","m2_ClippingRankSum",
@@ -765,6 +801,9 @@ parsevcf_allfeaturesall = function(x, t.label){
                              "Alt_Allele_Freq",
                              "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")
   
+  } else { 
+    parse_indel=NULL
+    print('There are no indels in the region.')}
   
   return(list(snv=parse_snv, indel=parse_indel))
 }
