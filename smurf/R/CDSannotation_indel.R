@@ -150,7 +150,7 @@ CDSannotation_indel = function(x, predicted, build, change.build){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.mutect2)))]
         }
         
-        mut.vardict=mutations[mutations$FILTER_Vardict==TRUE]# & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.vardict=mutations[mutations$FILTER_Vardict==TRUE]# & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
         mut.vardict=mutations[(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
         if (length(mut.vardict)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.vardict)))]
