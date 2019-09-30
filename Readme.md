@@ -207,6 +207,7 @@ Output files saved include:
 5. Time taken (_time_)
 
 </br>
+
 ```r
 #Main predicted file (SNV & indel)
 
@@ -230,6 +231,7 @@ SMuRF_score      | SMuRF confidence score of the predicted mutation
 
 
 </br>
+
 ```r
 myresults$smurf_indel$stats_indel
 
