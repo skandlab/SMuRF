@@ -213,6 +213,7 @@ Output files saved include:
 myresults$smurf_snv$predicted_snv
 
 myresults$smurf_indel$predicted_indel
+
 ```
 
 Column | Description
