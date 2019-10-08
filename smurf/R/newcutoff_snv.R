@@ -8,7 +8,7 @@
 #' 
 #' 
 #' @export
-newcutoff_snv = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
+newcutoff_snv = function(parsevcf, snv.cutoff){
   
   
   if (getRversion()<3.5) {
@@ -20,19 +20,19 @@ newcutoff_snv = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
         cutoff = snv.cutoff
       } else if (snv.cutoff == 0) {
         cutoff = 0
-        fixed.snv.cutoff = T
+        # fixed.snv.cutoff = T
       } 
     }
     else {
         if (snv.cutoff == 'default') {
           print('Using default snv.cutoff')
-          cutoff = 0.24 #High sensitivity Recall >0.95
-        } else if (snv.cutoff != 'default' & indel.cutoff !=0) {
+          cutoff = 0.254 #High sensitivity Recall >0.95
+        } else if (snv.cutoff != 'default' & snv.cutoff !=0) {
           print("Assigning new snv.cutoff")
           cutoff = snv.cutoff
         } else if (snv.cutoff == 0) {
           cutoff = 0
-          fixed.snv.cutoff = T
+          # fixed.snv.cutoff = T
         } 
     }
     
@@ -41,10 +41,11 @@ newcutoff_snv = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
     # final <- parsevcf[[1]]
     snv_parse <- parsevcf[[1]]
     
-    snv_predict = dplyr::filter(snv_parse, TRUE.>cutoff)
     
-    if (fixed.snv.cutoff == T) {
+    if (cutoff == 0) {
       snv_predict = snv_parse
+    } else {
+      snv_predict = dplyr::filter(snv_parse, TRUE.>cutoff)
     }
     
     if (dim(snv_predict)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 

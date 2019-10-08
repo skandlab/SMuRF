@@ -89,24 +89,12 @@ CDSannotation_indel = function(x, predicted, build, change.build){
 
   # annotate ensembl ids that are present in uniprot
   smurfdir <- find.package("smurf")
-  uniprotdir <- paste0(smurfdir, "/data/ensembl2uni.rds")
-  #uniprotdir <- "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/ensembl2uniprot_0917.txt"
-  #ensembl2uni=read.delim(uniprotdir,header=TRUE,stringsAsFactors = FALSE)
-  #ensembl2uni <- readRDS("C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/ensembl2uni.rds")
-  ensembl2uni <- readRDS(uniprotdir)
-
-  #cdsdir <- paste0(smurfdir, "/data/Ensembl75.CDS.bed")
-  #cdsdir <- "C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/Ensembl75.CDS.bed"
-  #cds=bed.to.granges(cdsdir)
-  #roit <- read.table(cdsdir,header=F)[,1:3]
-  #colnames(roit) <- c('chr','start','end')
-  # create GRanges object 
-  #cds <- with(roit, GRanges(chr, IRanges(start, end)))
-  #saveRDS(cds,"C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/cds.rds")
-  cdsdir <- paste0(smurfdir, "/data/cds.rds")
-  cds <- readRDS(cdsdir)
-  #cds <- readRDS("C:/Users/Tyler/Dropbox/Scripts/smurf/smurf1.2/smurf/data/cds.rds")
   
+  uniprotdir <- paste0(smurfdir, "/data/ensembl2uni.rds")
+  ensembl2uni <- readRDS(uniprotdir)
+  cdsdir <- paste0(smurfdir, "/data/cds.rds") #hg19
+  cds <- readRDS(cdsdir)
+
   seqlevelsStyle(cds)="NCBI"
 
     #tryCatch({
@@ -115,8 +103,39 @@ CDSannotation_indel = function(x, predicted, build, change.build){
       #mutations.orig=snvpredict[[2]]
       #mutations.orig=indelpredict[[2]]
       
+      #check build
+      if (is.null(build)) {
+        print('build not specified. Detecting genome build please wait...')
+        vcf_m2<- suppressWarnings(readVcf(x[[1]], genome=seqinfo(scanVcfHeader(x[[1]])), svp_m))
+        H_m2=header(vcf_m2)
+        reference = H_m2@header@listData$reference@listData$Value
+        hg19 = unique(grep('hg19|GRCh37', reference, value=T))
+        hg38 = unique(grep('hg38|GRCh38', reference, value=T))
+        
+        if(!is.null(H_m2@header@listData$reference)) {
+          reference = H_m2@header@listData$reference@listData$Value
+          hg19 = unique(grep('hg19|GRCh37', reference, value=T))
+          hg38 = unique(grep('hg38|GRCh38', reference, value=T))
+        } else {
+          hg19 = NULL
+          hg38 = NULL
+        }
+        
+        if (length(hg19)==1 & length(hg38)==0) {
+          print('hg19 build detected.')
+          g.build = 'hg19'
+        } else if (length(hg19)==0 & length(hg38)==1) {
+          print('hg38 build detected.')
+          g.build = 'hg38'
+        } else {
+          stop("Unable to detect genome build. Please specify build manually.")
+        }
+      } else {
+        g.build = build
+      }
+      
       #hg19 to hg38 conversion
-      if(build=='hg38') {
+      if(g.build=='hg38') {
         cdsdir <- paste0(smurfdir, "/data/cds-hg38.rds")
         cds <- readRDS(cdsdir)
         seqlevelsStyle(cds)="UCSC"
@@ -126,8 +145,10 @@ CDSannotation_indel = function(x, predicted, build, change.build){
       # all predicted files should have the following fields
       mutations=with(mutations.orig,GRanges(Chr,IRanges(START_POS_REF,END_POS_REF),REF=REF,ALT=ALT,REF_MFVdVs=REF_MFVdVs,ALT_MFVdVs=ALT_MFVdVs,
                                             FILTER_Mutect2=FILTER_Mutect2,FILTER_Freebayes=FILTER_Freebayes,FILTER_Vardict=FILTER_Vardict,FILTER_Varscan=FILTER_Varscan,
-                                            Sample_Name=Sample_Name,Alt_Allele_Freq=Alt_Allele_Freq,T_altDepth=T_altDepth,
-                                            T_refDepth=T_refDepth,N_refDepth=N_refDepth,N_altDepth=N_altDepth))
+                                            Sample_Name=Sample_Name,Alt_Allele_Freq=Alt_Allele_Freq,
+                                            N_refDepth=N_refDepth,N_altDepth=N_altDepth,
+                                            T_refDepth=T_refDepth,T_altDepth=T_altDepth
+                                            ))
       
       # annotate CDS region by overlapping with ensembl cds file
       ovl=findOverlaps(mutations,cds)
@@ -204,7 +225,7 @@ CDSannotation_indel = function(x, predicted, build, change.build){
         mutations.orig=mutations.orig[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
                                          "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                                          "Sample_Name","Alt_Allele_Freq",
-                                         "T_altDepth","T_refDepth","N_refDepth","N_altDepth",
+                                         "N_refDepth","N_altDepth","T_refDepth","T_altDepth",
                                          "REGION","SMuRF_score")]
         colnames(mut)[1:17]=colnames(mutations.orig)[1:17]
         mut$Chr=as.character(mut$Chr)
@@ -212,11 +233,11 @@ CDSannotation_indel = function(x, predicted, build, change.build){
         mutations.orig=merge(mut,mutations.orig,by=c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
                                                      "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                                                      "Sample_Name","Alt_Allele_Freq",
-                                                     "T_altDepth","T_refDepth","N_refDepth","N_altDepth"),all.y=TRUE)
+                                                     "N_refDepth","N_altDepth","T_refDepth","T_altDepth"),all.y=TRUE)
         
         mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
         
-        if (change.build!=F & change.build=='hg19.to.hg38') {
+        if (change.build==T & g.build=='hg19') {
           print('Changing annotations from hg19 to hg38')
           hg.gr = with(mutations.orig,GRanges(Chr,IRanges(START_POS_REF,END_POS_REF)))
           seqlevelsStyle(hg.gr)="UCSC"
@@ -224,7 +245,7 @@ CDSannotation_indel = function(x, predicted, build, change.build){
           hg38 <- as.data.frame(liftOver(hg.gr, chainObject))
           mutations.orig[,c('Chr','START_POS_REF','END_POS_REF')] = hg38[,c('seqnames','start','end')]
           mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
-        } else if (change.build!=F & change.build=='hg38.to.hg19') {
+        } else if (change.build==T & g.build=='hg38') {
           print('Changing annotations from hg38 to hg19')
           hg.gr = with(mutations.orig,GRanges(Chr,IRanges(START_POS_REF,END_POS_REF)))
           seqlevelsStyle(hg.gr)="UCSC"
@@ -233,7 +254,6 @@ CDSannotation_indel = function(x, predicted, build, change.build){
           mutations.orig[,c('Chr','START_POS_REF','END_POS_REF')] = hg19[,c('seqnames','start','end')]
           mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
         }
-        
         end.time=Sys.time() 
         
         print(end.time-start.time)
@@ -248,13 +268,13 @@ CDSannotation_indel = function(x, predicted, build, change.build){
         mutations.orig <- cbind(mutations.orig[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
                                                    "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan",
                                                    "Sample_Name","Alt_Allele_Freq",
-                                                   "T_altDepth","T_refDepth","N_refDepth","N_altDepth")],
+                                                   "N_refDepth","N_altDepth","T_refDepth","T_altDepth")],
                                  ann,
                                  mutations.orig[,c("REGION", "SMuRF_score")])
         
         mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
         
-        if (change.build!=F & change.build=='hg19.to.hg38') {
+        if (change.build==T & g.build=='hg19') {
           print('Changing annotations from hg19 to hg38')
           hg.gr = with(mutations.orig,GRanges(Chr,IRanges(START_POS_REF,END_POS_REF)))
           seqlevelsStyle(hg.gr)="UCSC"
@@ -262,7 +282,7 @@ CDSannotation_indel = function(x, predicted, build, change.build){
           hg38 <- as.data.frame(liftOver(hg.gr, chainObject))
           mutations.orig[,c('Chr','START_POS_REF','END_POS_REF')] = hg38[,c('seqnames','start','end')]
           mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
-        } else if (change.build!=F & change.build=='hg38.to.hg19') {
+        } else if (change.build==T & g.build=='hg38') {
           print('Changing annotations from hg38 to hg19')
           hg.gr = with(mutations.orig,GRanges(Chr,IRanges(START_POS_REF,END_POS_REF)))
           seqlevelsStyle(hg.gr)="UCSC"

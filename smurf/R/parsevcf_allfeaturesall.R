@@ -11,7 +11,7 @@
 #' 
 #' 
 #' @export
-parsevcf_allfeaturesall = function(x, t.label){
+parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
   
   print("Parsing step")
   
@@ -28,19 +28,19 @@ parsevcf_allfeaturesall = function(x, t.label){
   #ScanVCF with required parameters
   svp_m<-ScanVcfParam(info=c("FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=suppressWarnings(scanVcfHeader(x[[1]])@samples), geno=c("AD", "AF", "DP"))
   svp_f<-ScanVcfParam(info=c("GTI","LEN","MQM","MQMR","ODDS"),samples=suppressWarnings(scanVcfHeader(x[[2]])@samples), geno=c("RO","DP"))
-  svp_vs<-ScanVcfParam(info=c("SSC","GPV","SS","SPV"), samples=suppressWarnings(scanVcfHeader(x[[3]])@samples), geno=c("AD","FREQ", "DP"))
+  svp_vs<-ScanVcfParam(info=c("SSC","GPV","SS","SPV"), samples=suppressWarnings(scanVcfHeader(x[[3]])@samples), geno=c("AD","FREQ", "DP","RD"))
   svp_vd<-ScanVcfParam(info=c("SSF","MSI","SOR"), samples=suppressWarnings(scanVcfHeader(x[[4]])@samples), geno=c("AD", "AF", "DP"))
   
   
   ## read only chromosomes 1-22, X, Y and M
   print("reading mutect2")
-  vcf_m2<- suppressWarnings(readVcf(x[[1]], "hg19", svp_m))
+  vcf_m2<- suppressWarnings(readVcf(x[[1]], genome=seqinfo(scanVcfHeader(x[[1]])), svp_m))
   print("reading freebayes")
-  vcf_f<- suppressWarnings(readVcf(x[[2]], "hg19", svp_f))
+  vcf_f<- suppressWarnings(readVcf(x[[2]], genome=seqinfo(scanVcfHeader(x[[2]])), svp_f))
   print("reading varscan")
-  vcf_vs<- suppressWarnings(readVcf(x[[3]], "hg19", svp_vs))
+  vcf_vs<- suppressWarnings(readVcf(x[[3]], genome=seqinfo(scanVcfHeader(x[[3]])), svp_vs))
   print("reading vardict")
-  vcf_vd<- suppressWarnings(readVcf(x[[4]], "hg19", svp_vd))
+  vcf_vd<- suppressWarnings(readVcf(x[[4]], genome=seqinfo(scanVcfHeader(x[[4]])), svp_vd))
   
   
   # remove duplicates from vcfs
@@ -59,14 +59,20 @@ parsevcf_allfeaturesall = function(x, t.label){
   H_vd=header(vcf_vd)
   
   # sample name
-  # sampleid.t <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T")]
-  # sampleid.n <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T", invert=T)]
-  sampleid.t <-H_m2@samples[grep((H_m2@samples), pattern=t.label)]
-  sampleid.n <-H_m2@samples[grep((H_m2@samples), pattern=t.label, invert=T)]
+  # if (t.label=='-T') {
+  #   sampleid.t <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T")]
+  #   sampleid.n <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T", invert=T)]
+  # } else {
+  #   sampleid.t <-H_m2@samples[grep((H_m2@samples), pattern=t.label)]
+  #   sampleid.n <-H_m2@samples[grep((H_m2@samples), pattern=t.label, invert=T)]
+  # }
+  # if(length(sampleid.t)!=1 & length(sampleid.n)!=1) {
+  #   write(paste0("t.label='",t.label,"'"),stdout())
+  #   stop('t.label for tumor sample is not unique, duplicated or missing')
+  # }
   
-  if(length(sampleid.t)!=1 & length(sampleid.n)!=1) {
-    stop('t.label for tumor sample is duplicated or missing')
-  }
+  sampleid.t = H_m2@header@listData$PEDIGREE$Derived
+  sampleid.n = H_m2@header@listData$PEDIGREE$Original
   
   print("extracting calls passed by at least 1 caller")
   start.time=Sys.time()
@@ -76,11 +82,74 @@ parsevcf_allfeaturesall = function(x, t.label){
   snv_vs<-isSNV(vcf_vs, singleAltOnly=FALSE)
   snv_vd<-isSNV(vcf_vd, singleAltOnly=FALSE)  
   
-  # extract passed calls from each caller
-  pass_m2<- vcf_m2@fixed$FILTER=="PASS"
-  pass_f<- vcf_f@fixed$FILTER=="PASS" 
-  pass_vs<- vcf_vs@fixed$FILTER=="PASS" | vcf_vs@fixed$FILTER=="SpvFreq" | vcf_vs@fixed$FILTER=="REJECT;SpvFreq"
-  pass_vd<- vcf_vd@fixed$FILTER=="PASS"
+  if (roi==F) { 
+    
+    # extract passed calls from each caller
+    pass_m2<- vcf_m2@fixed$FILTER=="PASS"
+    pass_f<- vcf_f@fixed$FILTER=="PASS" 
+    pass_vs<- vcf_vs@fixed$FILTER=="PASS" | vcf_vs@fixed$FILTER=="SpvFreq" | vcf_vs@fixed$FILTER=="REJECT;SpvFreq"
+    pass_vd<- vcf_vd@fixed$FILTER=="PASS"
+    
+  } else if (roi==T) {
+    
+    print('Subsetting ROI region')
+    
+    roi.df = read.delim(roi.dir, header = F, colClasses = c('factor','integer','integer'))
+    colnames(roi.df) = c('chrom','start','end')
+    roi.df$chrom = gsub('chr', '', roi.df$chrom)
+    roi.gr <- with(roi.df, GRanges(chrom, IRanges(start, end)))
+    roi.gr = GenomicRanges::reduce(roi.gr)
+    
+    #check build
+    if (is.null(build)) {
+      print('build not specified. Detecting genome build please wait...')
+      # vcf_m2<- suppressWarnings(readVcf(x[[1]], genome=seqinfo(scanVcfHeader(x[[1]])), svp_m))
+      # H_m2=header(vcf_m2)
+      if(!is.null(H_m2@header@listData$reference)) {
+      reference = H_m2@header@listData$reference@listData$Value
+      hg19 = unique(grep('hg19|GRCh37', reference, value=T))
+      hg38 = unique(grep('hg38|GRCh38', reference, value=T))
+      } else {
+        hg19 = NULL
+        hg38 = NULL
+      }
+      if (length(hg19)==1 & length(hg38)==0) {
+        print('hg19 build detected.')
+        g.build = 'hg19'
+      } else if (length(hg19)==0 & length(hg38)==1) {
+        print('hg38 build detected.')
+        g.build = 'hg38'
+      } else {
+        stop("Unable to detect genome build. Please specify build manually.")
+      }
+    } else {
+      g.build = build
+    }
+    
+    #hg19 to hg38 conversion
+    if(g.build=='hg38') {
+      seqlevelsStyle(roi.gr)="UCSC"
+    } else if(g.build=='hg19') {
+      seqlevelsStyle(roi.gr)="NCBI"
+    }
+    
+    
+    ovl_m2 = suppressWarnings(IRanges::findOverlaps(vcf_m2@rowRanges, roi.gr))
+    ovl_f = suppressWarnings(IRanges::findOverlaps(vcf_f@rowRanges, roi.gr))
+    ovl_vs = suppressWarnings(IRanges::findOverlaps(vcf_vs@rowRanges, roi.gr))
+    ovl_vd = suppressWarnings(IRanges::findOverlaps(vcf_vd@rowRanges, roi.gr))
+    
+    pass_m2 = rep(F, length(vcf_m2@rowRanges))
+    pass_f = rep(F, length(vcf_f@rowRanges))
+    pass_vs = rep(F, length(vcf_vs@rowRanges))
+    pass_vd = rep(F, length(vcf_vd@rowRanges))
+    
+    pass_m2[queryHits(ovl_m2)] = T 
+    pass_f[queryHits(ovl_f)] = T
+    pass_vs[queryHits(ovl_vs)] = T 
+    pass_vd[queryHits(ovl_vd)] = T
+
+  }
   
   # get passed snv calls from all callers
   snv_pass=c(rowRanges(vcf_m2[pass_m2&snv_m2]), rowRanges(vcf_f[pass_f&snv_f]),  rowRanges(vcf_vs[pass_vs&snv_vs]), rowRanges(vcf_vd[pass_vd&snv_vd]),ignore.mcols=T)
@@ -314,20 +383,16 @@ parsevcf_allfeaturesall = function(x, t.label){
   alt.ind=alt.ind[!duplicated(alt.ind[,1]),]# take the first non-NA allele of each row
   meta_data$ALT=alt[alt.ind]  
   
-  # calculate alt allele frequency
   
-  if(all(is.na(meta_data$T_altDepth_Varscan))==F & all(is.na(meta_data$T_refDepth_Varscan))==T) {
-    meta_data$T_refDepth_Varscan <- meta_data$T_totalDepth_Varscan-meta_data$T_altDepth_Varscan
-    meta_data$N_refDepth_Varscan <- meta_data$N_totalDepth_Varscan-meta_data$N_altDepth_Varscan
-  } else if(all(is.na(meta_data$T_altDepth_Varscan))==T & all(is.na(meta_data$T_refDepth_Varscan))==F) {
-    meta_data$T_altDepth_Varscan <- meta_data$T_totalDepth_Varscan-meta_data$T_refDepth_Varscan
-    meta_data$N_altDepth_Varscan <- meta_data$N_totalDepth_Varscan-meta_data$N_refDepth_Varscan
-  }
+  # calculate alt allele frequency
   
   meta_data$T_altDepth_Freebayes <- meta_data$T_totalDepth_Freebayes-meta_data$RO_Freebayes
   meta_data$T_refDepth_Freebayes <- meta_data$RO_Freebayes
   meta_data$AF_Freebayes <- meta_data$T_altDepth_Freebayes/meta_data$T_totalDepth_Freebayes
   # meta_data$AF_Freebayes[meta_data$AF_Freebayes == 0] <- NA
+  
+  meta_data$T_refDepth_Varscan <- meta_data$RD_Varscan
+  meta_data$T_altDepth_Varscan <- meta_data$T_totalDepth_Varscan-meta_data$RD_Varscan
   
   af=meta_data[,c("AF_Mutect2", "FREQ_Varscan", "AF_Vardict", "AF_Freebayes")]
   af.ind=which(!is.na(af), arr.ind=T) #find all non-NA allele freq
@@ -335,12 +400,53 @@ parsevcf_allfeaturesall = function(x, t.label){
   af.ind=af.ind[!duplicated(af.ind[,1]),]# take the first non-NA allele freq of each row
   meta_data$AF=af[af.ind]
   meta_data$AF[is.na(meta_data$AF)] <- 0
-  
   # if(class(meta_data$AF)=='list') {
   #   meta_data$AF = as.numeric(meta_data$AF)
   # }
   
   # meta_data$AF <- rowMeans(meta_data[, c("AF_Mutect2", "AF_Freebayes", "FREQ_Varscan", "AF_Vardict")],na.rm = TRUE)
+  
+  
+  #catch vcf caller mapping errors
+  if(all(is.na(meta_data$T_altDepth_Mutect2))==T | 
+     all(is.na(meta_data$T_refDepth_Mutect2))==T |
+     all(is.na(meta_data$N_altDepth_Mutect2))==T | 
+     all(is.na(meta_data$N_refDepth_Mutect2))==T) {
+    meta_data$T_refDepth_Mutect2 <- NA
+    meta_data$N_refDepth_Mutect2 <- NA
+    meta_data$T_altDepth_Mutect2 <- NA
+    meta_data$N_altDepth_Mutect2 <- NA
+  }
+  if(all(is.na(meta_data$T_altDepth_Freebayes))==T | 
+     all(is.na(meta_data$T_refDepth_Freebayes))==T 
+     # all(is.na(meta_data$N_altDepth_Freebayes))==T | 
+     # all(is.na(meta_data$N_refDepth_Freebayes))==T
+     ) {
+    meta_data$T_refDepth_Freebayes <- NA
+    # meta_data$N_refDepth_Freebayes <- NA
+    meta_data$T_altDepth_Freebayes <- NA
+    # meta_data$N_altDepth_Freebayes <- NA
+  }
+  if(all(is.na(meta_data$T_altDepth_Varscan))==T | 
+     all(is.na(meta_data$T_refDepth_Varscan))==T 
+     # all(is.na(meta_data$N_altDepth_Varscan))==T | 
+     # all(is.na(meta_data$N_refDepth_Varscan))==T
+     ) {
+    meta_data$T_refDepth_Varscan <- NA
+    # meta_data$N_refDepth_Varscan <- NA
+    meta_data$T_altDepth_Varscan <- NA
+    # meta_data$N_altDepth_Varscan <- NA
+  }
+  if(all(is.na(meta_data$T_altDepth_Vardict))==T | 
+     all(is.na(meta_data$T_refDepth_Vardict))==T |
+     all(is.na(meta_data$N_altDepth_Vardict))==T | 
+     all(is.na(meta_data$N_refDepth_Vardict))==T) {
+    meta_data$T_refDepth_Vardict <- NA
+    meta_data$N_refDepth_Vardict <- NA
+    meta_data$T_altDepth_Vardict <- NA
+    meta_data$N_altDepth_Vardict <- NA
+  }
+  
   
   # calculate mean depth
   meta_data$N_refDepth <- round(rowMeans(meta_data[, c("N_refDepth_Mutect2", "N_refDepth_Freebayes", "N_refDepth_Varscan", "N_refDepth_Vardict")],na.rm = TRUE))
@@ -384,7 +490,8 @@ parsevcf_allfeaturesall = function(x, t.label){
   
   # sample name
   # meta_data$Sample_Name <- substrLeft(sampleid.t, 2)
-  meta_data$Sample_Name <- gsub(t.label,'',sampleid.t)
+  # meta_data$Sample_Name <- gsub(t.label,'',sampleid.t)
+  meta_data$Sample_Name <- sampleid.t
   
   #insert missing feature(s)
   # meta_data$BaseQRankSum_Mutect2 <- NA
@@ -408,6 +515,7 @@ parsevcf_allfeaturesall = function(x, t.label){
                                                                                                       "SSF_Vardict","MSI_Vardict","SOR_Vardict",
                                                                                                       "AF",
                                                                                                       "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")], as.numeric)
+  meta_data$AF = round(meta_data$AF,digits=3)
   
   #keep important columns and rename columns
   parse_snv <- meta_data[,c("seqnames","start","end","REF","ALT","REF_MFVdVs","ALT_MFVdVs","Sample_Name",
@@ -665,11 +773,14 @@ parsevcf_allfeaturesall = function(x, t.label){
   meta_indel$ALT <- alt[alt.ind]
   
   # calculate alt allele frequency
-  meta_indel$T_refDepth_Varscan <- meta_indel$T_totalDepth_Varscan-meta_indel$T_altDepth_Varscan
-  meta_indel$N_refDepth_Varscan <- meta_indel$N_totalDepth_Varscan-meta_indel$N_altDepth_Varscan
+  # meta_indel$T_refDepth_Varscan <- meta_indel$T_totalDepth_Varscan-meta_indel$T_altDepth_Varscan
+  # meta_indel$N_refDepth_Varscan <- meta_indel$N_totalDepth_Varscan-meta_indel$N_altDepth_Varscan
   meta_indel$T_altDepth_Freebayes <- meta_indel$T_totalDepth_Freebayes-meta_indel$RO_Freebayes
   meta_indel$T_refDepth_Freebayes <- meta_indel$RO_Freebayes
   meta_indel$AF_Freebayes <- meta_indel$T_altDepth_Freebayes/meta_indel$T_totalDepth_Freebayes
+  
+  meta_indel$T_refDepth_Varscan <- meta_indel$RD_Varscan
+  meta_indel$T_altDepth_Varscan <- meta_indel$T_totalDepth_Varscan-meta_indel$RD_Varscan
   
   af=meta_indel[,c("AF_Mutect2", "FREQ_Varscan", "AF_Vardict", "AF_Freebayes")]
   af.ind=which(!is.na(af), arr.ind=T) #find all non-NA allele freq
@@ -680,6 +791,46 @@ parsevcf_allfeaturesall = function(x, t.label){
   
   if(class(meta_indel$AF)=='list') {
     meta_indel$AF = as.numeric(meta_indel$AF)
+  }
+  
+  #catch vcf caller mapping errors
+  if(all(is.na(meta_indel$T_altDepth_Mutect2))==T | 
+     all(is.na(meta_indel$T_refDepth_Mutect2))==T |
+     all(is.na(meta_indel$N_altDepth_Mutect2))==T | 
+     all(is.na(meta_indel$N_refDepth_Mutect2))==T) {
+    meta_indel$T_refDepth_Mutect2 <- NA
+    meta_indel$N_refDepth_Mutect2 <- NA
+    meta_indel$T_altDepth_Mutect2 <- NA
+    meta_indel$N_altDepth_Mutect2 <- NA
+  }
+  if(all(is.na(meta_indel$T_altDepth_Freebayes))==T | 
+     all(is.na(meta_indel$T_refDepth_Freebayes))==T 
+     # all(is.na(meta_indel$N_altDepth_Freebayes))==T | 
+     # all(is.na(meta_indel$N_refDepth_Freebayes))==T
+  ) {
+    meta_indel$T_refDepth_Freebayes <- NA
+    # meta_indel$N_refDepth_Freebayes <- NA
+    meta_indel$T_altDepth_Freebayes <- NA
+    # meta_indel$N_altDepth_Freebayes <- NA
+  }
+  if(all(is.na(meta_indel$T_altDepth_Varscan))==T | 
+     all(is.na(meta_indel$T_refDepth_Varscan))==T 
+     # all(is.na(meta_indel$N_altDepth_Varscan))==T | 
+     # all(is.na(meta_indel$N_refDepth_Varscan))==T
+  ) {
+    meta_indel$T_refDepth_Varscan <- NA
+    # meta_indel$N_refDepth_Varscan <- NA
+    meta_indel$T_altDepth_Varscan <- NA
+    # meta_indel$N_altDepth_Varscan <- NA
+  }
+  if(all(is.na(meta_indel$T_altDepth_Vardict))==T | 
+     all(is.na(meta_indel$T_refDepth_Vardict))==T |
+     all(is.na(meta_indel$N_altDepth_Vardict))==T | 
+     all(is.na(meta_indel$N_refDepth_Vardict))==T) {
+    meta_indel$T_refDepth_Vardict <- NA
+    meta_indel$N_refDepth_Vardict <- NA
+    meta_indel$T_altDepth_Vardict <- NA
+    meta_indel$N_altDepth_Vardict <- NA
   }
   
   # calculate mean depth
@@ -722,7 +873,8 @@ parsevcf_allfeaturesall = function(x, t.label){
   
   # sample name
   # meta_indel$Sample_Name <- substrLeft(sampleid.t, 2)
-  meta_indel$Sample_Name <- gsub(t.label,'',sampleid.t)
+  # meta_indel$Sample_Name <- gsub(t.label,'',sampleid.t)
+  meta_indel$Sample_Name <- sampleid.t
   
   #insert missing feature
   # meta_indel$BaseQRankSum_Mutect2 <- NA
