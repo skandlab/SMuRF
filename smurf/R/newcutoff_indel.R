@@ -19,19 +19,19 @@ newcutoff_indel = function(parsevcf, indel.cutoff){
         cutoff = indel.cutoff
       } else if (indel.cutoff == 0) {
         cutoff = 0
-        fixed.indel.cutoff = T
+        # fixed.indel.cutoff = T
       } 
   }
     else {
         if (indel.cutoff == 'default') {
           print('Using default indel.cutoff')
-          cutoff = 0.352 #High sensitivity Recall >0.80
+          cutoff = 0.348 #High sensitivity Recall >0.80
         } else if (indel.cutoff != 'default'& indel.cutoff !=0) {
           print("Assigning new indel.cutoff")
           cutoff = indel.cutoff
         } else if (indel.cutoff == 0) {
           cutoff = 0
-          fixed.indel.cutoff = T
+          # fixed.indel.cutoff = T
         } 
       }
 
@@ -40,10 +40,10 @@ newcutoff_indel = function(parsevcf, indel.cutoff){
     # final <- parsevcf[[2]]
     indel_parse <- parsevcf[[2]]
     
-    indel_predict = dplyr::filter(indel_parse, TRUE.>cutoff)
-    
-    if (fixed.indel.cutoff == T) {
+    if (cutoff == 0) {
       indel_predict = indel_parse
+    } else {
+      indel_predict = dplyr::filter(indel_parse, TRUE.>cutoff)
     }
     
     if (dim(indel_predict)[1] != 0) { #encountering zero predictions will exit code, output contains parse and raw file only. 

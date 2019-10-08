@@ -15,7 +15,7 @@ callers MuTect2, Freebayes, VarDict and VarScan.}
 
 \item{build}{Your current genomic build}
 
-\item{change.build}{Choose 'hg19.to.hg38' or 'hg38.to.hg19' to convert annotation output}
+\item{change.build}{Choose TRUE to convert from 'hg19.to.hg38' or 'hg38.to.hg19' annotation output}
 }
 \description{
 snvRF-Annotations

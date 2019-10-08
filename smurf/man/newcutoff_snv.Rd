@@ -4,7 +4,7 @@
 \alias{newcutoff_snv}
 \title{newcutoff_snv}
 \usage{
-newcutoff_snv(parsevcf, snv.cutoff, fixed.snv.cutoff = F)
+newcutoff_snv(parsevcf, snv.cutoff)
 }
 \description{
 SMuRFv1.6 (R-3.3.1, R-3.5.1)
