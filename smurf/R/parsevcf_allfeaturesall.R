@@ -333,16 +333,16 @@ parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
   meta_data=data.frame(snv_pass)[,1:3]
   meta_data[c(names_m2,names_f,names_vs,names_vd)]=NA
   #do not merge when the 1st row is all NAs + last column PASSED/REJECT
-  if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,-1])))!=ncol(data.frame(mcols(gr_m2)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,-1]))-1)==TRUE) {
     meta_data[Biostrings::match(gr_m2, snv_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_f)[1,-1])))!=ncol(data.frame(mcols(gr_f)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))!=ncol(data.frame(mcols(gr_f)[1,-1]))-1)==TRUE) {
     meta_data[Biostrings::match(gr_f, snv_pass), names_f]=data.frame(mcols(gr_f)[,-1])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,-1])))!=ncol(data.frame(mcols(gr_vs)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))!=ncol(data.frame(mcols(gr_vs)[1,-1]))-1)==TRUE) {
     meta_data[Biostrings::match(gr_vs, snv_pass), names_vs]=data.frame(mcols(gr_vs)[,-1])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,-1])))!=ncol(data.frame(mcols(gr_vd)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))!=ncol(data.frame(mcols(gr_vd)[1,-1]))-1)==TRUE) {
     meta_data[Biostrings::match(gr_vd, snv_pass), names_vd]=data.frame(mcols(gr_vd)[,-1])
   }
   end.time=Sys.time()
@@ -492,6 +492,10 @@ parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
   # meta_data$Sample_Name <- substrLeft(sampleid.t, 2)
   # meta_data$Sample_Name <- gsub(t.label,'',sampleid.t)
   meta_data$Sample_Name <- sampleid.t
+  
+  
+  #filtering low read depth (in case of targeted sequencing or poor coverage) 
+  meta_data = meta_data[((meta_data$N_refDepth!=0 & meta_data$N_altDepth!=0) | (meta_data$T_refDepth!=0 & meta_data$T_altDepth!=0)),]
   
   #insert missing feature(s)
   # meta_data$BaseQRankSum_Mutect2 <- NA
@@ -711,16 +715,16 @@ parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
   meta_indel=data.frame(indel_pass)[,1:3]
   meta_indel[c(names_m2,names_f,names_vs,names_vd)]=NA
   #do not merge when the 1st row is all NAs + last column PASSED/REJECT
-  if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,-1])))!=ncol(data.frame(mcols(gr_m2)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,-1]))-1)==TRUE) {
     meta_indel[Biostrings::match(gr_m2, indel_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_f)[1,-1])))!=ncol(data.frame(mcols(gr_f)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))!=ncol(data.frame(mcols(gr_f)[1,-1]))-1)==TRUE) {
     meta_indel[Biostrings::match(gr_f, indel_pass), names_f]=data.frame(mcols(gr_f)[,-1])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,-1])))!=ncol(data.frame(mcols(gr_vs)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))!=ncol(data.frame(mcols(gr_vs)[1,-1]))-1)==TRUE) {
     meta_indel[Biostrings::match(gr_vs, indel_pass), names_vs]=data.frame(mcols(gr_vs)[,-1])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,-1])))!=ncol(data.frame(mcols(gr_vd)[1,-1]))-1)==TRUE) {
+  if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))!=ncol(data.frame(mcols(gr_vd)[1,-1]))-1)==TRUE) {
     meta_indel[Biostrings::match(gr_vd, indel_pass), names_vd]=data.frame(mcols(gr_vd)[,-1])
   }
   end.time=Sys.time()
@@ -875,6 +879,9 @@ parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
   # meta_indel$Sample_Name <- substrLeft(sampleid.t, 2)
   # meta_indel$Sample_Name <- gsub(t.label,'',sampleid.t)
   meta_indel$Sample_Name <- sampleid.t
+  
+  #filtering low read depth (in case of targeted sequencing or poor coverage) 
+  meta_indel = meta_indel[((meta_indel$N_refDepth!=0 & meta_indel$N_altDepth!=0) | (meta_indel$T_refDepth!=0 & meta_indel$T_altDepth!=0)),]
   
   #insert missing feature
   # meta_indel$BaseQRankSum_Mutect2 <- NA
