@@ -40,6 +40,10 @@
 #' @param change.build TRUE or FALSE. For conversion of your genomic coordinates.
 #' Default option is disabled to retain your original 'build' specified above. 
 #' 
+#' @param t.label (optional) Provide the sample name for your tumour sample to ease 
+#' the identification of the normal and tumour sample names in your vcf.
+#' See examples below
+#' 
 #' @param check.packages Default as TRUE. For debug mode.
 #' 
 #' @examples
@@ -48,7 +52,7 @@
 #' 
 #' myresults = smurf(directory="/path/to/directory..",
 #'                   mode="snv",
-#'                   save.files=T, output.dir="/path/to/output")
+#'                   output.dir="/path/to/output")
 #' 
 #' myresults = smurf(directory="/path/to/directory..",
 #'                   mode="combined",
@@ -69,6 +73,12 @@
 #'                   annotation=T, 
 #'                   build='hg38', change.build=T)
 #'                   
+#' #Specify tumor sample name
+#' myresults = smurf(directory="/path/to/directory..",
+#'                   mode="combined", 
+#'                   annotation=T, 
+#'                   build='hg38', t.label = '-T')
+#'                                       
 #' #Specify directories manually
 #' dir.list = list(mutect='/path/to/mutect.vcf.gz',
 #'                 freebayes='/path/to/freebayes.vcf.gz',
@@ -83,11 +93,11 @@
 smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
-                 build=NULL, change.build=F,
+                 build=NULL, change.build=F, t.label=NULL,
                  check.packages=T){
   
   #SMuRF version announcement
-  print("SMuRFv1.6 (3rd Oct 2019)")
+  print("SMuRFv1.6.2 (24th Oct 2019)")
   
 
   if(is.null(directory)){
@@ -95,7 +105,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     return(write("smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=T, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
-                 build=NULL, change.build=F,
+                 build=NULL, change.build=F, t.label=NULL,
                  check.packages=T)", stdout()))
   }
   
@@ -221,7 +231,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       stop('build unrecognized')
     }
   }
-
+  
     #check for existing and required packages
     
   if(check.packages == T) {
@@ -331,7 +341,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     if (whitelist == T) {
       print('Retrieving whitelist...')
       
-      parsevcf = parsevcf_allfeaturesall(x, roi=T, roi.dir=whitelist.file)
+      parsevcf = parsevcf_allfeaturesall(x, roi=T, roi.dir=whitelist.file, t.label=t.label)
       
       parsevcf[[1]]$SMuRF_score = NA
       parsevcf[[2]]$SMuRF_score = NA
@@ -468,7 +478,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
         } else {parse_snv=NA}
 
       } else {
-        parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL)
+        parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL, t.label=t.label)
         snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
         # indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
         
@@ -533,7 +543,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
           } else {parse_indel=NA}
           
         } else {
-          parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL)
+          parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL, t.label=t.label)
           # snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
           indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
         }
@@ -605,7 +615,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
           } else {parse_indel=NA}
           
         } else {
-          parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL)
+          parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL, t.label=t.label)
           snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
           indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
         }
@@ -666,7 +676,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
 
     } else if (mode == "featureselectionall") { #debug mode, only parse feature matrix
       
-      parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL)
+      parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL, t.label=t.label)
       
       end.time <- Sys.time()
       time.taken <- end.time - start.time

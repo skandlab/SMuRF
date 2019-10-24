@@ -11,7 +11,7 @@
 #' 
 #' 
 #' @export
-parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
+parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL, t.label=NULL){
   
   print("Parsing step")
   
@@ -59,20 +59,23 @@ parsevcf_allfeaturesall = function(x, roi=F, roi.dir=NULL){
   H_vd=header(vcf_vd)
   
   # sample name
-  # if (t.label=='-T') {
-  #   sampleid.t <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T")]
-  #   sampleid.n <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T", invert=T)]
-  # } else {
-  #   sampleid.t <-H_m2@samples[grep((H_m2@samples), pattern=t.label)]
-  #   sampleid.n <-H_m2@samples[grep((H_m2@samples), pattern=t.label, invert=T)]
-  # }
-  # if(length(sampleid.t)!=1 & length(sampleid.n)!=1) {
-  #   write(paste0("t.label='",t.label,"'"),stdout())
-  #   stop('t.label for tumor sample is not unique, duplicated or missing')
-  # }
+  if (is.null(t.label)) {
+    sampleid.t = H_m2@header@listData$PEDIGREE$Derived
+    sampleid.n = H_m2@header@listData$PEDIGREE$Original
+    # sampleid.t <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T")]
+    # sampleid.n <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T", invert=T)]
+  } else {
+    sampleid.t <-H_m2@samples[grep((H_m2@samples), pattern=t.label)]
+    sampleid.n <-H_m2@samples[grep((H_m2@samples), pattern=t.label, invert=T)]
+  }
   
-  sampleid.t = H_m2@header@listData$PEDIGREE$Derived
-  sampleid.n = H_m2@header@listData$PEDIGREE$Original
+  if(length(sampleid.t)!=1 & length(sampleid.n)!=1) {
+    write(paste0("t.label='",t.label,"'"),stdout())
+    stop('t.label for tumor sample is not unique, duplicated or missing')
+  }
+  
+  # sampleid.t = H_m2@header@listData$PEDIGREE$Derived
+  # sampleid.n = H_m2@header@listData$PEDIGREE$Original
   
   print("extracting calls passed by at least 1 caller")
   start.time=Sys.time()
