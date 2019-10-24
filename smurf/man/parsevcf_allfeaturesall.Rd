@@ -4,7 +4,7 @@
 \alias{parsevcf_allfeaturesall}
 \title{parsevcf}
 \usage{
-parsevcf_allfeaturesall(x, roi = F, roi.dir = NULL)
+parsevcf_allfeaturesall(x, roi = F, roi.dir = NULL, t.label = NULL)
 }
 \arguments{
 \item{x}{List object containing the four vcf.gz files from 

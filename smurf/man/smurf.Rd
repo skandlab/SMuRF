@@ -7,7 +7,7 @@
 smurf(directory = NULL, mode = NULL, nthreads = -1, annotation = F,
   output.dir = NULL, parse.dir = NULL, whitelist.file = NULL,
   snv.cutoff = "default", indel.cutoff = "default", build = NULL,
-  change.build = F, check.packages = T)
+  change.build = F, t.label = NULL, check.packages = T)
 }
 \arguments{
 \item{directory}{Choose directory where the files Variant Caller Format(VCF) files are located. 
@@ -42,6 +42,10 @@ All SNVs and INDELS will be retrieved. SMuRF prediction will not be performed.}
 \item{change.build}{TRUE or FALSE. For conversion of your genomic coordinates.
 Default option is disabled to retain your original 'build' specified above.}
 
+\item{t.label}{(optional) Provide the sample name for your tumour sample to ease 
+the identification of the normal and tumour sample names in your vcf.
+See examples below}
+
 \item{check.packages}{Default as TRUE. For debug mode.}
 }
 \description{
@@ -59,7 +63,7 @@ myresults = smurf(directory="/path/to/directory..",
 
 myresults = smurf(directory="/path/to/directory..",
                   mode="snv",
-                  save.files=T, output.dir="/path/to/output")
+                  output.dir="/path/to/output")
 
 myresults = smurf(directory="/path/to/directory..",
                   mode="combined",
@@ -80,6 +84,12 @@ myresults = smurf(directory="/path/to/directory..",
                   annotation=T, 
                   build='hg38', change.build=T)
                   
+#Specify tumor sample name
+myresults = smurf(directory="/path/to/directory..",
+                  mode="combined", 
+                  annotation=T, 
+                  build='hg38', t.label = '-T')
+                                      
 #Specify directories manually
 dir.list = list(mutect='/path/to/mutect.vcf.gz',
                 freebayes='/path/to/freebayes.vcf.gz',
