@@ -1,17 +1,19 @@
-#' snvRF-Annotations
-#' Step 3 Annotations
+#' indelRF-Annotations
+#' FOR WHITELIST ATTEMPT ANNOTATIONS IF POSSIBLE BUT MAY HAVE INACCURACIES
 #'
+#' 
+#' Step 3 Annotations
 #'@param x List object containing the four vcf.gz files from 
 #' callers MuTect2, Freebayes, VarDict and VarScan.
-#' @param predicted List object containing 1.stats, 2.predicted-snv and 3.parse-snv matrices
+#' @param predicted List object containing 1.stats, 2.predicted-indel and 3.parse-indel matrices
 #' @param build Your current genomic build
-#' @param change.build Choose TRUE to convert from 'hg19.to.hg38' or 'hg38.to.hg19' annotation output
+#' @param change.build Choose 'hg19.to.hg38' or 'hg38.to.hg19' to convert annotation output
 #'  
-#'@examples
+#' @examples
 #' 
 #' 
-#'@export
-CDSannotation_snv = function(x, predicted, build, change.build){
+#' @export
+CDSannotation_indel_whitelist = function(x, predicted, build, change.build){
   
   print("Adding CDS and annotations")
   
@@ -31,7 +33,7 @@ CDSannotation_snv = function(x, predicted, build, change.build){
     if(length(gr)==length(mut.subset)){
       gr$ANN=info(vcf)$ANN
     } else if (length(unlist(gr$ALT))==length(gr)) {
-      z=which(gr$FILTER=="PASS" & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
+      z=which(gr$FILTER=="PASS" & nchar(as.character(gr$REF))!=1 | nchar(as.character(unlist(gr$ALT)))!=1)
       gr=gr[z]
       gr$ANN=info(vcf)$ANN[z]
     } else {
@@ -88,11 +90,12 @@ CDSannotation_snv = function(x, predicted, build, change.build){
 
   # annotate ensembl ids that are present in uniprot
   smurfdir <- find.package("smurf")
+  
   uniprotdir <- paste0(smurfdir, "/data/ensembl2uni.rds")
   ensembl2uni <- readRDS(uniprotdir)
-  
-  cdsdir <- paste0(smurfdir, "/data/cds.rds") #HG19
+  cdsdir <- paste0(smurfdir, "/data/cds.rds") #hg19
   cds <- readRDS(cdsdir)
+
   seqlevelsStyle(cds)="NCBI"
 
     #tryCatch({
@@ -100,13 +103,10 @@ CDSannotation_snv = function(x, predicted, build, change.build){
       mutations.orig=predicted[[2]]
       #mutations.orig=snvpredict[[2]]
       #mutations.orig=indelpredict[[2]]
-      #mutations.orig=snv.roi[[2]]
-      #mutations.orig=test.smurf$smurf_snv$predicted_snv
       
       #check build
       if (is.null(build)) {
         print('build not specified. Detecting genome build please wait...')
-        svp_m<-ScanVcfParam(info=c("FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=suppressWarnings(scanVcfHeader(x[[1]])@samples), geno=c("AD", "AF", "DP"))
         vcf_m2<- suppressWarnings(readVcf(x[[1]], genome=seqinfo(scanVcfHeader(x[[1]])), svp_m))
         H_m2=header(vcf_m2)
         reference = H_m2@header@listData$reference@listData$Value
@@ -132,7 +132,7 @@ CDSannotation_snv = function(x, predicted, build, change.build){
           stop("Unable to detect genome build. Please specify build manually.")
         }
       } else {
-      g.build = build
+        g.build = build
       }
       
       #hg19 to hg38 conversion
@@ -148,7 +148,8 @@ CDSannotation_snv = function(x, predicted, build, change.build){
                                             FILTER_Mutect2=FILTER_Mutect2,FILTER_Freebayes=FILTER_Freebayes,FILTER_Vardict=FILTER_Vardict,FILTER_Varscan=FILTER_Varscan,
                                             Sample_Name=Sample_Name,Alt_Allele_Freq=Alt_Allele_Freq,
                                             N_refDepth=N_refDepth,N_altDepth=N_altDepth,
-                                            T_refDepth=T_refDepth,T_altDepth=T_altDepth))
+                                            T_refDepth=T_refDepth,T_altDepth=T_altDepth
+                                            ))
       
       # annotate CDS region by overlapping with ensembl cds file
       ovl=findOverlaps(mutations,cds)
@@ -165,26 +166,26 @@ CDSannotation_snv = function(x, predicted, build, change.build){
         
         mutations2=mutations
         
-        mut.mutect2=mutations[mutations$FILTER_Mutect2==TRUE & nchar(gsub("/.*.","",mutations$ALT_MFVdVs))==1 & nchar(gsub("/.*.","",mutations$REF_MFVdVs))==1]
-        # mut.mutect2=mutations[nchar(gsub("/.*.","",mutations$ALT_MFVdVs))==1 & nchar(gsub("/.*.","",mutations$REF_MFVdVs))==1]
+        # mut.mutect2=mutations[mutations$FILTER_Mutect2==TRUE]# & (nchar(gsub("/.*.","",mutations$ALT_MFVdVs))>1 & gsub("/.*.","",mutations$REF_MFVdVs)!="NA") | nchar(gsub("/.*.","",mutations$REF_MFVdVs))>=1]
+        mut.mutect2=mutations[(gsub("/.*.","",mutations$REF_MFVdVs)!="NA")]
         if (length(mut.mutect2)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.mutect2)))]
         }
         
-        mut.vardict=mutations[mutations$FILTER_Vardict==TRUE & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
-        # mut.vardict=mutations[nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.vardict=mutations[mutations$FILTER_Vardict==TRUE]# & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        mut.vardict=mutations[(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
         if (length(mut.vardict)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.vardict)))]
         }
         
-        mut.varscan=mutations[mutations$FILTER_Varscan==TRUE & nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
-        # mut.varscan=mutations[nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
+        # mut.varscan=mutations[mutations$FILTER_Varscan==TRUE]# & nchar(gsub(".*./","",mutations$ALT_MFVdVs))>1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
+        mut.varscan=mutations[(gsub(".*./","",mutations$REF_MFVdVs))!="NA"]
         if (length(mut.varscan)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.varscan)))]
         }
         
-        mut.freebayes=mutations[mutations$FILTER_Freebayes==TRUE & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
-        # mut.freebayes=mutations[nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.freebayes=mutations[mutations$FILTER_Freebayes==TRUE]# & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        mut.freebayes=mutations[(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
         if (sum(length(mut.mutect2),length(mut.vardict),length(mut.varscan),length(mut.freebayes))!=length(mutations2)){
           print("Warning: missing annotations")
         }
@@ -254,8 +255,6 @@ CDSannotation_snv = function(x, predicted, build, change.build){
           mutations.orig[,c('Chr','START_POS_REF','END_POS_REF')] = hg19[,c('seqnames','start','end')]
           mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
         }
-        
-        
         end.time=Sys.time() 
         
         print(end.time-start.time)
@@ -294,7 +293,7 @@ CDSannotation_snv = function(x, predicted, build, change.build){
           mutations.orig$Chr = gsub('chr','',mutations.orig$Chr)
         }
         
-        
+
       }
 
   return(list(annotated=mutations.orig))

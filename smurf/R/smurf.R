@@ -8,7 +8,7 @@
 #' Input files containing variant calls should be ".vcf.gz" format of each caller.
 #' Supported for R (>=3.3.1), Java 7 or 8. For R (>=3.5.1), Java (7 up to 11 is supported). 
 #' 
-#' @param directory Choose directory where the files Variant Caller Format(VCF) files are located. 
+#' @param directory Choose directory where the Variant Caller Format(VCF) files are located. 
 #' Alternatively, provide a list object containing the path to the 4 VCF files labelled: mutect, freebayes, vardict and varscan.
 #'
 #' @param mode Choose "snv", "indel" or "combined" (snv+indel). 
@@ -97,13 +97,13 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T){
   
   #SMuRF version announcement
-  print("SMuRFv1.6.2 (24th Oct 2019)")
+  print("SMuRFv1.6.3 (15th Jan 2020)")
   
 
   if(is.null(directory)){
     # stop('directory path not specified')
     return(write("smurf(directory=NULL, mode=NULL, nthreads = -1,
-                 annotation=T, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
+                 annotation=F, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
                  build=NULL, change.build=F, t.label=NULL,
                  check.packages=T)", stdout()))
@@ -161,8 +161,8 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
   if(annotation == T) {
     mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
     freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
-    varscan.tbi <- Sys.glob(paste0(directory,"*/varscan*.vcf.gz.tbi"))
-    vardict.tbi <- Sys.glob(paste0(directory,"*/vardict*.vcf.gz.tbi"))
+    varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
+    vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
     tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi)
     
     if(length(grep("mutect", mutect2.tbi))!=1 & 
@@ -318,6 +318,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     suppressWarnings(suppressMessages(library(VariantAnnotation)))
 
     suppressWarnings(suppressMessages(library(h2o)))
+    #nthreads = -1
     suppressWarnings(h2o.init(nthreads = nthreads))
       
     
@@ -372,7 +373,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
         
         if (length(snvpredict)>1) {
           print("SNV annotation")
-          snvannotation<-CDSannotation_snv(x,snvpredict,build=build,change.build=change.build)
+          snvannotation<-CDSannotation_snv_whitelist(x,snvpredict,build=build,change.build=change.build)
         } else {
           print("No snv predictions. Skipping snv annotation step.")
           snvannotation=NULL
@@ -380,7 +381,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
         
         if (length(indelpredict)>1) {
           print("Indel annotation")
-          indelannotation<-CDSannotation_indel(x,indelpredict,build=build,change.build=change.build)
+          indelannotation<-CDSannotation_indel_whitelist(x,indelpredict,build=build,change.build=change.build)
         } else {
           print("No indel predictions. Skipping indel annotation step.")
           indelannotation=NULL

@@ -10,7 +10,7 @@ smurf(directory = NULL, mode = NULL, nthreads = -1, annotation = F,
   change.build = F, t.label = NULL, check.packages = T)
 }
 \arguments{
-\item{directory}{Choose directory where the files Variant Caller Format(VCF) files are located. 
+\item{directory}{Choose directory where the Variant Caller Format(VCF) files are located. 
 Alternatively, provide a list object containing the path to the 4 VCF files labelled: mutect, freebayes, vardict and varscan.}
 
 \item{mode}{Choose "snv", "indel" or "combined" (snv+indel). 

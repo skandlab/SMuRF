@@ -165,26 +165,26 @@ CDSannotation_indel = function(x, predicted, build, change.build){
         
         mutations2=mutations
         
-        # mut.mutect2=mutations[mutations$FILTER_Mutect2==TRUE]# & (nchar(gsub("/.*.","",mutations$ALT_MFVdVs))>1 & gsub("/.*.","",mutations$REF_MFVdVs)!="NA") | nchar(gsub("/.*.","",mutations$REF_MFVdVs))>=1]
-        mut.mutect2=mutations[(gsub("/.*.","",mutations$REF_MFVdVs)!="NA")]
+        mut.mutect2=mutations[mutations$FILTER_Mutect2==TRUE]# & (nchar(gsub("/.*.","",mutations$ALT_MFVdVs))>1 & gsub("/.*.","",mutations$REF_MFVdVs)!="NA") | nchar(gsub("/.*.","",mutations$REF_MFVdVs))>=1]
+        # mut.mutect2=mutations[(gsub("/.*.","",mutations$REF_MFVdVs)!="NA")]
         if (length(mut.mutect2)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.mutect2)))]
         }
         
-        # mut.vardict=mutations[mutations$FILTER_Vardict==TRUE]# & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
-        mut.vardict=mutations[(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
+        mut.vardict=mutations[mutations$FILTER_Vardict==TRUE]# & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.vardict=mutations[(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
         if (length(mut.vardict)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.vardict)))]
         }
         
-        # mut.varscan=mutations[mutations$FILTER_Varscan==TRUE]# & nchar(gsub(".*./","",mutations$ALT_MFVdVs))>1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
-        mut.varscan=mutations[(gsub(".*./","",mutations$REF_MFVdVs))!="NA"]
+        mut.varscan=mutations[mutations$FILTER_Varscan==TRUE]# & nchar(gsub(".*./","",mutations$ALT_MFVdVs))>1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
+        # mut.varscan=mutations[(gsub(".*./","",mutations$REF_MFVdVs))!="NA"]
         if (length(mut.varscan)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.varscan)))]
         }
         
-        # mut.freebayes=mutations[mutations$FILTER_Freebayes==TRUE]# & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
-        mut.freebayes=mutations[(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
+        mut.freebayes=mutations[mutations$FILTER_Freebayes==TRUE]# & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))>1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.freebayes=mutations[(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))!="NA"]
         if (sum(length(mut.mutect2),length(mut.vardict),length(mut.varscan),length(mut.freebayes))!=length(mutations2)){
           print("Warning: missing annotations")
         }
