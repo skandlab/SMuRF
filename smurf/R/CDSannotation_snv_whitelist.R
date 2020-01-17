@@ -1,5 +1,6 @@
 #' snvRF-Annotations
 #' Step 3 Annotations
+#' FOR WHITELIST ATTEMPT ANNOTATIONS IF POSSIBLE BUT MAY HAVE INACCURACIES
 #'
 #'@param x List object containing the four vcf.gz files from 
 #' callers MuTect2, Freebayes, VarDict and VarScan.
@@ -11,7 +12,7 @@
 #' 
 #' 
 #'@export
-CDSannotation_snv = function(x, predicted, build, change.build){
+CDSannotation_snv_whitelist = function(x, predicted, build, change.build){
   
   print("Adding CDS and annotations")
   
@@ -106,7 +107,6 @@ CDSannotation_snv = function(x, predicted, build, change.build){
       #check build
       if (is.null(build)) {
         print('build not specified. Detecting genome build please wait...')
-        svp_m<-ScanVcfParam(info=c("FS","MQ","MQRankSum","NLOD","ReadPosRankSum","TLOD"), samples=suppressWarnings(scanVcfHeader(x[[1]])@samples), geno=c("AD", "AF", "DP"))
         vcf_m2<- suppressWarnings(readVcf(x[[1]], genome=seqinfo(scanVcfHeader(x[[1]])), svp_m))
         H_m2=header(vcf_m2)
         reference = H_m2@header@listData$reference@listData$Value
@@ -165,26 +165,26 @@ CDSannotation_snv = function(x, predicted, build, change.build){
         
         mutations2=mutations
         
-        mut.mutect2=mutations[mutations$FILTER_Mutect2==TRUE & nchar(gsub("/.*.","",mutations$ALT_MFVdVs))==1 & nchar(gsub("/.*.","",mutations$REF_MFVdVs))==1]
-        # mut.mutect2=mutations[nchar(gsub("/.*.","",mutations$ALT_MFVdVs))==1 & nchar(gsub("/.*.","",mutations$REF_MFVdVs))==1]
+        # mut.mutect2=mutations[mutations$FILTER_Mutect2==TRUE]# & nchar(gsub("/.*.","",mutations$ALT_MFVdVs))==1 & nchar(gsub("/.*.","",mutations$REF_MFVdVs))==1]
+        mut.mutect2=mutations[nchar(gsub("/.*.","",mutations$ALT_MFVdVs))==1 & nchar(gsub("/.*.","",mutations$REF_MFVdVs))==1]
         if (length(mut.mutect2)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.mutect2)))]
         }
         
-        mut.vardict=mutations[mutations$FILTER_Vardict==TRUE & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
-        # mut.vardict=mutations[nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.vardict=mutations[mutations$FILTER_Vardict==TRUE]# & nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        mut.vardict=mutations[nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
         if (length(mut.vardict)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.vardict)))]
         }
         
-        mut.varscan=mutations[mutations$FILTER_Varscan==TRUE & nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
-        # mut.varscan=mutations[nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
+        # mut.varscan=mutations[mutations$FILTER_Varscan==TRUE]# & nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
+        mut.varscan=mutations[nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
         if (length(mut.varscan)!=0){
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.varscan)))]
         }
         
-        mut.freebayes=mutations[mutations$FILTER_Freebayes==TRUE & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
-        # mut.freebayes=mutations[nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        # mut.freebayes=mutations[mutations$FILTER_Freebayes==TRUE]# & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
+        mut.freebayes=mutations[nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
         if (sum(length(mut.mutect2),length(mut.vardict),length(mut.varscan),length(mut.freebayes))!=length(mutations2)){
           print("Warning: missing annotations")
         }
