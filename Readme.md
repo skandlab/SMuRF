@@ -1,7 +1,7 @@
 ### SMuRF vignette
 by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
-15th Jan 2020
+20th Jan 2020
 
 #### <br/>Introduction
 
@@ -98,7 +98,7 @@ library("smurf") #load SMuRF package
 
 smurf() #check version and parameters
 
-# "SMuRFv1.6.3 (15th Jan 2020)"
+# "SMuRFv1.6.4 (20th Jan 2020)"
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
