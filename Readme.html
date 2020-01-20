@@ -183,7 +183,7 @@ summary {
 <div id="smurf-vignette" class="section level3">
 <h3>SMuRF vignette</h3>
 <p>by <a href="https://www.researchgate.net/profile/Weitai_Huang">Huang Weitai</a></p>
-<p>14th Jan 2020</p>
+<p>15th Jan 2020</p>
 <div id="introduction" class="section level4">
 <h4><br />Introduction</h4>
 <p><em>SMuRF</em> R package predicts a consensus set of somatic mutation calls using RandomForest machine learning. SMuRF generates a set of point mutations and insertions/deletions (indels) trained on the latest community-curated tumor whole genome sequencing data (Alioto <em>et. al.</em>, 2015, Nat. Comms.). Our method is fast and accurate and analyses both whole-genome and whole-exome sequencing data from different cancer types.</p>
@@ -215,29 +215,9 @@ summary {
 </div>
 <div id="requirements" class="section level4">
 <h4><br />Requirements</h4>
-<table>
-<thead>
-<tr class="header">
-<th align="center">R 3.3 &amp; 3.4</th>
-<th align="center">R &gt;=3.5</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="center">Java 7 or 8</td>
-<td align="center">Java 7 or higher (tested on Java 11)</td>
-</tr>
-<tr class="even">
-<td align="center">h2o-3.10.3.3 (included in package)</td>
-<td align="center">h2o-3.26.0.2 (requires download*)</td>
-</tr>
-<tr class="odd">
-<td align="center">bioconductor::VariantAnnotation</td>
-<td align="center">BiocManager::VariantAnnotation</td>
-</tr>
-</tbody>
-</table>
-<p><em>If h2o-3.26.0.2 takes a long time to install, try manually installing from their <a href="https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html">AWS page.</a></em></p>
+<p><strong>R 3.3 &amp; 3.4</strong> : bioconductor::VariantAnnotation</p>
+<p><strong>R &gt;=3.5</strong> : BiocManager::VariantAnnotation</p>
+<p><strong>h2o package</strong> : <em>If h2o package takes a long time to install, try manually installing from their <a href="https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html">AWS page.</a></em></p>
 <p><a name="installation"></a></p>
 </div>
 <div id="installation" class="section level4">
@@ -257,7 +237,7 @@ install.packages(&quot;my/current/directory/smurf&quot;, repos = NULL, type = &q
 
 smurf() #check version and parameters
 
-# &quot;SMuRFv1.6.2 (24th Oct 2019)&quot;
+# &quot;SMuRFv1.6.3 (15th Jan 2020)&quot;
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',

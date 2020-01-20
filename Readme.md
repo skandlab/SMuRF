@@ -1,7 +1,7 @@
 ### SMuRF vignette
 by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
-14th Jan 2020
+15th Jan 2020
 
 #### <br/>Introduction
 
@@ -62,13 +62,12 @@ In this vignette, we utilise a [partial output dataset](https://github.com/skand
 
 #### <br/>Requirements
 
-R 3.3 & 3.4|R >=3.5
-:-:|:-:
-Java 7 or 8|Java 7 or higher (tested on Java 11)
-h2o-3.10.3.3 (included in package)|h2o-3.26.0.2 (requires download*)
-bioconductor::VariantAnnotation|BiocManager::VariantAnnotation
+**R 3.3 & 3.4** : bioconductor::VariantAnnotation
 
-_If h2o-3.26.0.2 takes a long time to install, try manually installing from their [AWS page.](https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html)_
+**R >=3.5** : BiocManager::VariantAnnotation
+
+**h2o package** : 
+_If h2o package takes a long time to install, try manually installing from their [AWS page.](https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html)_
 
 <a name="installation"></a>
 
@@ -99,7 +98,7 @@ library("smurf") #load SMuRF package
 
 smurf() #check version and parameters
 
-# "SMuRFv1.6.2 (24th Oct 2019)"
+# "SMuRFv1.6.3 (15th Jan 2020)"
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
