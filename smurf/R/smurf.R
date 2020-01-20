@@ -97,7 +97,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T){
   
   #SMuRF version announcement
-  print("SMuRFv1.6.3 (15th Jan 2020)")
+  print("SMuRFv1.6.4 (20th Jan 2020)")
   
 
   if(is.null(directory)){
@@ -142,7 +142,8 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     freebayes <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz"))
     varscan <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz"))
     vardict <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz"))
-    x<-list(mutect2,freebayes,varscan,vardict)
+    strelka2 <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz"))
+    x<-list(mutect2,freebayes,varscan,vardict,strelka2)
     
     if(length(grep("mutect", mutect2))!=1 & 
        length(grep("freebayes", freebayes))!=1 & 
@@ -247,28 +248,6 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       biocLite("Rsamtools")
       }
       
-      #check for h2o version 3.10.3.3
-      if("h2o" %in% rownames(installed.packages()) == FALSE){
-        print("h2o version 3.10.3.3 not found. Installing required h2o package.")
-        install.packages(paste0(find.package("smurf"), "/data/h2o_3.10.3.3.tar.gz"), type="source", repos=NULL)
-        # install.packages("versions")
-        # library(versions)
-        # install.versions("h2o", versions = "3.10.3.3")
-        print("h2o version 3.10.3.3 installed.")
-        
-      } else {
-        if((packageVersion("h2o") == '3.10.3.3') == FALSE){
-          print("Incorrect h2o version found. Installing h2o version 3.10.3.3.")
-          if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
-          if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
-          install.packages(paste0(find.package("smurf"), "/data/h2o_3.10.3.3.tar.gz"), type="source", repos=NULL)
-          # install.packages("versions")
-          # library(versions)
-          # install.versions("h2o", versions = "3.10.3.3")
-          print("h2o version 3.10.3.3 installed.")
-        }  
-      }
-      
     } else {
       
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -277,27 +256,6 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     # BiocManager::install(c("VariantAnnotation"))
     }
     
-    #check for h2o version 3.26.0.2
-    if("h2o" %in% rownames(installed.packages()) == FALSE){
-      print("h2o version 3.26.0.2 not found. Installing required h2o package.")
-      # install.packages(paste0(find.package("smurf"), "/data/h2o_3.26.0.2.tar.gz"), type="source", repos=NULL)
-      install.packages("versions")
-      library(versions)
-      install.versions("h2o", versions = "3.26.0.2")
-      print("h2o version 3.26.0.2 installed.")
-      
-    } else {
-      if((packageVersion("h2o") == '3.26.0.2') == FALSE){
-        print("Incorrect h2o version found. Installing h2o version 3.26.0.2.")
-        if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
-        if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
-        # install.packages(paste0(find.package("smurf"), "/data/h2o_3.26.0.2.tar.gz"), type="source", repos=NULL)
-        install.packages("versions")
-        library(versions)
-        install.versions("h2o", versions = "3.26.0.2")
-        print("h2o version 3.26.0.2 installed.")
-      }  
-      }
     }
   }
   
@@ -311,7 +269,9 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
   if (! ("tools" %in% rownames(installed.packages()))) { install.packages("tools") }
   if (! ("utils" %in% rownames(installed.packages()))) { install.packages("utils") }
   if (! ("dplyr" %in% rownames(installed.packages()))) { install.packages("dplyr") }
-    
+  #installs latest stable version of h2o
+  if (! ("h2o" %in% rownames(installed.packages()))) { install.packages("h2o", type="source", repos=(c("http://h2o-release.s3.amazonaws.com/h2o/rel-yu/1/R"))) }
+  
 
     #load packages
   
@@ -677,7 +637,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
 
     } else if (mode == "featureselectionall") { #debug mode, only parse feature matrix
       
-      parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL, t.label=t.label)
+      parsevcf<-parsevcf_allfeaturesall_strelka(x,roi=F, roi.dir=NULL, t.label=t.label)
       
       end.time <- Sys.time()
       time.taken <- end.time - start.time
