@@ -21,23 +21,23 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
 
   smurfdir <- find.package("smurf")
   
-  if (getRversion()<3.5) {
-  
-    #Define cutoffs
-      if (snv.cutoff == 'default') {
-        # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
-        cutoff = 0.24 #High sensitivity Recall >0.95
-      } else if (snv.cutoff != 'default') {
-        cutoff = snv.cutoff
-      } else if (snv.cutoff == 0) {
-        cutoff = 0
-        fixed.snv.cutoff = T
-      } 
-    
-  smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-nofeat-relcov-v108") #SMuRFv1.5
-  snv_model <- h2o.loadModel(path = smurfmodeldir)
-  
-  } else { #(R>=3.5)
+  # if (getRversion()<3.5) {
+  # 
+  #   #Define cutoffs
+  #     if (snv.cutoff == 'default') {
+  #       # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
+  #       cutoff = 0.24 #High sensitivity Recall >0.95
+  #     } else if (snv.cutoff != 'default') {
+  #       cutoff = snv.cutoff
+  #     } else if (snv.cutoff == 0) {
+  #       cutoff = 0
+  #       fixed.snv.cutoff = T
+  #     } 
+  #   
+  # smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-nofeat-relcov-v108") #SMuRFv1.5
+  # snv_model <- h2o.loadModel(path = smurfmodeldir)
+  # 
+  # } else { #(R>=3.5)
       
       #Define cutoffs
         if (snv.cutoff == 'default') {
@@ -51,10 +51,12 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
         } 
   
 
-      smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6") #SMuRFv1.6
-      snv_model <- h2o.loadModel(path = smurfmodeldir)
+      # smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6") #SMuRFv1.6
+      # snv_model <- h2o.loadModel(path = smurfmodeldir)
+      smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6.zip") #SMuRFv1.6
+      snv_model <- h2o.import_mojo(smurfmodeldir)
       
-  }
+  # }
   
   
   predicted <- h2o.predict(object = snv_model, newdata = df)

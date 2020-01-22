@@ -21,23 +21,23 @@ indelRFpredict = function(parsevcf, indel.cutoff, fixed.indel.cutoff=F){
 
   smurfdir <- find.package("smurf")
   
-  if (getRversion()<3.5) {
-    
-    #Define cutoffs
-      if (indel.cutoff == 'default') {
-        # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1")
-        cutoff = 0.352 #High sensitivity Recall >0.80
-      } else if (indel.cutoff != 'default') {
-        cutoff = indel.cutoff
-      } else if (indel.cutoff == 0) {
-        cutoff = 0
-        fixed.indel.cutoff = T
-      } 
-
-  smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-nofeat-relcov-v108") #SMuRFv1.5
-  indel_model <- h2o.loadModel(path = smurfmodeldir)
-  
-  } else { #(R>=3.5)
+  # if (getRversion()<3.5) {
+  #   
+  #   #Define cutoffs
+  #     if (indel.cutoff == 'default') {
+  #       # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1")
+  #       cutoff = 0.352 #High sensitivity Recall >0.80
+  #     } else if (indel.cutoff != 'default') {
+  #       cutoff = indel.cutoff
+  #     } else if (indel.cutoff == 0) {
+  #       cutoff = 0
+  #       fixed.indel.cutoff = T
+  #     } 
+  # 
+  # smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-nofeat-relcov-v108") #SMuRFv1.5
+  # indel_model <- h2o.loadModel(path = smurfmodeldir)
+  # 
+  # } else { #(R>=3.5)
     
     #Define cutoffs
       if (indel.cutoff == 'default') {
@@ -50,10 +50,12 @@ indelRFpredict = function(parsevcf, indel.cutoff, fixed.indel.cutoff=F){
         fixed.indel.cutoff = T
       } 
 
-    smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-model-v6") #SMuRFv1.6
-    indel_model <- h2o.loadModel(path = smurfmodeldir)
+    # smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-model-v6") #SMuRFv1.6
+    # indel_model <- h2o.loadModel(path = smurfmodeldir)
+    smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-model-v6.zip") #SMuRFv1.6
+    indel_model <- h2o.import_mojo(smurfmodeldir)
     
-  }
+  # }
   
   
   predicted <- h2o.predict(object = indel_model, newdata = df)
