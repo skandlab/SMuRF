@@ -61,24 +61,21 @@ save.files = function (myresults, output.dir) {
   #   write.table(a , file = paste0(output.dir, "/indel-roi.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
   # }
   
-  # a<- myresults$parsevcf_featureselection$snv
-  # if(!is.null(a)){
-  #   write.table(a , file = paste0(output.dir, "/snv-allpredicted.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
-  # }
-  # 
-  # a<- myresults$parsevcf_featureselection$indel
-  # if(!is.null(a)){
-  #   write.table(a , file = paste0(output.dir, "/indel-allpredicted.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
-  # }
+  a<- myresults$parsevcf_featureselection$snv
+  if(!is.null(a)){
+    write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
+  }
+
+  a<- myresults$parsevcf_featureselection$indel
+  if(!is.null(a)){
+    write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
+  }
   
   #show time taken for run
   a<- myresults$time.taken
   if(!is.null(a)){
     write(a, file = paste0(output.dir, "/time.txt"))
   }
-  
-
-  return()
   
 }
 

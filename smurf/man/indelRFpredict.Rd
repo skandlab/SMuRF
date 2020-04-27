@@ -14,7 +14,7 @@ indelRFpredict(parsevcf, indel.cutoff, fixed.indel.cutoff = F)
 \item{fixed.indel.cutoff}{debug for when threshold is zero.}
 }
 \description{
-Indel prediction model SMuRFv1.6 (R-3.3.1, R-3.5.1)
+Indel prediction model SMuRFv2.0 (>R-3.5.1)
 Step 2 Predict
 }
 \examples{

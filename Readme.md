@@ -1,7 +1,7 @@
-### SMuRF vignette
+### SMuRF v2.0
 by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
-20th Jan 2020
+27th Apr 2020
 
 #### <br/>Introduction
 
@@ -32,7 +32,12 @@ ____________________________________________________
 
 #### <br/>Input from bcbio-nextgen pipeline
 
-Before running _SMuRF_, you require output data from the [bcbio-nextgen pipeline](http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling) that generates the VCF output for the variant callers: MuTect2, FreeBayes, VarDict and VarScan. Note that your vcf.gz files need to be tab-indexed (.tbi files required) for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience.  
+Before running _SMuRF_, you require output data from the [bcbio-nextgen pipeline](http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling) that generates the VCF output for the variant callers: MuTect2, FreeBayes, VarDict, VarScan and the latest Strelka2. An additional caller Strelka2, has been added to SMuRF 2.0  and the information is documented on our [wiki page](https://github.com/skandlab/SMuRF/wiki/SMuRF-2.0). 
+
+SMuRF v1.6.4 is still available [**here**](https://github.com/skandlab/SMuRF/releases/tag/SMuRFv1.6.4)
+[SMuRF v1.6.4 readme](https://github.com/skandlab/SMuRF/wiki/SMuRF-v1.6.4-vignette)
+
+Note that your vcf.gz files need to be tab-indexed (.tbi files required) for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience.  
 
 _SMuRF_ requires the VCF output from each caller (.vcf.gz) to be placed in the same directory and files tagged with the caller (eg. sample1-mutect.vcf.gz, sample1-freebayes.vcf.gz, sample1-vardict.vcf.gz, sample1-varscan.vcf.gz)
 
@@ -49,7 +54,7 @@ Refer to the installation and instructions for each caller:
 <br/>- [VarScan](https://github.com/dkoboldt/varscan)
 <br/>- [MuTect2](https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php)
 <br/>- [FreeBayes](https://github.com/ekg/freebayes)
-
+<br/>- [Strelka2](https://github.com/Illumina/strelka)
 
 <a name="test"></a>
 
@@ -98,13 +103,14 @@ library("smurf") #load SMuRF package
 
 smurf() #check version and parameters
 
-# "SMuRFv1.6.4 (20th Jan 2020)"
+# "SMuRFv2.0 (13th April 2020)"
 smurf(directory=NULL, mode=NULL, nthreads = -1,
-                 annotation=F, output.dir=NULL, parse.dir=NULL, whitelist.file=NULL,
+                 annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
                  build=NULL, change.build=F, t.label=NULL,
                  check.packages=T)
-myresults = smurf(mydir, "combined") #save output into 'myresults' variable
+
+myresults = smurf(mydir, 'combined', build='hg19') #save output into 'myresults' variable
 
 ```
 
@@ -121,11 +127,10 @@ mode|Choose "snv", "indel" or "combined" (snv+indel). "combined" provides a sepa
 annotation|TRUE or FALSE (default). Provide gene annotations for each variant call.
 nthreads=-1|Number of cores used for RandomForest prediction. Default (-1) for maximum number of cores. _For 32-bit Windows, only 1 core is allowed (nthreads=1)._
 t.label|(Optional) Provide the sample name for your tumour sample to ease the identification of the normal and tumour sample names in your vcf
-build|Genome build='hg19' or "hg38". If unknown, SMuRF will try to detect it
+build|Specify you genome build: build='hg19' or build="hg38".
 change.build|For conversion of your genomic coordinates
 snv.cutoff|Default SNV model cutoff, unless a number between 0 to 1 is stated
 indel.cutoff|Default indel model cutoff, unless a number between 0 to 1 is stated
-whitelist.file|Path to .BED or .txt file with region to be parsed into the SMuRF format. All SNVs and INDELS will be retrieved. SMuRF prediction will not be performed.
 check.packages=T|Developer mode
 
 
@@ -154,10 +159,6 @@ library("smurf") #load SMuRF package
  myresults = smurf(directory="/path/to/directory..",
                    mode="combined", 
                    annotation=T, build='hg19')
- 
- #Whitelist option to extract full list of genomic positions                  
- myresults = smurf(directory="/path/to/directory..",
-                   whitelist.dir="/path/to/dir/roi.bed")
  
  #Change hg38 to hg19 coordinates in gene annotation output
  myresults = smurf(directory="/path/to/directory..",
@@ -205,25 +206,6 @@ myresults = smurf(directory = paste0(find.package("smurf"), "/data"),
 hist(as.numeric(myresults$smurf_indel$predicted_indel[,'SMuRF_score']), main = 'Re-adjusted predicted indels', xlab = 'SMuRF_score', col = 'grey50')
 ```
 
-</br>SMuRF can extract variant calls from a BED or (.txt) file containing the genomic coordinates of your region of interest.
-Use genomic coordinates referencing hg19/GRCh37. Specify the BED file path using 'whitelist.file'
-
-```r
-# roi.df = read.delim(roi.dir, header = F)
-# roi.df
-#   chrom    start      end
-# 1     1        1    25000
-# 2     1     1000   100000
-# 3     1 77000000 78000000
-
-myresults = smurf(directory = paste0(find.package("smurf"), "/data"),
-                  mode="combined", #retrieve SNVs + indels from regions-of-interest
-                  whitelist.file = paste0(find.package("smurf"), "/data/roi.bed"), #BED file containing ROIs
-                  save.files = T, 
-                  output.dir = 'C:/Users/admin/myresults3')
-```
-
-
 <a name="output"></a>
 
 #### </br>Output format
@@ -256,7 +238,7 @@ Column | Description
 Chr         | Chromosome number
 START_POS_REF/END_POS_REF         | Start and End nucleotide position of the somatic mutation
 REF/ALT     | Consensus Ref and Alt nucleotide changes of the highest likelihood
-REF_MFVdVs/ALT_MFVdVs        | Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs)
+REF_MFVdVs/ALT_MFVdVs        | Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs) and lastly the newly added Strelka2
 FILTER | Passed (TRUE) or Reject (FALSE) [boolean] mutation calls from the individual callers
 Sample_Name | Sample name is extracted based on your labeled samples in the vcf files
 Alt_Allele_Freq | Mean Variant allele frequency calculated from the tumor reads of the callers
@@ -270,49 +252,51 @@ SMuRF_score      | SMuRF confidence score of the predicted mutation
 myresults$smurf_indel$stats_indel
 
 #             Passed_Calls
-# Mutect2             1546
-# FreeBayes            339
-# VarDict              515
-# VarScan             2228
-# Atleast1            4343
-# Atleast2             244
-# Atleast3              37
-# All4                   4
-# SMuRF_INDEL            6
-
+# Strelka2             466
+# Mutect2              232
+# FreeBayes            306
+# VarDict              483
+# VarScan             1273
+# Atleast1            2431
+# Atleast2             278
+# Atleast3              43
+# Atleast4               7
+# All5                   1
+# SMuRF_INDEL           88
 
 myresults$smurf_snv$stats_snv
 
 #           Passed_Calls
-# Mutect2           4906
-# FreeBayes          247
-# VarDict            315
-# VarScan           5101
-# Atleast1         10302
-# Atleast2           170
-# Atleast3            58
-# All4                39
-# SMuRF_SNV         1345
-
+# Strelka2          1362
+# Mutect2           1539
+# FreeBayes          216
+# VarDict            239
+# VarScan           1734
+# Atleast1          4017
+# Atleast2           928
+# Atleast3            60
+# Atleast4            48
+# All5                37
+# SMuRF_SNV         1043
 ```
 
 </br>We added gene annotations using SnpEff (from bcbio) and _SMuRF_ extracts the coding annotations from the canonical transcripts with the highest impact. Take note that your vcf.gz files should be tab-indexed (.tbi files required).
 ```r
 myresults = smurf(mydir, "cdsannotation") #runs SMuRF for SNV and indels + generate annotations
 
-myresults$smurf_snv_annotation$annotated
-#   Chr START_POS_REF END_POS_REF REF ALT REF_MFVdVs ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict FILTER_Varscan Sample_Name Alt_Allele_Freq
-# 1   1      77712621    77712621   G   A    G/G/G/G    A/A/A/A           TRUE             TRUE           TRUE           TRUE    icgc_cll           0.296
-# 2   1      77806132    77806132   G   A    G/G/G/G    A/A/A/A           TRUE             TRUE           TRUE           TRUE    icgc_cll           0.483
-
-#   T_altDepth T_refDepth N_refDepth N_altDepth Allele       Annotation   Impact Gene_name         Gene_ID Feature_Type      Feature_ID Transcript_BioType
-# 1          8         19         40          0   <NA>             <NA>     <NA>      <NA>            <NA>         <NA>            <NA>               <NA>
-# 2         15         16         22          0      A missense_variant MODERATE       AK5 ENSG00000154027   transcript ENST00000354567     protein_coding
-
-#   Rank   HGVS.c      HGVS.p  cDNA.pos  CDS.pos  AA.pos Distance     REGION SMuRF_score
-# 1 <NA>     <NA>        <NA>      <NA>     <NA>    <NA>     <NA> Non-coding   0.8148148
-# 2 6/14 c.770G>A p.Arg257His 1033/3248 770/1689 257/562        .        CDS   0.7777778
-
+myresults$smurf_snv_annotation$annotated[order(myresults$smurf_snv_annotation$annotated$REGION)[1:2],]
+#    Chr START_POS_REF END_POS_REF REF ALT   REF_MFVdVs   ALT_MFVdVs FILTER_Mutect2 FILTER_Freebayes FILTER_Vardict
+# 52   1      77806132    77806132   G   A    G/G/G/G/G    A/A/A/A/A           TRUE             TRUE           TRUE
+# 81   1     170961432   170961432   C   T C/NA/NA/NA/C T/NA/NA/NA/T           TRUE            FALSE          FALSE
+#    FILTER_Varscan FILTER_Strelka2     Sample_Name Alt_Allele_Freq N_refDepth N_altDepth T_refDepth T_altDepth Allele
+# 52           TRUE            TRUE icgc_cll_tumour           0.500         14          0         15         15      A
+# 81          FALSE            TRUE icgc_cll_tumour           0.467         33          0         16         14      T
+#          Annotation   Impact Gene_name         Gene_ID Feature_Type      Feature_ID Transcript_BioType  Rank    HGVS.c
+# 52 missense_variant MODERATE       AK5 ENSG00000154027   transcript ENST00000354567     protein_coding  6/14  c.770G>A
+# 81 missense_variant MODERATE     MROH9 ENSG00000117501   transcript ENST00000367759     protein_coding 12/22 c.1156C>T
+#         HGVS.p  cDNA.pos   CDS.pos  AA.pos Distance REGION SMuRF_score
+# 52 p.Arg257His 1033/3248  770/1689 257/562        .    CDS   0.9083840
+# 81 p.Arg386Cys 1310/3165 1156/2586 386/861        .    CDS   0.8107475
 ```
 
 </br>Time taken for your run:
