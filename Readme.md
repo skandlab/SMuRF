@@ -10,7 +10,7 @@ _SMuRF_ R package predicts a consensus set of somatic mutation calls using Rando
 For more information see our Bioinformatics paper: https://doi.org/10.1093/bioinformatics/btz018   
 
 **Citation** 
-</br>Huang, W., et al., SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics, 2019: p. 3157-3159
+</br>Huang, W., Guo, YA., Muthukumar, K., Baruah, P., Chang, M., and AJ., Skanderup, SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics, 2019: p. 3157-3159
 
 #### <br/>Table of contents
 [Input from bcbio-nextgen pipeline](#input-bcbio)
@@ -127,10 +127,11 @@ mode|Choose "snv", "indel" or "combined" (snv+indel). "combined" provides a sepa
 annotation|TRUE or FALSE (default). Provide gene annotations for each variant call.
 nthreads=-1|Number of cores used for RandomForest prediction. Default (-1) for maximum number of cores. _For 32-bit Windows, only 1 core is allowed (nthreads=1)._
 t.label|(Optional) Provide the sample name for your tumour sample to ease the identification of the normal and tumour sample names in your vcf
-build|Specify you genome build: build='hg19' or build="hg38".
+build|Specify you genome build: build='hg19' or build="hg38"
 change.build|For conversion of your genomic coordinates
 snv.cutoff|Default SNV model cutoff, unless a number between 0 to 1 is stated
 indel.cutoff|Default indel model cutoff, unless a number between 0 to 1 is stated
+re.tabIndex|TRUE or FALSE (default). Set to TRUE to create tab-indexed (.tbi) files for each vcf
 check.packages=T|Developer mode
 
 

@@ -368,12 +368,12 @@ summary {
 <div id="smurf-v2.0" class="section level3">
 <h3>SMuRF v2.0</h3>
 <p>by <a href="https://www.researchgate.net/profile/Weitai_Huang">Huang Weitai</a></p>
-<p>27th Apr 2020</p>
+<p>1st May 2020</p>
 <div id="introduction" class="section level4">
 <h4><br />Introduction</h4>
 <p><em>SMuRF</em> R package predicts a consensus set of somatic mutation calls using RandomForest machine learning. SMuRF generates a set of point mutations and insertions/deletions (indels) trained on the latest community-curated tumor whole genome sequencing data (Alioto <em>et. al.</em>, 2015, Nat. Comms.). Our method is fast and accurate and analyses both whole-genome and whole-exome sequencing data from different cancer types.</p>
 <p>For more information see our Bioinformatics paper: <a href="https://doi.org/10.1093/bioinformatics/btz018" class="uri">https://doi.org/10.1093/bioinformatics/btz018</a></p>
-<p><strong>Citation</strong> </br>Huang, W., et al., SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics, 2019: p. 3157-3159</p>
+<p><strong>Citation</strong> </br>Huang, W., Guo, YA., Muthukumar, K., Baruah, P., Chang, M., and AJ., Skanderup, SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics, 2019: p. 3157-3159</p>
 </div>
 <div id="table-of-contents" class="section level4">
 <h4><br />Table of contents</h4>
@@ -424,11 +424,11 @@ install.packages(&quot;my/current/directory/smurf&quot;, repos = NULL, type = &q
 
 smurf() #check version and parameters
 
-# &quot;SMuRFv2.0 (27th April 2020)&quot;
+# &quot;SMuRFv2.0 (30th April 2020)&quot;
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = &#39;default&#39;, indel.cutoff = &#39;default&#39;,
-                 build=NULL, change.build=F, t.label=NULL,
+                 build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
                  check.packages=T)
 
 myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output into &#39;myresults&#39; variable
@@ -479,7 +479,7 @@ myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output 
 </tr>
 <tr class="even">
 <td align="center">build</td>
-<td align="left">Specify you genome build: build=‘hg19’ or build=“hg38”.</td>
+<td align="left">Specify you genome build: build=‘hg19’ or build=“hg38”</td>
 </tr>
 <tr class="odd">
 <td align="center">change.build</td>
@@ -494,6 +494,10 @@ myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output 
 <td align="left">Default indel model cutoff, unless a number between 0 to 1 is stated</td>
 </tr>
 <tr class="even">
+<td align="center">re.tabIndex</td>
+<td align="left">TRUE or FALSE (default). Set to TRUE to create tab-indexed (.tbi) files for each vcf</td>
+</tr>
+<tr class="odd">
 <td align="center">check.packages=T</td>
 <td align="left">Developer mode</td>
 </tr>
