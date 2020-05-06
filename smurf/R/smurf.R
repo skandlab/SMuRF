@@ -41,6 +41,8 @@
 #' the identification of the normal and tumour sample names in your vcf.
 #' See examples below
 #' 
+#' @param re.tabIndex Default as FALSE. Set to TRUE if tab-indexed (.tbi) files for each vcf is missing.
+#' 
 #' @param check.packages Default as TRUE. For debug mode.
 #' 
 #' @examples
@@ -87,11 +89,11 @@
 smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
-                 build=NULL, change.build=F, t.label=NULL,
+                 build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
                  check.packages=T){
   
   #SMuRF version announcement
-  print("SMuRFv2.0 (27th April 2020)")
+  print("SMuRFv2.0 (30th April 2020)")
   
 
   if(is.null(directory)){
@@ -99,7 +101,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     return(write("smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
-                 build=NULL, change.build=F, t.label=NULL,
+                 build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
                  check.packages=T)", stdout()))
   }
   
@@ -177,12 +179,12 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     }
   }
   
-  if(annotation == T) {
-    mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
-    freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
-    varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
-    vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
-    strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
+    if(re.tabIndex == F) {
+      mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
+      freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
+      varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
+      vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
+      strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
     
     if (length(freebayes.tbi)==2) {
       freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
@@ -199,52 +201,79 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
         length(vardict.tbi)!=1 |
         length(strelka2.tbi)!=1|
         length(tbi)!=5){
-      print('tab-indexed (.tbi) files required for cdsannotation not found.')
-      print('Generating .tbi files in directory...')
+      print('tab-indexed (.tbi) files required not found.')
+      stop('Specify re.tabIndex=TRUE to re-index your vcf files.')
     }
-
-    if(length(mutect2.tbi)!=1 & length(grep("mutect", mutect2.tbi))!=1) {
+    
+    } else if (re.tabIndex == T){
+      
+      print('Generating .tbi files in directory...')
+      
       library(Rsamtools)
       indexTabix(x[[1]], format = 'vcf')
-      mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
-    }
-    
-    if(length(freebayes.tbi)!=1 & length(grep("freebayes", freebayes.tbi))!=1) {
-      library(Rsamtools)
       indexTabix(x[[2]], format = 'vcf')
-      freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
-    }
-
-    if(length(varscan.tbi)!=1 & length(grep("varscan", varscan.tbi))!=1) {
-      library(Rsamtools)
       indexTabix(x[[3]], format = 'vcf')
-      varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
-    }
-
-    if(length(vardict.tbi)!=1 & length(grep("vardict", vardict.tbi))!=1) {
-      library(Rsamtools)
       indexTabix(x[[4]], format = 'vcf')
+      indexTabix(x[[5]], format = 'vcf')
+      
+      mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
+      freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
+      varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
       vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
+      strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
+      
+      if (length(freebayes.tbi)==2) {
+        freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
+      }
+      if (length(strelka2.tbi)==2) {
+        strelka2.tbi = strelka2.tbi[-grep("-N-", strelka2.tbi)]
+      }
+      
+      tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
+      
     }
 
-    if(length(strelka2.tbi)!=1 & length(grep("strelka", strelka2.tbi))!=1) {
-      library(Rsamtools)
-      indexTabix(x[[5]], format = 'vcf')
-      strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
-    }
+    # if(length(mutect2.tbi)!=1 & length(grep("mutect", mutect2.tbi))!=1) {
+    #   library(Rsamtools)
+    #   indexTabix(x[[1]], format = 'vcf')
+    #   mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
+    # }
+    # 
+    # if(length(freebayes.tbi)!=1 & length(grep("freebayes", freebayes.tbi))!=1) {
+    #   library(Rsamtools)
+    #   indexTabix(x[[2]], format = 'vcf')
+    #   freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
+    # }
+    # 
+    # if(length(varscan.tbi)!=1 & length(grep("varscan", varscan.tbi))!=1) {
+    #   library(Rsamtools)
+    #   indexTabix(x[[3]], format = 'vcf')
+    #   varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
+    # }
+    # 
+    # if(length(vardict.tbi)!=1 & length(grep("vardict", vardict.tbi))!=1) {
+    #   library(Rsamtools)
+    #   indexTabix(x[[4]], format = 'vcf')
+    #   vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
+    # }
+    # 
+    # if(length(strelka2.tbi)!=1 & length(grep("strelka", strelka2.tbi))!=1) {
+    #   library(Rsamtools)
+    #   indexTabix(x[[5]], format = 'vcf')
+    #   strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
+    # }
+    # 
+    # # write("DONE",stdout())
+    # if (length(freebayes.tbi)==2) {
+    #   freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
+    # }
+    # if (length(strelka2.tbi)==2) {
+    #   strelka2.tbi = strelka2.tbi[-grep("-N-", strelka2.tbi)]
+    # }
+    # 
+    # tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
     
-    # write("DONE",stdout())
-    if (length(freebayes.tbi)==2) {
-      freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
-    }
-    if (length(strelka2.tbi)==2) {
-      strelka2.tbi = strelka2.tbi[-grep("-N-", strelka2.tbi)]
-    }
-    
-    tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
-    
-  }
-  
+      
   if (!is.null(mode)){
     if (mode != "combined" & 
         mode != "snv" & 
@@ -281,12 +310,12 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       biocLite("rtracklayer")
     }
       
-    } else {
+    } else { #R>=3.5
       
     if (!requireNamespace("BiocManager", quietly = TRUE)) {
       install.packages("BiocManager")
     BiocManager::install()
-    # BiocManager::install(c("VariantAnnotation"))
+    BiocManager::install(c("VariantAnnotation"))
     }
     
     }
