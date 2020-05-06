@@ -1,6 +1,6 @@
 Package: smurf
 Title: Somatic Mutation Calling using a RandomForest Model
-Version: 1.6
+Version: 2.0
 Authors@R: person("Weitai", "Huang", email = "huangwt@a-star.edu.sg", role = c("aut","cre"))
 Description: https://github.com/skandlab/SMuRF
 Depends: R (>= 3.3.1)

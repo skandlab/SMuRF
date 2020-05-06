@@ -1,6 +1,6 @@
 #' snvRF-Predict
 #'
-#' snv prediction model SMuRFv1.6 (R-3.3.1, R-3.5.1)
+#' snv prediction model
 #' Step 2 Predict
 #'
 #'@param parsevcf List object containing 1.snv-parse and 2.indel-parse matrices.
@@ -21,42 +21,25 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
 
   smurfdir <- find.package("smurf")
   
-  # if (getRversion()<3.5) {
-  # 
-  #   #Define cutoffs
-  #     if (snv.cutoff == 'default') {
-  #       # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
-  #       cutoff = 0.24 #High sensitivity Recall >0.95
-  #     } else if (snv.cutoff != 'default') {
-  #       cutoff = snv.cutoff
-  #     } else if (snv.cutoff == 0) {
-  #       cutoff = 0
-  #       fixed.snv.cutoff = T
-  #     } 
-  #   
-  # smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-nofeat-relcov-v108") #SMuRFv1.5
-  # snv_model <- h2o.loadModel(path = smurfmodeldir)
-  # 
-  # } else { #(R>=3.5)
-      
-      #Define cutoffs
-        if (snv.cutoff == 'default') {
-          # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1")
-          cutoff = 0.254 #High sensitivity Recall >0.95
-        } else if (snv.cutoff != 'default') {
-          cutoff = snv.cutoff
-        } else if (snv.cutoff == 0) {
-          cutoff = 0
-          fixed.snv.cutoff = T
-        } 
+  if(exists('snv.cutoff')==F) {snv.cutoff = 'default'}
   
-
-      # smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6") #SMuRFv1.6
-      # snv_model <- h2o.loadModel(path = smurfmodeldir)
-      smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6.zip") #SMuRFv1.6
-      snv_model <- h2o.import_mojo(smurfmodeldir)
-      
-  # }
+  # smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6") #SMuRFv1.6
+  # snv_model <- h2o.loadModel(path = smurfmodeldir)
+  smurfmodeldir <- paste0(smurfdir, "/data/snv-v7.zip") #SMuRFv2.0
+  snv_model <- h2o.import_mojo(smurfmodeldir)
+  
+  #Define cutoffs
+  if (snv.cutoff == 'default') {
+    # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.4627947 v7-2
+    # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.4587242
+    cutoff = 0.0822 #High sensitivity Recall >0.99 v7-2
+    # cutoff = 0.12760258 #High sensitivity Recall >0.99 
+  } else if (snv.cutoff != 'default') {
+    cutoff = snv.cutoff
+  } else if (snv.cutoff == 0) {
+    cutoff = 0
+    fixed.snv.cutoff = T
+  } 
   
   
   predicted <- h2o.predict(object = snv_model, newdata = df)
@@ -64,10 +47,10 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
 
   snv_parse <- cbind(final, p)
   
-  results<- snv_parse[which(snv_parse$TRUE.>cutoff),]
+  results <- snv_parse[which(snv_parse$TRUE.>cutoff),]
   
   if (fixed.snv.cutoff == T) {
-    results<- snv_parse
+    results <- snv_parse
   }
   
   
@@ -78,35 +61,35 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
     names(table)[names(table) == 'TRUE.'] <- 'SMuRF_score'
 
     snv_predict <- table[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
-                            "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","Sample_Name",
+                            "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","FILTER_Strelka2",
+                            "Sample_Name",
                             "Alt_Allele_Freq",
                             "N_refDepth","N_altDepth","T_refDepth","T_altDepth",
                             "SMuRF_score")]
     
     
   # Generate stats
-  stats <- matrix(,nrow = 9, ncol = 1)
+  stats <- matrix(,nrow = 11, ncol = 1)
   stats <- as.data.frame(stats)
   colnames(stats) <- c("Passed_Calls")
-  rownames(stats) <- c("Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "All4", "SMuRF_SNV")
+  rownames(stats) <- c("Strelka2", "Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "Atleast4", "All5", "SMuRF_SNV")
   
-  counts <- apply(snv_parse[, c("FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan")], 1, function(x) length(which(x=="TRUE")))
+  counts <- apply(snv_parse[, c("FILTER_Strelka2","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan")], 1, function(x) length(which(x=="TRUE")))
   
-  stats$Passed_Calls[1] <- length(which((snv_parse$FILTER_Mutect2==TRUE)))
-  stats$Passed_Calls[2] <- length(which((snv_parse$FILTER_Freebayes==TRUE)))
-  stats$Passed_Calls[3] <- length(which((snv_parse$FILTER_Vardict==TRUE)))
-  stats$Passed_Calls[4] <- length(which((snv_parse$FILTER_Varscan==TRUE)))
+  stats$Passed_Calls[1] <- length(which((snv_parse$FILTER_Strelka2==TRUE)))
+  stats$Passed_Calls[2] <- length(which((snv_parse$FILTER_Mutect2==TRUE)))
+  stats$Passed_Calls[3] <- length(which((snv_parse$FILTER_Freebayes==TRUE)))
+  stats$Passed_Calls[4] <- length(which((snv_parse$FILTER_Vardict==TRUE)))
+  stats$Passed_Calls[5] <- length(which((snv_parse$FILTER_Varscan==TRUE)))
   
+  stats$Passed_Calls[6] <- length(which(counts>=1))
+  stats$Passed_Calls[7] <- length(which(counts>=2))
+  stats$Passed_Calls[8] <- length(which(counts>=3))
+  stats$Passed_Calls[9] <- length(which(counts>=4))
+  stats$Passed_Calls[10] <- length(which(counts>=5))
   
-  stats$Passed_Calls[5] <- length(which(counts>=1))
-  stats$Passed_Calls[6] <- length(which(counts>=2))
-  stats$Passed_Calls[7] <- length(which(counts>=3))
-  stats$Passed_Calls[8] <- length(which(counts>=4))
+  stats$Passed_Calls[11] <- nrow(snv_predict)
   
-  
-  stats$Passed_Calls[9] <- nrow(snv_predict)
-  
-
   stats<-as.matrix(stats)
   parse<-as.matrix(snv_parse)
 
