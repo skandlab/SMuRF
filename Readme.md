@@ -1,7 +1,7 @@
 ### SMuRF v2.0
 by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
 
-27th Apr 2020
+1st May 2020
 
 #### <br/>Introduction
 
@@ -103,11 +103,11 @@ library("smurf") #load SMuRF package
 
 smurf() #check version and parameters
 
-# "SMuRFv2.0 (13th April 2020)"
+# "SMuRFv2.0 (30th April 2020)"
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
-                 build=NULL, change.build=F, t.label=NULL,
+                 build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
                  check.packages=T)
 
 myresults = smurf(mydir, 'combined', build='hg19') #save output into 'myresults' variable
