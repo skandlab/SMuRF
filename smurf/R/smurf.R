@@ -93,7 +93,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T){
   
   #SMuRF version announcement
-  print("SMuRFv2.0 (30th April 2020)")
+  print("SMuRFv2.0 (2nd July 2020)")
   
 
   if(is.null(directory)){
@@ -133,45 +133,60 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
   }
   
   
-  if(is.null(build)){
-    stop('Please specify genome build. build = hg19 or hg38')
+  if(is.null(build) & annotation == T){
+    stop('Please specify genome build. build = "hg19" or "hg38".')
   }
   
+  if (!is.null(build) & annotation == T) {
+    if (build!='hg19' & build!='hg38') {
+      stop('build unrecognized. Only hg19 or hg38 is allowed.')
+    }
+  }
+  
+  
   if (class(directory)!='list') {
-    # directory <-paste(directory,"/", sep="")
+    
     mutect2 <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz"))
     freebayes <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz"))
     varscan <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz"))
     vardict <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz"))
     strelka2 <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz"))
     
-    if (length(freebayes)==2) {
-      warning('Two Freebayes VCF detected. Attempt to exclude germline vcf.')
+    #'germline' file filter
+    # warning('VCF file names containing "germline" will be excluded.')
+    if(length(mutect2)!=1){
+      mutect2 = mutect2[-grep("germline", mutect2)]
+    }
+    if(length(freebayes)!=1){
       freebayes = freebayes[-grep("germline", freebayes)]
-      # write("...done.",stdout())
+    }
+    if(length(varscan)!=1){
+        varscan = varscan[-grep("germline", varscan)]
+    }
+    if(length(vardict)!=1){
+          vardict = vardict[-grep("germline", vardict)]
+    }
+    if(length(strelka2)!=1){
+      strelka2 = strelka2[-grep("germline", strelka2)]
     }
     
-    if (length(strelka2)==2) {
-      warning('Two Strelka2 VCF detected. Attempt to exclude germline vcf.')
-      strelka2 = strelka2[-grep("-N-", strelka2)]
-      # write("...done.",stdout())
-    }
-    
-    if(length(grep("strelka", strelka2))!=1) {
-      warning('Strelka2 VCF not detected correctly. Use SMuRFv1.6 for 4 callers: Mutect2, Freebayes, Vardict, Varscan.')
-    }
-    
-    if(length(grep("mutect", mutect2))!=1 |
-       length(grep("freebayes", freebayes))!=1 |
-       length(grep("varscan", varscan))!=1 |
-       length(grep("vardict", vardict))!=1 |
-       length(grep("strelka", strelka2))!=1) {
+    if(length(mutect2)!=1 |
+       length(freebayes)!=1 |
+       length(varscan)!=1 |
+       length(vardict)!=1 |
+       length(strelka2)!=1) {
       stop('Directory contains missing or duplicated vcf files. Alternatively, you may specify your path to caller files as a list object manually.')
     }
     
+    #'germline' file filter
+    # warning('VCF file names containing "germline" will be excluded.')
+    
+    # if(length(grep("strelka", strelka2))!=1) {
+    #   warning('Strelka2 VCF not detected correctly. Use SMuRFv1.6 for 4 callers: Mutect2, Freebayes, Vardict, Varscan.')
+    # }
+    
     x<-list(mutect2,freebayes,varscan,vardict,strelka2)
     
-
   } else if (class(directory)=='list'){
     x = directory
     if (length(x)!=5){
@@ -179,19 +194,33 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     }
   }
   
-    if(re.tabIndex == F) {
+    
+  if(re.tabIndex == F) {
+    
       mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
       freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
       varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
       vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
       strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
-    
-    if (length(freebayes.tbi)==2) {
-      freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
-    }
-    if (length(strelka2.tbi)==2) {
-      strelka2.tbi = strelka2.tbi[-grep("-N-", strelka2.tbi)]
-    }
+      
+      #'germline' file filter
+      # warning('VCF file names containing "germline" will be excluded.')
+      if(length(mutect2.tbi)!=1){
+        mutect2.tbi = mutect2.tbi[-grep("germline", mutect2.tbi)]
+      }
+      if(length(freebayes.tbi)!=1){
+        freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
+      }
+      if(length(varscan.tbi)!=1){
+        varscan.tbi = varscan.tbi[-grep("germline", varscan.tbi)]
+      }
+      if(length(vardict.tbi)!=1){
+        vardict.tbi = vardict.tbi[-grep("germline", vardict.tbi)]
+      }
+      if(length(strelka2.tbi)!=1){
+        strelka2.tbi = strelka2.tbi[-grep("germline", strelka2.tbi)]
+      }
+      
     
     tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
     
@@ -222,57 +251,28 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
       strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
       
-      if (length(freebayes.tbi)==2) {
+      #'germline' file filter
+      # warning('VCF file names containing "germline" will be excluded.')
+      if(length(mutect2.tbi)!=1){
+        mutect2.tbi = mutect2.tbi[-grep("germline", mutect2.tbi)]
+      }
+      if(length(freebayes.tbi)!=1){
         freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
       }
-      if (length(strelka2.tbi)==2) {
-        strelka2.tbi = strelka2.tbi[-grep("-N-", strelka2.tbi)]
+      if(length(varscan.tbi)!=1){
+        varscan.tbi = varscan.tbi[-grep("germline", varscan.tbi)]
+      }
+      if(length(vardict.tbi)!=1){
+        vardict.tbi = vardict.tbi[-grep("germline", vardict.tbi)]
+      }
+      if(length(strelka2.tbi)!=1){
+        strelka2.tbi = strelka2.tbi[-grep("germline", strelka2.tbi)]
       }
       
       tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
       
     }
 
-    # if(length(mutect2.tbi)!=1 & length(grep("mutect", mutect2.tbi))!=1) {
-    #   library(Rsamtools)
-    #   indexTabix(x[[1]], format = 'vcf')
-    #   mutect2.tbi <- Sys.glob(paste0(directory,"/*mutect*.vcf.gz.tbi"))
-    # }
-    # 
-    # if(length(freebayes.tbi)!=1 & length(grep("freebayes", freebayes.tbi))!=1) {
-    #   library(Rsamtools)
-    #   indexTabix(x[[2]], format = 'vcf')
-    #   freebayes.tbi <- Sys.glob(paste0(directory,"/*freebayes*.vcf.gz.tbi"))
-    # }
-    # 
-    # if(length(varscan.tbi)!=1 & length(grep("varscan", varscan.tbi))!=1) {
-    #   library(Rsamtools)
-    #   indexTabix(x[[3]], format = 'vcf')
-    #   varscan.tbi <- Sys.glob(paste0(directory,"/*varscan*.vcf.gz.tbi"))
-    # }
-    # 
-    # if(length(vardict.tbi)!=1 & length(grep("vardict", vardict.tbi))!=1) {
-    #   library(Rsamtools)
-    #   indexTabix(x[[4]], format = 'vcf')
-    #   vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
-    # }
-    # 
-    # if(length(strelka2.tbi)!=1 & length(grep("strelka", strelka2.tbi))!=1) {
-    #   library(Rsamtools)
-    #   indexTabix(x[[5]], format = 'vcf')
-    #   strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
-    # }
-    # 
-    # # write("DONE",stdout())
-    # if (length(freebayes.tbi)==2) {
-    #   freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
-    # }
-    # if (length(strelka2.tbi)==2) {
-    #   strelka2.tbi = strelka2.tbi[-grep("-N-", strelka2.tbi)]
-    # }
-    # 
-    # tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
-    
       
   if (!is.null(mode)){
     if (mode != "combined" & 
@@ -284,13 +284,8 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     }
   }
   
-  if (!is.null(build)) {
-    if (build!='hg19' & build!='hg38') {
-      stop('build unrecognized')
-    }
-  }
   
-    #check for existing and required packages
+  #check for existing and required packages
     
   if(check.packages == T) {
     if (getRversion()<3.5) {
