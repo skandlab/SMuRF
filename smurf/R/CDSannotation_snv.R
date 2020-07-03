@@ -168,8 +168,8 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
         mut.strelka2=mutations[mutations$FILTER_Strelka2==TRUE & nchar(as.vector(as.matrix(REF[,5])))==1 & nchar(as.vector(as.matrix(ALT[,5])))==1]
         if (length(mut.strelka2)!=0){
           #remove using index from REF and ALT matrix 
-          REF=REF[-unique(queryHits(findOverlaps(mutations,mut.mutect2))),]
-          ALT=ALT[-unique(queryHits(findOverlaps(mutations,mut.mutect2))),]
+          REF=REF[-unique(queryHits(findOverlaps(mutations,mut.strelka2))),]
+          ALT=ALT[-unique(queryHits(findOverlaps(mutations,mut.strelka2))),]
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.strelka2)))]
         }
         
@@ -178,8 +178,8 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
         # mut.vardict=mutations[nchar(sub(".*/(.*)/.*","\\1",mutations$ALT_MFVdVs))==1 & nchar(sub(".*/(.*)/.*","\\1",mutations$REF_MFVdVs))==1]
         if (length(mut.vardict)!=0){
           #remove using index from REF and ALT matrix 
-          REF=REF[-unique(queryHits(findOverlaps(mutations,mut.mutect2))),]
-          ALT=ALT[-unique(queryHits(findOverlaps(mutations,mut.mutect2))),]
+          REF=REF[-unique(queryHits(findOverlaps(mutations,mut.vardict))),]
+          ALT=ALT[-unique(queryHits(findOverlaps(mutations,mut.vardict))),]
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.vardict)))]
         }
         
@@ -188,8 +188,8 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
         # mut.varscan=mutations[nchar(gsub(".*./","",mutations$ALT_MFVdVs))==1 & nchar(gsub(".*./","",mutations$REF_MFVdVs))==1]
         if (length(mut.varscan)!=0){
           #remove using index from REF and ALT matrix 
-          REF=REF[-unique(queryHits(findOverlaps(mutations,mut.mutect2))),]
-          ALT=ALT[-unique(queryHits(findOverlaps(mutations,mut.mutect2))),]
+          REF=REF[-unique(queryHits(findOverlaps(mutations,mut.varscan))),]
+          ALT=ALT[-unique(queryHits(findOverlaps(mutations,mut.varscan))),]
           mutations=mutations[-unique(queryHits(findOverlaps(mutations,mut.varscan)))]
         }
         

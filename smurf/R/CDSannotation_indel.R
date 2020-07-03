@@ -195,7 +195,7 @@ CDSannotation_indel = function(x, tbi, predicted, build, change.build){
         print("Compiling annotations")
         start.time=Sys.time()
         
-        mut=rbind(mut.mutect2,mut.vardict,mut.varscan,mut.freebayes)
+        mut=rbind(mut.mutect2,mut.strelka2,mut.vardict,mut.varscan,mut.freebayes)
         mut=mut[,-which(colnames(mut) %in% c("width","strand"))]
         mutations.orig=mutations.orig[,c("Chr","START_POS_REF","END_POS_REF","REF","ALT","REF_MFVdVs","ALT_MFVdVs",
                                          "FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan","FILTER_Strelka2",
