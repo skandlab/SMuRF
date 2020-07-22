@@ -45,6 +45,8 @@
 #' 
 #' @param check.packages Default as TRUE. For debug mode.
 #' 
+#' @param file.key Additional keywords in file directory names to be filtered.
+#' 
 #' @examples
 #' myresults = smurf(directory="/path/to/directory..",
 #'                   mode="indel",build='hg19')
@@ -90,10 +92,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
                  build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
-                 check.packages=T){
+                 check.packages=T, file.key=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv2.0 (3rd July 2020)")
+  print("SMuRFv2.0.3 (22nd July 2020)")
   
 
   if(is.null(directory)){
@@ -102,7 +104,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
                  build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
-                 check.packages=T)", stdout()))
+                 check.packages=T, file.key=NULL)", stdout()))
   }
   
   if(!is.null(directory) & class(directory)!='list'){
@@ -154,21 +156,37 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     
     #'germline' file filter
     # warning('VCF file names containing "germline" will be excluded.')
-    if(length(mutect2)!=1){
-      mutect2 = mutect2[-grep("germline", mutect2)]
+    
+    keywords=c("germline")
+    if(!is.null(file.key)){
+      keywords = c(keywords, file.key)
     }
-    if(length(freebayes)!=1){
-      freebayes = freebayes[-grep("germline", freebayes)]
+    
+    dir.check = function(dir.name,caller,keywords) {
+      key.len = length(keywords)
+      if(length(dir.name)!=1){
+        print(paste('Two file names for', caller, 'detected.'))
+        for (k in 1:key.len) {
+        if(length(grep(keywords[k],dir.name))==1){
+          dir.name = dir.name[-grep(keywords[k], dir.name)]
+      }
+        }
+        if(length(dir.name)==1){
+          print(paste('Selecting',dir.name))
+        }
+      }
+      if(length(dir.name)!=1){
+        print(dir.name)
+        warning('More than one file is selected. Use file.key to specify unique file name.')
+      } 
+      return(dir.name)
     }
-    if(length(varscan)!=1){
-        varscan = varscan[-grep("germline", varscan)]
-    }
-    if(length(vardict)!=1){
-          vardict = vardict[-grep("germline", vardict)]
-    }
-    if(length(strelka2)!=1){
-      strelka2 = strelka2[-grep("germline", strelka2)]
-    }
+    
+    mutect2 = dir.check(mutect2,'MuTect2', keywords)
+    freebayes = dir.check(freebayes,'FreeBayes', keywords)
+    varscan = dir.check(varscan,'VarScan', keywords)
+    vardict = dir.check(vardict,'VarDict', keywords)
+    strelka2 = dir.check(strelka2,'Strelka2', keywords)
     
     if(length(mutect2)!=1 |
        length(freebayes)!=1 |
@@ -205,23 +223,14 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       
       #'germline' file filter
       # warning('VCF file names containing "germline" will be excluded.')
-      if(length(mutect2.tbi)!=1){
-        mutect2.tbi = mutect2.tbi[-grep("germline", mutect2.tbi)]
-      }
-      if(length(freebayes.tbi)!=1){
-        freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
-      }
-      if(length(varscan.tbi)!=1){
-        varscan.tbi = varscan.tbi[-grep("germline", varscan.tbi)]
-      }
-      if(length(vardict.tbi)!=1){
-        vardict.tbi = vardict.tbi[-grep("germline", vardict.tbi)]
-      }
-      if(length(strelka2.tbi)!=1){
-        strelka2.tbi = strelka2.tbi[-grep("germline", strelka2.tbi)]
-      }
       
-    
+      mutect2.tbi = dir.check(mutect2.tbi,'MuTect2', keywords)
+      freebayes.tbi = dir.check(freebayes.tbi,'FreeBayes', keywords)
+      varscan.tbi = dir.check(varscan.tbi,'VarScan', keywords)
+      vardict.tbi = dir.check(vardict.tbi,'VarDict', keywords)
+      strelka2.tbi = dir.check(strelka2.tbi,'Strelka2', keywords)
+      
+      
     tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
     
     if (length(mutect2.tbi)!=1 |
@@ -253,21 +262,11 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       
       #'germline' file filter
       # warning('VCF file names containing "germline" will be excluded.')
-      if(length(mutect2.tbi)!=1){
-        mutect2.tbi = mutect2.tbi[-grep("germline", mutect2.tbi)]
-      }
-      if(length(freebayes.tbi)!=1){
-        freebayes.tbi = freebayes.tbi[-grep("germline", freebayes.tbi)]
-      }
-      if(length(varscan.tbi)!=1){
-        varscan.tbi = varscan.tbi[-grep("germline", varscan.tbi)]
-      }
-      if(length(vardict.tbi)!=1){
-        vardict.tbi = vardict.tbi[-grep("germline", vardict.tbi)]
-      }
-      if(length(strelka2.tbi)!=1){
-        strelka2.tbi = strelka2.tbi[-grep("germline", strelka2.tbi)]
-      }
+      mutect2.tbi = dir.check(mutect2.tbi,'MuTect2', keywords)
+      freebayes.tbi = dir.check(freebayes.tbi,'FreeBayes', keywords)
+      varscan.tbi = dir.check(varscan.tbi,'VarScan', keywords)
+      vardict.tbi = dir.check(vardict.tbi,'VarDict', keywords)
+      strelka2.tbi = dir.check(strelka2.tbi,'Strelka2', keywords)
       
       tbi<-list(mutect2.tbi,freebayes.tbi,varscan.tbi,vardict.tbi,strelka2.tbi)
       
