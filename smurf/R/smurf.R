@@ -45,7 +45,7 @@
 #' 
 #' @param check.packages Default as TRUE. For debug mode.
 #' 
-#' @param file.key Additional keywords in file directory names to be filtered.
+#' @param file.exclude Additional keywords in file directory names to be filtered.
 #' 
 #' @examples
 #' myresults = smurf(directory="/path/to/directory..",
@@ -92,7 +92,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
                  build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
-                 check.packages=T, file.key=NULL){
+                 check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
   print("SMuRFv2.0.3 (22nd July 2020)")
@@ -104,7 +104,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
                  build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
-                 check.packages=T, file.key=NULL)", stdout()))
+                 check.packages=T, file.exclude=NULL)", stdout()))
   }
   
   if(!is.null(directory) & class(directory)!='list'){
@@ -158,8 +158,8 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     # warning('VCF file names containing "germline" will be excluded.')
     
     keywords=c("germline")
-    if(!is.null(file.key)){
-      keywords = c(keywords, file.key)
+    if(!is.null(file.exclude)){
+      keywords = c(keywords, file.exclude)
     }
     
     dir.check = function(dir.name,caller,keywords) {
