@@ -205,6 +205,8 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
           print("reading mutect2")
           # mut.mutect2=suppressWarnings(annotate.vcf(x[[1]],build,mut.mutect2))
           mut.mutect2=suppressWarnings(annotate.vcf(tbi[[1]],build,mut.mutect2))
+          # mut.mutect2=suppressWarnings(annotate.vcf(tbi[[1]],build=seqinfo(scanVcfHeader(x[[1]])),mut.mutect2))
+          
         }
         
         if (length(mut.strelka2)!=0){
