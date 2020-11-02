@@ -314,10 +314,10 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   end.time=Sys.time() 
   print(end.time-start.time)
   
-  print("merge 4 vcfs and meta data")
+  print("merge 5 vcfs and meta data")
   start.time=Sys.time()
   
-  ## merge 4 vcfs and meta data
+  ## merge 5 vcfs and meta data
   names_m2= paste(names(mcols(gr_m2)[,-1]), "_Mutect2", sep="")
   names_f= paste(names(mcols(gr_f)[,-1]), "_Freebayes", sep="")
   names_vs= paste(names(mcols(gr_vs)[,-1]), "_Varscan", sep="")
@@ -820,10 +820,10 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   end.time=Sys.time() 
   print(end.time-start.time)
   
-  print("merge 4 vcfs and meta data")
+  print("merge 5 vcfs and meta data")
   start.time=Sys.time()
   
-  ## merge 4 vcfs and meta data
+  ## merge 5 vcfs and meta data
   names_m2= paste(names(mcols(gr_m2)[,-1]), "_Mutect2", sep="")
   names_f= paste(names(mcols(gr_f)[,-1]), "_Freebayes", sep="")
   names_vs= paste(names(mcols(gr_vs)[,-1]), "_Varscan", sep="")

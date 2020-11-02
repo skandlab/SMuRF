@@ -99,9 +99,32 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
     
     print("Warning: There are no predicted SNV calls in this sample. Re-examine myresults$smurf_snv$parse_snv and set a lower snv.cutoff.")
     
+    # Generate stats
+    stats <- matrix(,nrow = 11, ncol = 1)
+    stats <- as.data.frame(stats)
+    colnames(stats) <- c("Passed_Calls")
+    rownames(stats) <- c("Strelka2", "Mutect2", "FreeBayes", "VarDict", "VarScan", "Atleast1", "Atleast2", "Atleast3", "Atleast4", "All5", "SMuRF_SNV")
+    
+    counts <- apply(snv_parse[, c("FILTER_Strelka2","FILTER_Mutect2","FILTER_Freebayes","FILTER_Vardict","FILTER_Varscan")], 1, function(x) length(which(x=="TRUE")))
+    
+    stats$Passed_Calls[1] <- length(which((snv_parse$FILTER_Strelka2==TRUE)))
+    stats$Passed_Calls[2] <- length(which((snv_parse$FILTER_Mutect2==TRUE)))
+    stats$Passed_Calls[3] <- length(which((snv_parse$FILTER_Freebayes==TRUE)))
+    stats$Passed_Calls[4] <- length(which((snv_parse$FILTER_Vardict==TRUE)))
+    stats$Passed_Calls[5] <- length(which((snv_parse$FILTER_Varscan==TRUE)))
+    
+    stats$Passed_Calls[6] <- length(which(counts>=1))
+    stats$Passed_Calls[7] <- length(which(counts>=2))
+    stats$Passed_Calls[8] <- length(which(counts>=3))
+    stats$Passed_Calls[9] <- length(which(counts>=4))
+    stats$Passed_Calls[10] <- length(which(counts>=5))
+    
+    stats$Passed_Calls[11] <- 0
+    
+    stats<-as.matrix(stats)
     parse<-as.matrix(snv_parse)
 
-    return(list(parse_snv=parse))
+    return(list(stats_snv=stats, parse_snv=parse))
   }
   
 }
