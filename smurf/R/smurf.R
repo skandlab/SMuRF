@@ -98,7 +98,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv2.0.5 (2nd Nov 2020)")
+  print("SMuRFv2.0.6 (18th Nov 2020)")
   
 
   if(is.null(directory)){
