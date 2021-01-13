@@ -11,7 +11,7 @@
 #' 
 #' 
 #' @export
-parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
+parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
   
   print("Parsing step")
   
@@ -69,8 +69,6 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   if (is.null(t.label)) {
     sampleid.t = H_m2@header@listData$PEDIGREE$Derived
     sampleid.n = H_m2@header@listData$PEDIGREE$Original
-    # sampleid.t <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T")]
-    # sampleid.n <-H_m2@samples[grep(substrRight(H_m2@samples, 2), pattern="-T", invert=T)]
   } else {
     sampleid.t <-H_m2@samples[grep((H_m2@samples), pattern=t.label)]
     sampleid.n <-H_m2@samples[grep((H_m2@samples), pattern=t.label, invert=T)]
@@ -81,9 +79,6 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
     stop('t.label for tumor sample is not unique, duplicated or missing')
   }
   
-  # sampleid.t = H_m2@header@listData$PEDIGREE$Derived
-  # sampleid.n = H_m2@header@listData$PEDIGREE$Original
-  
   print("extracting calls passed by at least 1 caller")
   start.time=Sys.time()
   # get rows that are SNVs
@@ -93,8 +88,7 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   snv_vd<-isSNV(vcf_vd, singleAltOnly=FALSE)  
   snv_s2<-isSNV(vcf_s2, singleAltOnly=FALSE)
   
-  if (roi==F) {
-    
+
     # extract passed calls from each caller
     pass_m2<- vcf_m2@fixed$FILTER=="PASS" | vcf_m2@fixed$FILTER=="MinAF"
     pass_f<- vcf_f@fixed$FILTER=="PASS" 
@@ -102,7 +96,6 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
     # pass_vs<- vcf_vs@fixed$FILTER=="PASS" | vcf_vs@fixed$FILTER=="SpvFreq" | vcf_vs@fixed$FILTER=="REJECT;SpvFreq" #SpvFreq not found in GATK4
     pass_vd<- vcf_vd@fixed$FILTER=="PASS"
     pass_s2<- vcf_s2@fixed$FILTER=="PASS" | vcf_s2@fixed$FILTER=="MinAF"
-  }
 
   
   # get passed snv calls from all callers
@@ -129,49 +122,27 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   start.time=Sys.time() 
   
   if (length(snv.m2.index)!=0) {
+  m2.na=F
+    
   # convert vcf to VRanges then to Granges, keep metadata columns
   vr_m2<- as(vcf_m2[snv.m2.index], "VRanges")
-
   vr_m2=GenomicRanges::split(vr_m2, vr_m2@sampleNames)
-  
   gr_m2=GRanges(vr_m2[[sampleid.t]])
-
   mcols(gr_m2)=cbind(mcols(gr_m2), data.frame(REF=ref(vr_m2[[sampleid.t]]), ALT=alt(vr_m2[[sampleid.t]]), T_totalDepth=totalDepth(vr_m2[[sampleid.t]]), 
                                               T_refDepth=refDepth(vr_m2[[sampleid.t]]), T_altDepth=altDepth(vr_m2[[sampleid.t]]),N_totalDepth=totalDepth(vr_m2[[sampleid.n]]), 
                                               N_refDepth=refDepth(vr_m2[[sampleid.n]]), N_altDepth=altDepth(vr_m2[[sampleid.n]]), stringsAsFactors=F))
 
   gr_m2 <- unique(gr_m2)
-
   gr_m2$FILTER=vcf_m2[snv.m2.index]@fixed$FILTER
   
   } else {
     print("Warning: There are no passed SNVs from MuTect2.")
-    vr_m2<- as(vcf_m2, "VRanges")
-    vr_m2=GenomicRanges::split(vr_m2, vr_m2@sampleNames)
-    gr_m2=GRanges(vr_m2[[sampleid.t]])
-    mcols(gr_m2)=cbind(mcols(gr_m2), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                              T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                              N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_m2 <- unique(gr_m2)
-    gr_m2$FILTER=vcf_m2@fixed$FILTER
-    
-    gr_m2 <- gr_m2[1,]
-    gr_m2@elementMetadata@listData$QUAL <- NA
-    gr_m2@elementMetadata@listData$MQ <- NA
-    gr_m2@elementMetadata@listData$MQRankSum <- NA
-    gr_m2@elementMetadata@listData$NLOD <- NA
-    gr_m2@elementMetadata@listData$TLOD <- NA
-    # gr_m2@elementMetadata@listData$ClippingRankSum <- NA
-    gr_m2@elementMetadata@listData$ReadPosRankSum <- NA
-    gr_m2@elementMetadata@listData$FS <- NA
-    gr_m2@elementMetadata@listData$AF <- NA
-    
-
+    m2.na=T
   }
   
   
   if (length(snv.f.index)!=0) {
-    
+  f.na=F  
   vr_f<- suppressWarnings(as(vcf_f[snv.f.index], "VRanges"))
   vr_f=GenomicRanges::split(vr_f, vr_f@sampleNames)
   gr_f=GRanges(vr_f[[sampleid.t]])
@@ -184,29 +155,12 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed SNVs from FreeBayes.")
-    vr_f<- suppressWarnings(as(vcf_f, "VRanges"))
-    vr_f=GenomicRanges::split(vr_f, vr_f@sampleNames)
-    gr_f=GRanges(vr_f[[sampleid.t]])
-    mcols(gr_f)=cbind(mcols(gr_f), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                              T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                              N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_f <- unique(gr_f)
-    gr_f$FILTER=vcf_f@fixed$FILTER
-    
-    gr_f <- gr_f[1,]
-    gr_f@elementMetadata@listData$QUAL <- NA
-    gr_f@elementMetadata@listData$LEN <- NA
-    gr_f@elementMetadata@listData$MQM <- NA
-    gr_f@elementMetadata@listData$MQMR <- NA
-    gr_f@elementMetadata@listData$ODDS <- NA
-    gr_f@elementMetadata@listData$GTI <- NA
-    gr_f@elementMetadata@listData$RO <- NA
-    
+    f.na=T
   }
   
   
   if (length(snv.vs.index)!=0) {
-    
+  vs.na=F  
   vr_vs<- suppressWarnings(as(vcf_vs[snv.vs.index], "VRanges"))
   vr_vs=GenomicRanges::split(vr_vs, vr_vs@sampleNames)
   gr_vs=GRanges(vr_vs[[sampleid.t]])
@@ -219,27 +173,11 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed SNVs from VarScan.")
-    vr_vs<- suppressWarnings(as(vcf_vs, "VRanges"))
-    vr_vs=GenomicRanges::split(vr_vs, vr_vs@sampleNames)
-    gr_vs=GRanges(vr_vs[[sampleid.t]])
-    mcols(gr_vs)=cbind(mcols(gr_vs), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_vs <- unique(gr_vs)
-    gr_vs$FILTER=vcf_vs@fixed$FILTER
-    
-    gr_vs <- gr_vs[1,]
-    gr_vs@elementMetadata@listData$QUAL <- NA
-    gr_vs@elementMetadata@listData$SSC <- NA
-    gr_vs@elementMetadata@listData$SPV <- NA
-    gr_vs@elementMetadata@listData$GPV <- NA
-    gr_vs@elementMetadata@listData$SS <- NA
-    gr_vs@elementMetadata@listData$FREQ <- NA
-    
+    vs.na=T
   }
   
   if (length(snv.vd.index)!=0) {
-    
+  vd.na=F  
   vr_vd<- suppressWarnings(as(vcf_vd[snv.vd.index], "VRanges"))
   vr_vd=GenomicRanges::split(vr_vd, vr_vd@sampleNames)
   gr_vd=GRanges(vr_vd[[sampleid.t]])
@@ -252,62 +190,28 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed SNVs from VarDict.")
-    vr_vd<- suppressWarnings(as(vcf_vd, "VRanges"))
-    vr_vd=GenomicRanges::split(vr_vd, vr_vd@sampleNames)
-    gr_vd=GRanges(vr_vd[[sampleid.t]])
-    mcols(gr_vd)=cbind(mcols(gr_vd), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_vd <- unique(gr_vd)
-    gr_vd$FILTER=vcf_vd@fixed$FILTER
-    
-    gr_vd <- gr_vd[1,]
-    gr_vd@elementMetadata@listData$QUAL <- NA
-    gr_vd@elementMetadata@listData$SSF <- NA
-    gr_vd@elementMetadata@listData$MSI <- NA
-    gr_vd@elementMetadata@listData$SOR <- NA
-    gr_vd@elementMetadata@listData$AF <- NA
-    
-
+    vd.na=T
   }
   
   
   
   if (length(snv.s2.index)!=0) {
+    s2.na=F
+    
     # convert vcf to VRanges then to Granges, keep metadata columns
     vr_s2<- as(vcf_s2[snv.s2.index], "VRanges")
-    
     vr_s2=GenomicRanges::split(vr_s2, vr_s2@sampleNames)
-    
     gr_s2=GRanges(vr_s2[[sampleid.t]])
-    
     mcols(gr_s2)=cbind(mcols(gr_s2), data.frame(REF=ref(vr_s2[[sampleid.t]]), ALT=alt(vr_s2[[sampleid.t]]), T_totalDepth=totalDepth(vr_s2[[sampleid.t]]), 
                                                 T_refDepth=refDepth(vr_s2[[sampleid.t]]), T_altDepth=altDepth(vr_s2[[sampleid.t]]),N_totalDepth=totalDepth(vr_s2[[sampleid.n]]), 
                                                 N_refDepth=refDepth(vr_s2[[sampleid.n]]), N_altDepth=altDepth(vr_s2[[sampleid.n]]), stringsAsFactors=F))
     
     gr_s2 <- unique(gr_s2)
-    
     gr_s2$FILTER=vcf_s2[snv.s2.index]@fixed$FILTER
     
   } else {
-    print("Warning: There are no passed SNVs from MuTect2.")
-    vr_s2<- as(vcf_s2, "VRanges")
-    vr_s2=GenomicRanges::split(vr_s2, vr_s2@sampleNames)
-    gr_s2=GRanges(vr_s2[[sampleid.t]])
-    mcols(gr_s2)=cbind(mcols(gr_s2), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_s2 <- unique(gr_s2)
-    gr_s2$FILTER=vcf_s2@fixed$FILTER
-    
-    gr_s2 <- gr_s2[1,]
-    gr_s2@elementMetadata@listData$QUAL <- NA
-    gr_s2@elementMetadata@listData$QSS <- NA
-    gr_s2@elementMetadata@listData$MQ <- NA
-    gr_s2@elementMetadata@listData$SomaticEVS <- NA
-    gr_s2@elementMetadata@listData$ReadPosRankSum <- NA
-    gr_s2@elementMetadata@listData$AF <- NA
-    
+    print("Warning: There are no passed SNVs from Strelka2.")
+    s2.na=T
   }
   
   
@@ -318,31 +222,61 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   start.time=Sys.time()
   
   ## merge 5 vcfs and meta data
-  names_m2= paste(names(mcols(gr_m2)[,-1]), "_Mutect2", sep="")
-  names_f= paste(names(mcols(gr_f)[,-1]), "_Freebayes", sep="")
-  names_vs= paste(names(mcols(gr_vs)[,-1]), "_Varscan", sep="")
-  names_vd= paste(names(mcols(gr_vd)[,-1]), "_Vardict", sep="")
-  names_s2= paste(names(mcols(gr_s2)[,-1]), "_Strelka2", sep="")
+  m2.cols = c(names(vcf_m2@info@listData),'AF','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  f.cols = c(names(vcf_f@info@listData),'RO','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  vs.cols = c(names(vcf_vs@info@listData),'FREQ','RD','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  vd.cols = c(names(vcf_vd@info@listData),'AF','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  s2.cols = c(names(vcf_s2@info@listData),'AF','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  
+  names_m2= paste(m2.cols, "_Mutect2", sep="")
+  names_f= paste(f.cols, "_Freebayes", sep="")
+  names_vs= paste(vs.cols, "_Varscan", sep="")
+  names_vd= paste(vd.cols, "_Vardict", sep="")
+  names_s2= paste(s2.cols, "_Strelka2", sep="")
+  
+  # names_m2= paste(names(mcols(gr_m2)[,-1]), "_Mutect2", sep="")
+  # names_f= paste(names(mcols(gr_f)[,-1]), "_Freebayes", sep="")
+  # names_vs= paste(names(mcols(gr_vs)[,-1]), "_Varscan", sep="")
+  # names_vd= paste(names(mcols(gr_vd)[,-1]), "_Vardict", sep="")
+  # names_s2= paste(names(mcols(gr_s2)[,-1]), "_Strelka2", sep="")
   
   meta_data=data.frame(snv_pass)[,1:3]
   meta_data[c(names_m2,names_f,names_vs,names_vd,names_s2)]=NA
-  #do not merge when the 1st row is all NAs + last column PASSED/REJECT
-  if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))==TRUE) {
-    meta_data[Biostrings::match(gr_m2, snv_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
+  
+  #do not merge when index=0, caller.na=T
+  if (m2.na==F) {
+    meta_data[Biostrings::match(gr_m2, snv_pass), names_m2]=data.frame(mcols(gr_m2)[,m2.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))!=ncol(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))==TRUE) {
-    meta_data[Biostrings::match(gr_f, snv_pass), names_f]=data.frame(mcols(gr_f)[,-1])
+  if (f.na==F) {
+    meta_data[Biostrings::match(gr_f, snv_pass), names_f]=data.frame(mcols(gr_f)[,f.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))!=ncol(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))==TRUE) {
-    meta_data[Biostrings::match(gr_vs, snv_pass), names_vs]=data.frame(mcols(gr_vs)[,-1])
+  if (vs.na==F) {
+    meta_data[Biostrings::match(gr_vs, snv_pass), names_vs]=data.frame(mcols(gr_vs)[,vs.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))!=ncol(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))==TRUE) {
-    meta_data[Biostrings::match(gr_vd, snv_pass), names_vd]=data.frame(mcols(gr_vd)[,-1])
+  if (vd.na==F) {
+    meta_data[Biostrings::match(gr_vd, snv_pass), names_vd]=data.frame(mcols(gr_vd)[,vd.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))!=ncol(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))==TRUE) {
-    meta_data[Biostrings::match(gr_s2, snv_pass), names_s2]=data.frame(mcols(gr_s2)[,-1])
+  if (s2.na==F) {
+    meta_data[Biostrings::match(gr_s2, snv_pass), names_s2]=data.frame(mcols(gr_s2)[,s2.cols])
   }
   
+  # #do not merge when the 1st row is all NAs + last column PASSED/REJECT
+  # if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))==TRUE) {
+  #   meta_data[Biostrings::match(gr_m2, snv_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))!=ncol(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))==TRUE) {
+  #   meta_data[Biostrings::match(gr_f, snv_pass), names_f]=data.frame(mcols(gr_f)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))!=ncol(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))==TRUE) {
+  #   meta_data[Biostrings::match(gr_vs, snv_pass), names_vs]=data.frame(mcols(gr_vs)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))!=ncol(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))==TRUE) {
+  #   meta_data[Biostrings::match(gr_vd, snv_pass), names_vd]=data.frame(mcols(gr_vd)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))!=ncol(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))==TRUE) {
+  #   meta_data[Biostrings::match(gr_s2, snv_pass), names_s2]=data.frame(mcols(gr_s2)[,-1])
+  # }
+
   end.time=Sys.time()
   print(end.time-start.time)
   
@@ -407,20 +341,7 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   meta_data$T_altDepth_Strelka2 <- round(meta_data$AF_Strelka2*meta_data$T_totalDepth_Strelka2)
   meta_data$T_refDepth_Strelka2 <- meta_data$T_totalDepth_Strelka2-meta_data$T_altDepth_Strelka2
   
-  #select best AF starting from mutect2
-  # af=meta_data[,c("AF_Mutect2", "FREQ_Varscan", "AF_Vardict", "AF_Freebayes", "AF_Strelka2")]
-  # af.ind=which(!is.na(af), arr.ind=T) #find all non-NA allele freq
-  # af.ind=af.ind[order(af.ind[,1]),]  #order array indices by row number
-  # af.ind=af.ind[!duplicated(af.ind[,1]),]# take the first non-NA allele freq of each row
-  # meta_data$AF=af[af.ind]
-  # meta_data$AF[is.na(meta_data$AF)] <- 0
-  # if(class(meta_data$AF)=='list') {
-  #   meta_data$AF = as.numeric(meta_data$AF)
-  # }
-  
-  # meta_data$AF <- rowMeans(meta_data[, c("AF_Mutect2", "AF_Freebayes", "FREQ_Varscan", "AF_Vardict")],na.rm = TRUE)
-  
-  
+
   #catch vcf caller mapping errors
   if(all(is.na(meta_data$T_altDepth_Mutect2))==T | 
      all(is.na(meta_data$T_refDepth_Mutect2))==T |
@@ -611,7 +532,7 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
                            "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")
   
   #SOR inf values
-  parse_snv$vd_SOR[which(is.infinite(parse_snv$vd_SOR)==TRUE)] <-  max(parse_snv$vd_SOR[which(is.infinite(parse_snv$vd_SOR)==F)],na.rm=T)+1 #added for v2
+  parse_snv$vd_SOR[which(is.infinite(parse_snv$vd_SOR)==TRUE)] <-  suppressWarnings(max(parse_snv$vd_SOR[which(is.infinite(parse_snv$vd_SOR)==F)],na.rm=T)+1) #added for v2
   
   #sort table
   parse_snv = parse_snv[order(parse_snv$START_POS_REF),]
@@ -642,10 +563,9 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   start.time=Sys.time() 
   
   if (length(indel.m2.index)!=0) {
-    
+  m2.na=F  
   # convert vcf to VRanges then to Granges, keep metadata columns
   vr_m2<- suppressWarnings(as(vcf_m2[indel.m2.index], "VRanges"))
-  #mcols(vr_m2)=vr_m2[,c("MQ","MQRankSum","TLOD","NLOD","AF")]
   vr_m2=GenomicRanges::split(vr_m2, vr_m2@sampleNames)
   gr_m2=GRanges(vr_m2[[sampleid.t]])
   mcols(gr_m2)=cbind(mcols(gr_m2), data.frame(REF=ref(vr_m2[[sampleid.t]]), ALT=alt(vr_m2[[sampleid.t]]), T_totalDepth=totalDepth(vr_m2[[sampleid.t]]), 
@@ -657,33 +577,12 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed INDELs from MuTect2.")
-    vr_m2<- as(vcf_m2, "VRanges")
-    vr_m2=GenomicRanges::split(vr_m2, vr_m2@sampleNames)
-    gr_m2=GRanges(vr_m2[[sampleid.t]])
-    mcols(gr_m2)=cbind(mcols(gr_m2), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_m2 <- unique(gr_m2)
-    gr_m2$FILTER=vcf_m2@fixed$FILTER
-    
-    gr_m2 <- gr_m2[1,]
-    gr_m2@elementMetadata@listData$QUAL <- NA
-    gr_m2@elementMetadata@listData$MQ <- NA
-    gr_m2@elementMetadata@listData$MQRankSum <- NA
-    gr_m2@elementMetadata@listData$NLOD <- NA
-    gr_m2@elementMetadata@listData$TLOD <- NA
-    # gr_m2@elementMetadata@listData$ClippingRankSum <- NA
-    gr_m2@elementMetadata@listData$ReadPosRankSum <- NA
-    gr_m2@elementMetadata@listData$FS <- NA
-    gr_m2@elementMetadata@listData$AF <- NA
-    
-    
+    m2.na=T
   }
   
   if (length(indel.f.index)!=0) {
-    
+  f.na=F  
   vr_f<- suppressWarnings(as(vcf_f[indel.f.index], "VRanges"))
-  #mcols(vr_f)=vr_f[,c("MQM","MQMR")]
   vr_f=GenomicRanges::split(vr_f, vr_f@sampleNames)
   gr_f=GRanges(vr_f[[sampleid.t]])
   mcols(gr_f)=cbind(mcols(gr_f), data.frame(REF=ref(vr_f[[sampleid.t]]), ALT=alt(vr_f[[sampleid.t]]), T_totalDepth=totalDepth(vr_f[[sampleid.t]]), 
@@ -695,30 +594,12 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed INDELs from FreeBayes.")
-    vr_f<- suppressWarnings(as(vcf_f, "VRanges"))
-    vr_f=GenomicRanges::split(vr_f, vr_f@sampleNames)
-    gr_f=GRanges(vr_f[[sampleid.t]])
-    mcols(gr_f)=cbind(mcols(gr_f), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                              T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                              N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_f <- unique(gr_f)
-    gr_f$FILTER=vcf_f@fixed$FILTER
-    
-    gr_f <- gr_f[1,]
-    gr_f@elementMetadata@listData$QUAL <- NA
-    gr_f@elementMetadata@listData$LEN <- NA
-    gr_f@elementMetadata@listData$MQM <- NA
-    gr_f@elementMetadata@listData$MQMR <- NA
-    gr_f@elementMetadata@listData$ODDS <- NA
-    gr_f@elementMetadata@listData$GTI <- NA
-    gr_f@elementMetadata@listData$RO <- NA
-    
+    f.na=T
   }
   
   if (length(indel.vs.index)!=0) {
-    
+  vs.na=F  
   vr_vs<- suppressWarnings(as(vcf_vs[indel.vs.index], "VRanges"))
-  #mcols(vr_vs)=vr_vs[,c("SSC","SPV", "FREQ")]
   vr_vs=GenomicRanges::split(vr_vs, vr_vs@sampleNames)
   gr_vs=GRanges(vr_vs[[sampleid.t]])
   mcols(gr_vs)=cbind(mcols(gr_vs), data.frame(REF=ref(vr_vs[[sampleid.t]]), ALT=alt(vr_vs[[sampleid.t]]), T_totalDepth=totalDepth(vr_vs[[sampleid.t]]), 
@@ -730,29 +611,12 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed INDELs from VarScan.")
-    vr_vs<- suppressWarnings(as(vcf_vs, "VRanges"))
-    vr_vs=GenomicRanges::split(vr_vs, vr_vs@sampleNames)
-    gr_vs=GRanges(vr_vs[[sampleid.t]])
-    mcols(gr_vs)=cbind(mcols(gr_vs), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_vs <- unique(gr_vs)
-    gr_vs$FILTER=vcf_vs@fixed$FILTER
-    
-    gr_vs <- gr_vs[1,]
-    gr_vs@elementMetadata@listData$QUAL <- NA
-    gr_vs@elementMetadata@listData$SSC <- NA
-    gr_vs@elementMetadata@listData$SPV <- NA
-    gr_vs@elementMetadata@listData$GPV <- NA
-    gr_vs@elementMetadata@listData$SS <- NA
-    gr_vs@elementMetadata@listData$FREQ <- NA
-    
+    vs.na=T
   }
   
   if (length(indel.vd.index)!=0) {
-    
+  vd.na=F  
   vr_vd<- suppressWarnings(as(vcf_vd[indel.vd.index], "VRanges"))
-  #mcols(vr_vd)=vr_vd[,c("SSF","SOR","MSI", "AF")]
   vr_vd=GenomicRanges::split(vr_vd, vr_vd@sampleNames)
   gr_vd=GRanges(vr_vd[[sampleid.t]])
   mcols(gr_vd)=cbind(mcols(gr_vd), data.frame(REF=ref(vr_vd[[sampleid.t]]), ALT=alt(vr_vd[[sampleid.t]]), T_totalDepth=totalDepth(vr_vd[[sampleid.t]]), 
@@ -764,25 +628,11 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   
   } else {
     print("Warning: There are no passed INDELs from VarDict.")
-    vr_vd<- suppressWarnings(as(vcf_vd, "VRanges"))
-    vr_vd=GenomicRanges::split(vr_vd, vr_vd@sampleNames)
-    gr_vd=GRanges(vr_vd[[sampleid.t]])
-    mcols(gr_vd)=cbind(mcols(gr_vd), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_vd <- unique(gr_vd)
-    gr_vd$FILTER=vcf_vd@fixed$FILTER
-    
-    gr_vd <- gr_vd[1,]
-    gr_vd@elementMetadata@listData$QUAL <- NA
-    gr_vd@elementMetadata@listData$SSF <- NA
-    gr_vd@elementMetadata@listData$MSI <- NA
-    gr_vd@elementMetadata@listData$SOR <- NA
-    gr_vd@elementMetadata@listData$AF <- NA
-    
+    vd.na=T
   }
   
   if (length(indel.s2.index)!=0) {
+    s2.na=F
     
     # convert vcf to VRanges then to Granges, keep metadata columns
     vr_s2<- suppressWarnings(as(vcf_s2[indel.s2.index], "VRanges"))
@@ -796,24 +646,8 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
     gr_s2$FILTER=vcf_s2[indel.s2.index]@fixed$FILTER
     
   } else {
-    print("Warning: There are no passed INDELs from MuTect2.")
-    vr_s2<- as(vcf_s2, "VRanges")
-    vr_s2=GenomicRanges::split(vr_s2, vr_s2@sampleNames)
-    gr_s2=GRanges(vr_s2[[sampleid.t]])
-    mcols(gr_s2)=cbind(mcols(gr_s2), data.frame(REF=NA, ALT=NA, T_totalDepth=NA, 
-                                                T_refDepth=NA, T_altDepth=NA,N_totalDepth=NA, 
-                                                N_refDepth=NA, N_altDepth=NA, stringsAsFactors=F))
-    gr_s2 <- unique(gr_s2)
-    gr_s2$FILTER=vcf_s2@fixed$FILTER
-    
-    gr_s2 <- gr_s2[1,]
-    gr_s2@elementMetadata@listData$QUAL <- NA
-    gr_s2@elementMetadata@listData$QSS <- NA
-    gr_s2@elementMetadata@listData$MQ <- NA
-    gr_s2@elementMetadata@listData$SomaticEVS <- NA
-    gr_s2@elementMetadata@listData$ReadPosRankSum <- NA
-    gr_s2@elementMetadata@listData$AF <- NA
-    
+    print("Warning: There are no passed INDELs from Strelka2.")
+    s2.na=T
   }
   
   
@@ -824,30 +658,60 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   start.time=Sys.time()
   
   ## merge 5 vcfs and meta data
-  names_m2= paste(names(mcols(gr_m2)[,-1]), "_Mutect2", sep="")
-  names_f= paste(names(mcols(gr_f)[,-1]), "_Freebayes", sep="")
-  names_vs= paste(names(mcols(gr_vs)[,-1]), "_Varscan", sep="")
-  names_vd= paste(names(mcols(gr_vd)[,-1]), "_Vardict", sep="")
-  names_s2= paste(names(mcols(gr_s2)[,-1]), "_Strelka2", sep="")
+  m2.cols = c(names(vcf_m2@info@listData),'AF','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  f.cols = c(names(vcf_f@info@listData),'RO','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  vs.cols = c(names(vcf_vs@info@listData),'FREQ','RD','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  vd.cols = c(names(vcf_vd@info@listData),'AF','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  s2.cols = c(names(vcf_s2@info@listData),'AF','REF','ALT','T_totalDepth','T_refDepth','T_altDepth','N_totalDepth','N_refDepth','N_altDepth','FILTER')
+  
+  names_m2= paste(m2.cols, "_Mutect2", sep="")
+  names_f= paste(f.cols, "_Freebayes", sep="")
+  names_vs= paste(vs.cols, "_Varscan", sep="")
+  names_vd= paste(vd.cols, "_Vardict", sep="")
+  names_s2= paste(s2.cols, "_Strelka2", sep="")
+  
+  # names_m2= paste(names(mcols(gr_m2)[,-1]), "_Mutect2", sep="")
+  # names_f= paste(names(mcols(gr_f)[,-1]), "_Freebayes", sep="")
+  # names_vs= paste(names(mcols(gr_vs)[,-1]), "_Varscan", sep="")
+  # names_vd= paste(names(mcols(gr_vd)[,-1]), "_Vardict", sep="")
+  # names_s2= paste(names(mcols(gr_s2)[,-1]), "_Strelka2", sep="")
   
   meta_indel=data.frame(indel_pass)[,1:3]
   meta_indel[c(names_m2,names_f,names_vs,names_vd,names_s2)]=NA
-  #do not merge when the 1st row is all NAs + last column PASSED/REJECT
-  if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))==TRUE) {
-    meta_indel[Biostrings::match(gr_m2, indel_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
+  
+  #do not merge when index=0, caller.na=T
+  if (m2.na==F) {
+    meta_indel[Biostrings::match(gr_m2, indel_pass), names_m2]=data.frame(mcols(gr_m2)[,m2.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))!=ncol(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))==TRUE) {
-    meta_indel[Biostrings::match(gr_f, indel_pass), names_f]=data.frame(mcols(gr_f)[,-1])
+  if (f.na==F) {
+    meta_indel[Biostrings::match(gr_f, indel_pass), names_f]=data.frame(mcols(gr_f)[,f.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))!=ncol(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))==TRUE) {
-    meta_indel[Biostrings::match(gr_vs, indel_pass), names_vs]=data.frame(mcols(gr_vs)[,-1])
+  if (vs.na==F) {
+    meta_indel[Biostrings::match(gr_vs, indel_pass), names_vs]=data.frame(mcols(gr_vs)[,vs.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))!=ncol(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))==TRUE) {
-    meta_indel[Biostrings::match(gr_vd, indel_pass), names_vd]=data.frame(mcols(gr_vd)[,-1])
+  if (vd.na==F) {
+    meta_indel[Biostrings::match(gr_vd, indel_pass), names_vd]=data.frame(mcols(gr_vd)[,vd.cols])
   }
-  if ((rowSums(is.na(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))!=ncol(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))==TRUE) {
-    meta_indel[Biostrings::match(gr_s2, indel_pass), names_s2]=data.frame(mcols(gr_s2)[,-1])
+  if (s2.na==F) {
+    meta_indel[Biostrings::match(gr_s2, indel_pass), names_s2]=data.frame(mcols(gr_s2)[,s2.cols])
   }
+  
+  # #do not merge when the 1st row is all NAs + last column PASSED/REJECT
+  # if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))==TRUE) {
+  #   meta_indel[Biostrings::match(gr_m2, indel_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))!=ncol(data.frame(mcols(gr_f)[1,1:length(mcols(gr_f))-1])))==TRUE) {
+  #   meta_indel[Biostrings::match(gr_f, indel_pass), names_f]=data.frame(mcols(gr_f)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))!=ncol(data.frame(mcols(gr_vs)[1,1:length(mcols(gr_vs))-1])))==TRUE) {
+  #   meta_indel[Biostrings::match(gr_vs, indel_pass), names_vs]=data.frame(mcols(gr_vs)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))!=ncol(data.frame(mcols(gr_vd)[1,1:length(mcols(gr_vd))-1])))==TRUE) {
+  #   meta_indel[Biostrings::match(gr_vd, indel_pass), names_vd]=data.frame(mcols(gr_vd)[,-1])
+  # }
+  # if ((rowSums(is.na(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))!=ncol(data.frame(mcols(gr_s2)[1,1:length(mcols(gr_s2))-1])))==TRUE) {
+  #   meta_indel[Biostrings::match(gr_s2, indel_pass), names_s2]=data.frame(mcols(gr_s2)[,-1])
+  # }
 
 
   end.time=Sys.time()
@@ -923,14 +787,7 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
   meta_indel$T_altDepth_Strelka2 <- round(meta_indel$AF_Strelka2*meta_indel$T_totalDepth_Strelka2)
   meta_indel$T_refDepth_Strelka2 <- meta_indel$T_totalDepth_Strelka2-meta_indel$T_altDepth_Strelka2
   
-  # af=meta_indel[,c("AF_Mutect2", "FREQ_Varscan", "AF_Vardict", "AF_Freebayes")]
-  # af.ind=which(!is.na(af), arr.ind=T) #find all non-NA allele freq
-  # af.ind=af.ind[order(af.ind[,1]),]  #order array indices by row number
-  # af.ind=af.ind[!duplicated(af.ind[,1]),]# take the first non-NA allele freq of each row
-  # meta_indel$AF=af[af.ind]  
-  # meta_indel$AF[is.na(meta_indel$AF)] <- 0
-  
-  
+
   #catch vcf caller mapping errors
   if(all(is.na(meta_indel$T_altDepth_Mutect2))==T | 
      all(is.na(meta_indel$T_refDepth_Mutect2))==T |
@@ -1116,7 +973,7 @@ parsevcf_allfeaturesall = function(x, tbi, roi=F, roi.dir=NULL, t.label=NULL){
                              "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")
   
   #SOR inf values
-  parse_indel$vd_SOR[which(is.infinite(parse_indel$vd_SOR)==TRUE)] <-  max(parse_indel$vd_SOR[which(is.infinite(parse_indel$vd_SOR)==F)],na.rm=T)+1 #added for v2
+  parse_indel$vd_SOR[which(is.infinite(parse_indel$vd_SOR)==TRUE)] <-  suppressWarnings(max(parse_indel$vd_SOR[which(is.infinite(parse_indel$vd_SOR)==F)],na.rm=T)+1) #added for v2
   
   #sort table
   parse_indel = parse_indel[order(parse_indel$START_POS_REF),]

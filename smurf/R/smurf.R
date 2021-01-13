@@ -98,7 +98,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv2.0.6 (18th Nov 2020)")
+  print("SMuRFv2.0.7 (12th Jan 2021)")
   
 
   if(is.null(directory)){
@@ -456,7 +456,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
 
     if (mode == "snv") {
       
-        parsevcf<-parsevcf_allfeaturesall(x,tbi,roi=F, roi.dir=NULL, t.label=t.label)
+        parsevcf<-parsevcf_allfeaturesall(x,tbi, t.label=t.label)
         snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
 
       if (annotation == F) {
@@ -505,7 +505,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       
       } else if (mode == "indel") {
       
-          parsevcf<-parsevcf_allfeaturesall(x,tbi,roi=F, roi.dir=NULL, t.label=t.label)
+          parsevcf<-parsevcf_allfeaturesall(x,tbi, t.label=t.label)
           indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
 
       if (annotation == F) {
@@ -556,7 +556,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
 
       } else if (mode == "combined") {
       
-          parsevcf<-parsevcf_allfeaturesall(x,tbi,roi=F, roi.dir=NULL, t.label=t.label)
+          parsevcf<-parsevcf_allfeaturesall(x,tbi, t.label=t.label)
           snvpredict<-snvRFpredict(parsevcf, snv.cutoff)
           indelpredict<-indelRFpredict(parsevcf, indel.cutoff)
 
@@ -616,7 +616,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
 
     } else if (mode == "featureselectionall") { #debug mode, only parse feature matrix
       
-      parsevcf<-parsevcf_allfeaturesall(x,roi=F, roi.dir=NULL, t.label=t.label)
+      parsevcf<-parsevcf_allfeaturesall(x, t.label=t.label)
       
       end.time <- Sys.time()
       time.taken <- end.time - start.time
