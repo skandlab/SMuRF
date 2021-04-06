@@ -33,7 +33,8 @@ CDSannotation_indel = function(x, tbi, predicted, build, change.build){
     if(length(gr)==length(mut.subset)){
       gr$ANN=info(vcf)$ANN
     } else if (length(unlist(gr$ALT))==length(gr)) {
-      z=which(gr$FILTER=="PASS" & nchar(as.character(gr$REF))!=1 | nchar(as.character(unlist(gr$ALT)))!=1)
+      # z=which(gr$FILTER=="PASS" & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
+      z=which((gr$FILTER=="PASS"|gr$FILTER=="MinAF") & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
       gr=gr[z]
       gr$ANN=info(vcf)$ANN[z]
     } else {
