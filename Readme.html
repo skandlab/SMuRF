@@ -365,27 +365,30 @@ summary {
 </div>
 
 
-<div id="smurf-v2.0" class="section level3">
-<h3>SMuRF v2.0</h3>
+<div id="smurf-v2.0" class="section level1">
+<h1>SMuRF v2.0</h1>
 <p>by <a href="https://www.researchgate.net/profile/Weitai_Huang">Huang Weitai</a></p>
-<p>1st May 2020</p>
+<p>Genome Institute of Singapore, A*STAR</p>
+<p>Check out the <a href="https://github.com/skandlab/SMuRF/releases">latest SMuRF version here</a></p>
+<p><a name="home"></a></p>
 <div id="introduction" class="section level4">
 <h4><br />Introduction</h4>
-<p><em>SMuRF</em> R package predicts a consensus set of somatic mutation calls using RandomForest machine learning. SMuRF generates a set of point mutations and insertions/deletions (indels) trained on the latest community-curated tumor whole genome sequencing data (Alioto <em>et. al.</em>, 2015, Nat. Comms.). Our method is fast and accurate and analyses both whole-genome and whole-exome sequencing data from different cancer types.</p>
+<p><em>SMuRF</em> R package predicts a consensus set of somatic mutation calls using RandomForest machine learning. <em>SMuRF</em> generates a set of point mutations and insertions/deletions (indels) trained on the latest community-curated tumor whole genome sequencing data (Alioto <em>et. al.</em>, 2015, Nat. Comms.). Our method is fast and accurate and analyses both whole-genome and whole-exome sequencing data from different cancer types.</p>
 <p>For more information see our Bioinformatics paper: <a href="https://doi.org/10.1093/bioinformatics/btz018" class="uri">https://doi.org/10.1093/bioinformatics/btz018</a></p>
-<p><strong>Citation</strong> </br>Huang, W., Guo, YA., Muthukumar, K., Baruah, P., Chang, M., and AJ., Skanderup, SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics, 2019: p. 3157-3159</p>
+<p><strong>Citation</strong> </br>Huang W, Guo YA, Chang MM and Skanderup AJ. Ensemble-Based Somatic Mutation Calling in Cancer Genomes. In: Boegel S, editor. Bioinformatics for Cancer Immunotherapy: Methods and Protocols. New York, NY: Springer US; 2020. p. 37-46.</p>
+<p>Huang W, Guo YA, Muthukumar K, Baruah P, Chang MM and Skanderup AJ. SMuRF: Portable and accurate ensemble prediction of somatic mutations. Bioinformatics (Oxford, England). 2019:btz018-btz. <a href="doi:10.1093/bioinformatics/btz018" class="uri">doi:10.1093/bioinformatics/btz018</a>.</p>
 </div>
 <div id="table-of-contents" class="section level4">
 <h4><br />Table of contents</h4>
-<p><a href="#input-bcbio">Input from bcbio-nextgen pipeline</a> </br><a href="#input-alt">Input directly from VCF Callers (optional)</a> </br><a href="#test">Test Dataset</a> </br><a href="#requirements">Requirements</a> </br><a href="#installation">Installation</a> </br><a href="#functions">Functions</a> </br>-Get SNV and indel predictions </br>-Annotate genes </br>-Subset region-of-interest </br><a href="#troubleshoot">Troubleshooting cutoffs</a> </br><a href="#output">Output format</a> </br><a href="#multiple-samples">Running on multiple samples</a></p>
+<p><a href="#input-bcbio">Input from bcbio-nextgen pipeline</a> </br><a href="#input-alt">Input directly from VCF Callers (optional)</a> </br><a href="#test">Test Dataset</a> </br><a href="#requirements">Requirements</a> </br><a href="#installation">Installation</a> </br><a href="#functions">Parameters</a> </br><a href="#input">Running SMuRF: Selecting the correct input vcfs</a> </br><a href="#build">Running SMuRF: Detecting and changing genome build</a> </br><a href="#cutoff">Running SMuRF: Tweaking SMuRF score cut-off</a> </br><a href="#output">Output format</a> </br><a href="#multiple-samples">Running on multiple samples</a></p>
 <hr />
 <p><a name="input-bcbio"></a></p>
 </div>
 <div id="input-from-bcbio-nextgen-pipeline" class="section level4">
 <h4><br />Input from bcbio-nextgen pipeline</h4>
 <p>Before running <em>SMuRF</em>, you require output data from the <a href="http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling">bcbio-nextgen pipeline</a> that generates the VCF output for the variant callers: MuTect2, FreeBayes, VarDict, VarScan and the latest Strelka2. An additional caller Strelka2, has been added to SMuRF 2.0 and the information is documented on our <a href="https://github.com/skandlab/SMuRF/wiki/SMuRF-2.0">wiki page</a>.</p>
-<p>SMuRF v1.6.4 is still available <a href="https://github.com/skandlab/SMuRF/releases/tag/SMuRFv1.6.4"><strong>here</strong></a> <a href="https://github.com/skandlab/SMuRF/wiki/SMuRF-v1.6.4-vignette">SMuRF v1.6.4 readme</a></p>
-<p>Note that your vcf.gz files need to be tab-indexed (.tbi files required) for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience.</p>
+<p>SMuRF v1.6.4 is still available here: <a href="https://github.com/skandlab/SMuRF/releases/tag/SMuRFv1.6.4">SMuRFv1.6.4</a> </br>SMuRF v1.6.4 wiki page: <a href="https://github.com/skandlab/SMuRF/wiki/SMuRF-v1.6.4-vignette">readme file</a></p>
+<p>Note that your vcf.gz files need to be tab-indexed (.tbi files required) for retrieving gene annotations in SMuRF. We would recommend the bcbio-nextgen pipeline for a better user experience. See <a href="#input">Running SMuRF: Selecting the correct input vcfs</a> for more information.</p>
 <p><em>SMuRF</em> requires the VCF output from each caller (.vcf.gz) to be placed in the same directory and files tagged with the caller (eg. sample1-mutect.vcf.gz, sample1-freebayes.vcf.gz, sample1-vardict.vcf.gz, sample1-varscan.vcf.gz)</p>
 <p><a name="input-alt"></a></p>
 </div>
@@ -397,46 +400,50 @@ summary {
 </div>
 <div id="test-dataset" class="section level4">
 <h4><br />Test Dataset</h4>
-<p>In this vignette, we utilise a <a href="https://github.com/skandlab/SMuRF/tree/master/test">partial output dataset</a> derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. This test dataset is provided in the SMuRF package.</p>
+<p>In this vignette, we utilise a <a href="https://github.com/skandlab/SMuRF/tree/master/test">partial output dataset</a> derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. The test dataset is provided in the SMuRF package.</p>
 <p><a name="requirements"></a></p>
 </div>
 <div id="requirements" class="section level4">
 <h4><br />Requirements</h4>
 <p><strong>R 3.3 &amp; 3.4</strong> : bioconductor::VariantAnnotation</p>
 <p><strong>R &gt;=3.5</strong> : BiocManager::VariantAnnotation</p>
-<p><strong>h2o package</strong> : <em>If h2o package takes a long time to install, try manually installing from their <a href="https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html">AWS page.</a></em></p>
+<p><strong>h2o package</strong> : <em>If h2o package takes some time to download/install (~350MB), try manually installing from their <a href="https://h2o-release.s3.amazonaws.com/h2o/rel-yau/2/index.html">AWS page.</a></em></p>
 <p><a name="installation"></a></p>
 </div>
 <div id="installation" class="section level4">
 <h4><br />Installation</h4>
 <p><br />1. The latest version of the package is updated on Github <a href="https://github.com/skandlab/SMuRF" class="uri">https://github.com/skandlab/SMuRF</a></p>
-<p><br />2. You can install the current SMuRF directly from Github via the following R commands:</p>
+<ol start="2" style="list-style-type: decimal">
+<li>You can install the current SMuRF directly from Github via the following R commands:</li>
+</ol>
 <pre class="r"><code>#devtools is required
 install.packages(&quot;devtools&quot;)
 library(devtools)
 install_github(&quot;skandlab/SMuRF&quot;, subdir=&quot;smurf&quot;)</code></pre>
-<p>(<em>Alternative option</em>) SMuRF installation via downloading of the package from Github:</p>
+<p></br>(<em>Alternative option</em>) SMuRF installation via downloading of the package from Github:</p>
 <pre class="r"><code>#Clone or download package from Github https://github.com/skandlab/SMuRF/tree/master/smurf and save to your local directory
 install.packages(&quot;my/current/directory/smurf&quot;, repos = NULL, type = &quot;source&quot;)</code></pre>
-<p><em>SMuRF</em> concurrently predicts single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels) and saves time by parsing the VCF files once.</p>
+<p></br> <em>SMuRF</em> concurrently predicts single somatic nucleotide variants (SNV) as well as small insertions and deletions (indels) and saves time by parsing the VCF files once.</p>
 <p><em>Missing packages will be installed the first time you run <em>SMuRF</em>.</em></p>
 <pre class="r"><code>library(&quot;smurf&quot;) #load SMuRF package
 
 smurf() #check version and parameters
 
-# &quot;SMuRFv2.0 (30th April 2020)&quot;
+# &quot;SMuRFv2.0.9 (16th Apr 2021)&quot;
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = &#39;default&#39;, indel.cutoff = &#39;default&#39;,
-                 build=NULL, change.build=F, t.label=NULL, re.tabIndex=F,
-                 check.packages=T)
+                 build=NULL, change.build=F, find.build=F,
+                 t.label=NULL, re.tabIndex=F,
+                 check.packages=T, file.exclude=NULL)
 
 myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output into &#39;myresults&#39; variable
 </code></pre>
+<p><a href="#home">back to top</a></p>
 <p><a name="functions"></a></p>
 </div>
-<div id="functions" class="section level4">
-<h4><br />Functions</h4>
+<div id="parameters" class="section level4">
+<h4><br />Parameters</h4>
 <table>
 <colgroup>
 <col width="5%"></col>
@@ -470,7 +477,7 @@ myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output 
 <td align="left">TRUE or FALSE (default). Provide gene annotations for each variant call.</td>
 </tr>
 <tr class="even">
-<td align="center">nthreads=-1</td>
+<td align="center">nthreads</td>
 <td align="left">Number of cores used for RandomForest prediction. Default (-1) for maximum number of cores. <em>For 32-bit Windows, only 1 core is allowed (nthreads=1).</em></td>
 </tr>
 <tr class="odd">
@@ -478,12 +485,20 @@ myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output 
 <td align="left">(Optional) Provide the sample name for your tumour sample to ease the identification of the normal and tumour sample names in your vcf</td>
 </tr>
 <tr class="even">
-<td align="center">build</td>
-<td align="left">Specify you genome build: build=‘hg19’ or build=“hg38”</td>
+<td align="center">file.exclude</td>
+<td align="left">(Optional) Additional keywords in file directory names to be filtered.</td>
 </tr>
 <tr class="odd">
+<td align="center">build</td>
+<td align="left">Specify your human genome build: build=“hg19” or build=“hg38”</td>
+</tr>
+<tr class="even">
 <td align="center">change.build</td>
-<td align="left">For conversion of your genomic coordinates</td>
+<td align="left">TRUE or FALSE (default). For conversion of your genomic coordinates</td>
+</tr>
+<tr class="odd">
+<td align="center">find.build</td>
+<td align="left">TRUE or FALSE (default). Additional genome build check for the annotation step.</td>
 </tr>
 <tr class="even">
 <td align="center">snv.cutoff</td>
@@ -509,66 +524,141 @@ myresults = smurf(mydir, &#39;combined&#39;, build=&#39;hg19&#39;) #save output 
 <pre class="r"><code>library(&quot;smurf&quot;) #load SMuRF package
 
  myresults = smurf(directory=&quot;/path/to/directory..&quot;,
-                   mode=&quot;snv&quot;,
-                   output.dir=&quot;/path/to/output&quot;, build=&#39;hg19&#39;)
- 
- #Alter snv or indel model score cutoff (see below)
- myresults = smurf(directory=&quot;/path/to/directory..&quot;,
-                   mode=&quot;combined&quot;,
-                   nthreads = 1, #for Windows OS
-                   snv.cutoff = 0.2, indel.cutoff = &#39;default&#39;,
-                   parse.dir=&quot;/path/to/parse/files/&quot;, build=&#39;hg19&#39;)
+                   mode=&quot;snv&quot;, #snv only
+                   output.dir=&quot;/path/to/output&quot;, #saving your output
+                   build=&#39;hg19&#39;)
  
  #Include gene annotations for coding regions in output
  myresults = smurf(directory=&quot;/path/to/directory..&quot;,
-                   mode=&quot;combined&quot;, 
-                   annotation=T, build=&#39;hg19&#39;)
- 
- #Change hg38 to hg19 coordinates in gene annotation output
- myresults = smurf(directory=&quot;/path/to/directory..&quot;,
-                   mode=&quot;combined&quot;, 
-                   annotation=T, 
-                   build=&#39;hg38&#39;, change.build=T)
-                   
- #Specify tumor sample name eg.&quot;SampleA-001-T&quot;
- myresults = smurf(directory=&quot;/path/to/directory..&quot;,
-                   mode=&quot;combined&quot;, 
-                   annotation=T, 
-                   build=&#39;hg38&#39;, t.label = &#39;-T&#39;)
-                                       
- #Specify directories manually
- dir.list = list(mutect=&#39;/path/to/mutect.vcf.gz&#39;,
-                 freebayes=&#39;/path/to/freebayes.vcf.gz&#39;,
-                 vardict=&#39;/path/to/vardict.vcf.gz&#39;,
-                 varscan=&#39;/path/to/varscan.vcf.gz&#39;)
- myresults = smurf(directory=dir.list, 
-                   mode=&quot;combined&quot;)
+                   mode=&quot;combined&quot;, #snv and indel predictions
+                   annotation=T, #generate gene annotations
+                   build=&#39;hg19&#39;)
 </code></pre>
+<p><a href="#home">back to top</a></p>
+<p><a name="input"></a></p>
+</div>
+<div id="running-smurf-selecting-the-correct-input-vcfs" class="section level4">
+<h4></br>Running SMuRF: Selecting the correct input vcfs</h4>
+<p></br><em>SMuRF</em> requires 5 caller VCF (vcf.gz) files as input stated under the “directory” parameter. Provide a path to a directory containing all 5 caller VCF files. <strong>caller.vcf.gz</strong> (compressed) and <strong>caller.vcf</strong> are accepted formats.</p>
+<p>The tab-indexed (.tbi) files for each caller are required for the parsing step. If the <strong>.tbi</strong> files are missing, specify using <em>re.tabIndex=T</em> on SMuRF to generate these files.</p>
+<pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  mode =&quot;snv&quot;, nthreads = 1, annotation = T, build = &#39;hg19&#39;,
+                  re.tabIndex = T)  #generate .tbi files in directory
+#&quot;Generating .tbi files in directory...&quot;
+# Connection successful!
+
+#If the vcf files are in different directories:
+
+#Specify directories manually
+ dir.list = list(mutect=&#39;/path1/to/mutect.vcf.gz&#39;,
+                 freebayes=&#39;/path2/to/freebayes.vcf.gz&#39;,
+                 vardict=&#39;/path3/to/vardict.vcf.gz&#39;,
+                 varscan=&#39;/path4/to/varscan.vcf.gz&#39;,
+                 strelka=&#39;/path5/to/strelka.vcf.gz&#39;)
+ myresults = smurf(directory=dir.list, 
+                   mode=&quot;combined&quot;, build=&#39;hg19&#39;)
+</code></pre>
+<p></br>In some cases, your input directory may contain other VCF files generated by bcbio. For example, germline VCF files, copy-number related files, older version VCFs. An exclusion <em>file.exclude</em> can be added to make sure that SMuRF selects the correct VCF files.</p>
+<pre class="r"><code>list.files(directory)
+# sample1.mutect.vcf.gz
+# sample1.mutect-germline.vcf.gz #to be excluded
+# sample1.freebayes.vcf.gz
+# sample1.vardict.vcf.gz
+# sample1.varscan.vcf.gz
+# sample1.varscan-version1.vcf.gz #to be excluded
+# sample1.strelka.vcf.gz
+# sample1.strelka-archive.vcf.gz #to be excluded
+
+myresults = smurf(directory=&quot;/path/to/directory..&quot;, 
+                  file.exclude = c(&quot;germline&quot;,&quot;version1&quot;,&quot;archive&quot;) #keywords in file name to be excluded
+                  mode=&quot;snv&quot;,
+                  output.dir=&quot;/path/to/output&quot;, build=&#39;hg19&#39;)</code></pre>
+<p></br>It is optional to indicate your normal and tumour sample labels. <em>SMuRF</em> detects your normal and tumour sample names in order to generate variant allele frequency information. If this information is missing in your VCF headers, <em>SMuRF</em> will terminate with an error. State your unique tumour sample label using <em>t.label</em>.</p>
+<p>Possible normal/tumour sample labels:</p>
+<p>sample1-N, sample1-T </br>sample1_normal, sample1_tumour </br>sample1.healthy, sample1.cancer</p>
+<pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  mode =&quot;combined&quot;, nthreads = 1, build = &#39;hg19&#39;,
+                  t.label = &#39;tumour&#39; #optional if labels were detected from vcf headers correctly
+                  )</code></pre>
+<p><a href="#home">back to top</a></p>
+<p><a name="build"></a></p>
+</div>
+<div id="running-smurf-detecting-and-changing-genome-build" class="section level4">
+<h4></br>Running SMuRF: Detecting and changing genome build</h4>
+<p></br> The genome build for your sample must be specified ( <em>build=‘hg19’</em> or <em>build=‘hg38’</em> ).</p>
+<p>hg19 also refers to the Genome Reference Consortium Human Build 37 (GRCh37) &amp; </br>hg38 also refers to the Genome Reference Consortium Human Build 38 (GRCh38)</p>
+<p>The genome build stated in <em>SMuRF</em> will be cross-checked with the build used in your VCF files.</p>
+<pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  mode =&quot;combined&quot;, nthreads = 1, annotation = T, 
+                  build = &#39;hg38&#39; #wrong build stated
+                  )
+# &quot;Genome build stated in SMuRF:&quot;
+# &quot;hg38&quot;
+# &quot;Ref genome used in vcf:&quot;
+# &quot;file:///home/projects/13001264/softwares/bcbio/genomes/Hsapiens/GRCh37/seq/GRCh37.fa&quot;
+# &quot;Warning: build provided does not match ref genome used in vcf. SMuRF CDS annotation may not run properly if genome build is incorrect.&quot;
+# &quot;Final genome build used for analysis: hg38&quot;
+# 
+# Warning message</code></pre>
+<p></br>If you are unsure of the genome build used in your analysis, specify <em>find.build=T</em>.</p>
+<pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  mode =&quot;combined&quot;, nthreads = 1, annotation = T, 
+                  build = &#39;hg38&#39;, #wrong build stated
+                  find.build = T, #if unsure of genome build
+                  )
+# &quot;Genome build stated in SMuRF:&quot;
+# &quot;hg38&quot;
+# &quot;Ref genome used in vcf:&quot;
+# &quot;file:///home/projects/13001264/softwares/bcbio/genomes/Hsapiens/GRCh37/seq/GRCh37.fa&quot;
+# &quot;Warning: build provided does not match ref genome used in vcf. SMuRF CDS annotation may not run properly if genome build is incorrect.&quot;
+# &quot;Changing build variable provided&quot;
+# &quot;hg38 -&gt; hg19&quot;
+# &quot;Final genome build used for analysis: hg19&quot;
+
+# No errors</code></pre>
+<p></br>Samples from different batches may be aligned to a different genome reference build. In order to standardize your gene annotations and output, specify <em>change.build</em> for genome build conversion.</p>
+<pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
+                  mode =&quot;combined&quot;, nthreads = 1, annotation = T, 
+                  build = &#39;hg19&#39;,
+                  change.build = T, #genome build conversion
+                  )
+# &quot;Genome build stated in SMuRF:&quot;
+# &quot;hg19&quot;
+# &quot;Ref genome used in vcf:&quot;
+# &quot;file:///home/projects/13001264/softwares/bcbio/genomes/Hsapiens/GRCh37/seq/GRCh37.fa&quot;
+# &quot;Final genome build used for analysis: hg19&quot;
+
+# &quot;Compiling annotations&quot;
+# &quot;Changing annotations from hg19 to hg38&quot;</code></pre>
+<p><a href="#home">back to top</a></p>
 <p><a name="troubleshoot"></a></p>
 </div>
-<div id="troubleshooting-adjusting-snv-and-indel-model-score-cutoffs-manually" class="section level4">
-<h4></br>Troubleshooting: Adjusting snv and indel model score cutoffs manually</h4>
-<p></br><em>SMuRF</em> is fine-tuned to achieve higher sensitivity. Re-adjust the stringency of the prediction with a specific cut-off value. </br>Use parameters ‘snv.cutoff’ or ‘indel.cutoff’ to adjust the thresholds. </br>To re-adjust the cut-off value of an <strong>existing</strong> SMuRF output, simply provide the parse.dir to the snv-parse and indel-parse files for immediate re-processing.</p>
-<pre class="r"><code>#start with a specific cutoff
+<div id="running-smurf-tweaking-smurf-score-cut-off" class="section level4">
+<h4></br>Running SMuRF: Tweaking SMuRF score cut-off</h4>
+<p></br><em>SMuRF</em> is fine-tuned to achieve higher sensitivity. The snv and indel cut-offs in our model are defined to achieve 99% sensitivity in our test dataset.</p>
+<p>Re-adjust the stringency of the prediction with a specific cut-off value. Use parameters <em>snv.cutoff</em> or <em>indel.cutoff</em> to adjust the thresholds (higher cut-off provide a smaller set of calls with better confidence).</p>
+<p>To re-adjust the cut-off value of an <strong>existing</strong> SMuRF output, simply provide the <em>parse.dir</em> to the snv-parse and indel-parse files for re-processing.</p>
+<pre class="r"><code>#start with default cutoffs
 myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
-                  mode=&quot;combined&quot;, #change cutoffs
-                  snv.cutoff=0.2, indel.cutoff=0.1, #specify new cutoffs
+                  mode=&quot;combined&quot;, 
+                  snv.cutoff=&#39;default&#39;, indel.cutoff=&#39;default&#39;,
                   output.dir = &#39;C:/Users/admin/myresults&#39;) 
 
 #modify cutoff from existing SMuRF parse files
 myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
                   mode=&quot;combined&quot;,
-                  snv.cutoff=0.2, indel.cutoff=0.1,
-                  parse.dir = &#39;C:/Users/admin/myresults&#39;, #SMuRF output path to existing parse.txt files
-                  output.dir = &#39;C:/Users/admin/myresults2&#39;) 
+                  snv.cutoff=0.2, indel.cutoff=0.1, #specify new cutoffs
+                  parse.dir = &#39;C:/Users/admin/myresults&#39;, #SMuRF path existing parse.txt files
+                  output.dir = &#39;C:/Users/admin/myresults2&#39; #new output) 
 
 #Plot histogram
 hist(as.numeric(myresults$smurf_indel$predicted_indel[,&#39;SMuRF_score&#39;]), main = &#39;Re-adjusted predicted indels&#39;, xlab = &#39;SMuRF_score&#39;, col = &#39;grey50&#39;)</code></pre>
+<p><a href="#home">back to top</a></p>
 <p><a name="output"></a></p>
 </div>
 <div id="output-format" class="section level4">
 <h4></br>Output format</h4>
-<p>Output files saved include:</p>
+<p>Output files available include:</p>
 <ol style="list-style-type: decimal">
 <li><p>Variant statistics (<em>stats</em>)</p></li>
 <li><p>Predicted reads (<em>predicted</em>)</p></li>
@@ -576,13 +666,13 @@ hist(as.numeric(myresults$smurf_indel$predicted_indel[,&#39;SMuRF_score&#39;]), 
 <li><p>Predicted reads with annotations (<em>annotated</em>)* #for smurf’s “cdsannotation” function only</p></li>
 <li><p>Time taken (<em>time</em>)</p></li>
 </ol>
-<p></br></p>
-<pre class="r"><code>#Main predicted file (SNV &amp; indel)
+<pre class="r"><code>#Viewing predicted output in R
 
 myresults$smurf_snv$predicted_snv
 
 myresults$smurf_indel$predicted_indel
-</code></pre>
+
+#see column description below</code></pre>
 <table>
 <colgroup>
 <col width="10%"></col>
@@ -609,7 +699,7 @@ myresults$smurf_indel$predicted_indel
 </tr>
 <tr class="even">
 <td>REF_MFVdVs/ALT_MFVdVs</td>
-<td>Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs) and lastly the newly added Strelka2</td>
+<td>Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs) and Strelka2 (not abbreviated to preserve column name)</td>
 </tr>
 <tr class="odd">
 <td>FILTER</td>
@@ -663,7 +753,7 @@ myresults$smurf_snv$stats_snv
 # Atleast4            48
 # All5                37
 # SMuRF_SNV         1043</code></pre>
-<p></br>We added gene annotations using SnpEff (from bcbio) and <em>SMuRF</em> extracts the coding annotations from the canonical transcripts with the highest impact. Take note that your vcf.gz files should be tab-indexed (.tbi files required).</p>
+<p></br>We added gene annotations using SnpEff (from bcbio) and <em>SMuRF</em> extracts the coding annotations from the canonical transcripts with the highest fucntional impact. Take note that your vcf.gz files should be tab-indexed (see <a href="#input">Running SMuRF: re.tabIndex</a>).</p>
 <pre class="r"><code>myresults = smurf(mydir, &quot;cdsannotation&quot;) #runs SMuRF for SNV and indels + generate annotations
 
 myresults$smurf_snv_annotation$annotated[order(myresults$smurf_snv_annotation$annotated$REGION)[1:2],]
@@ -688,28 +778,58 @@ myresults$smurf_snv_annotation$annotated[order(myresults$smurf_snv_annotation$an
 
 myresults$smurf_snv$parse_snv
 </code></pre>
-<p></br>Proceed to save the output in your desired formats State “output.dir” to generate .txt files in your desired directory Example:</p>
+<p></br>Indicate the <em>output.dir</em> to save the <em>SMuRF</em> output as tab-delimited .txt files in your targeted directory.</p>
 <pre class="r"><code>myresults = smurf(directory = paste0(find.package(&quot;smurf&quot;), &quot;/data&quot;),
-                           mode =&quot;combined&quot;, nthreads = 1,
-                           annotation=T, build=&#39;hg19&#39;,
-                           output.dir = &#39;C:/Users/admin/myresults&#39;)
-</code></pre>
+                  mode=&quot;combined&quot;, 
+                  output.dir = &#39;C:/Users/admin/myresults&#39; #path to output directory
+                  ) </code></pre>
+<p><a href="#home">back to top</a></p>
 <p><a name="multiple-samples"></a></p>
 </div>
 <div id="running-on-multiple-samples" class="section level4">
 <h4><br />Running on multiple samples</h4>
 <p>Iterate over multiple samples by providing the list of directories of where your sample files are located.</p>
-<pre class="r"><code>#Example
-
-project.dir = &#39;path/to/my/dir&#39;
+<pre class="r"><code>project.dir = &#39;path/to/my/dir&#39;
+list.files(project.dir)
+# sample_A
+# sample_B
+# sample_C
 samples = c(&#39;sample_A&#39;, &#39;sample_B&#39;, &#39;sample_C&#39;) #sample dir where vcf files are located
 
 for(i in 1:length(samples)) {
  smurf(directory=paste0(project.dir, &#39;/&#39;, samples[i]),
-        mode=&quot;combined&quot;, build=&#39;hg19&#39;,
-        output.dir = paste0(&#39;C:/Users/admin/myresults-&#39;,sample[i]))
+        mode=&quot;combined&quot;, build=&#39;hg19&#39;, annotation = T,
+        output.dir = paste0(&#39;C:/Users/admin/myresults/&#39;,samples[i]))
  } </code></pre>
+<p>Running SMuRF on multiple samples on a cluster (parallel multi-core instance)</p>
+<pre class="r"><code>install.packages(&quot;foreach&quot;)
+install.packages(&quot;doParallel&quot;)
+install.packages(&quot;doSNOW&quot;)
+
+library(foreach)
+library(doParallel)
+library(doSNOW)
+library(smurf)
+
+project.dir = &#39;path/to/my/dir&#39;
+samples = Sys.glob(paste0(project.dir,&#39;/*&#39;))
+
+#setup parallel backend to use many processors
+cores=detectCores()
+cl &lt;- makeCluster(cores[1]-1) #not to overload your computer
+registerDoParallel(cl)
+
+foreach(i=1:length(samples), .packages = &#39;smurf&#39;, .verbose = F) %dopar% {
+print(i)
+  smurf(directory = paste0(project.dir, &#39;/&#39;, samples[i]),
+      mode =&quot;combined&quot;, nthreads = 1, build = &#39;hg19&#39;,
+      output.dir = paste0(&#39;C:/Users/admin/myresults/&#39;,samples[i]))
+)
+}
+stopCluster(cl)
+h2o.shutdown()</code></pre>
 <p><br /> For errors and bugs, please report on our Github page.</p>
+<p><a href="#home">back to top</a></p>
 </div>
 </div>
 

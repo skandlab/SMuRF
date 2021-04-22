@@ -28,17 +28,21 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
     # read in mutect2/freebayes/varscan/vardict/strelka2
     # vcf=readVcf(filename,"hg19",param=mut.subset)
     vcf=readVcf(filename,genome = build,param=mut.subset)
+    vcf_pass=vcf@fixed$FILTER=="PASS" | vcf@fixed$FILTER=="MinAF"
+    vcf=vcf[vcf_pass]
     gr=rowRanges(vcf)
+    gr=gr[gr$FILTER=="PASS"|gr$FILTER=="MinAF"]
 
     if(length(gr)==length(mut.subset)){
       gr$ANN=info(vcf)$ANN
     } else if (length(unlist(gr$ALT))==length(gr)) {
       # z=which(gr$FILTER=="PASS" & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
-      z=which((gr$FILTER=="PASS"|gr$FILTER=="MinAF") & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
+      # z=which((gr$FILTER=="PASS"|gr$FILTER=="MinAF") & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
+      z=which(nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
       gr=gr[z]
       gr$ANN=info(vcf)$ANN[z]
     } else {
-      print("Error part 1") # need to fix this if there's error
+      print("CDS snv annotation error") # need to fix this if there's error
       ann=matrix(,nrow = length(mut.subset), ncol = 15)
       ann=as.data.frame(ann)
       colnames(ann) <- c("Allele","Annotation", "Impact", "Gene_name", "Gene_ID", "Feature_Type", "Feature_ID", "Transcript_BioType", "Rank",
@@ -95,7 +99,7 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
       #mutations.orig=snvpredict[[2]]
       #mutations.orig=indelpredict[[2]]
       #mutations.orig=snv.roi[[2]]
-      #mutations.orig=test.smurf$smurf_snv$predicted_snv
+      #mutations.orig=myresults$smurf_snv$predicted_snv
       
       # annotate ensembl ids that are present in uniprot
       smurfdir <- find.package("smurf")
