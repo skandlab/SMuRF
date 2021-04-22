@@ -300,7 +300,7 @@ myresults = smurf(directory = paste0(find.package("smurf"), "/data"),
 
 [back to top](#home)
 
-<a name="troubleshoot"></a>
+<a name="cutoff"></a>
 
 #### </br>Running SMuRF: Tweaking SMuRF score cut-off
 </br>_SMuRF_ is fine-tuned to achieve higher sensitivity. The snv and indel cut-offs in our model are defined to achieve 99% sensitivity in our test dataset.  
