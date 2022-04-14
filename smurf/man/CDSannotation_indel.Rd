@@ -2,13 +2,16 @@
 % Please edit documentation in R/CDSannotation_indel.R
 \name{CDSannotation_indel}
 \alias{CDSannotation_indel}
-\title{indelRF-Annotations}
+\title{indelRF-Annotations
+Step 3 Annotations}
 \usage{
-CDSannotation_indel(x, predicted, build, change.build)
+CDSannotation_indel(x, tbi, predicted, build, change.build)
 }
 \arguments{
 \item{x}{List object containing the four vcf.gz files from 
-callers MuTect2, Freebayes, VarDict and VarScan.}
+callers Strelka2, MuTect2, Freebayes, VarDict and VarScan.}
+
+\item{tbi}{TabixFile intance of VCF file}
 
 \item{predicted}{List object containing 1.stats, 2.predicted-indel and 3.parse-indel matrices}
 
@@ -17,6 +20,7 @@ callers MuTect2, Freebayes, VarDict and VarScan.}
 \item{change.build}{Choose 'hg19.to.hg38' or 'hg38.to.hg19' to convert annotation output}
 }
 \description{
+indelRF-Annotations
 Step 3 Annotations
 }
 \examples{

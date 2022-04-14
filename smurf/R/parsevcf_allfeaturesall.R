@@ -538,6 +538,8 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
   parse_snv = parse_snv[order(parse_snv$START_POS_REF),]
   parse_snv = parse_snv[order(parse_snv$Chr),]
   
+  parse_snv = parse_snv[!duplicated(parse_snv),]
+  
   ### continue from here to format the output
   
   print("Parsing INDEL")
@@ -978,6 +980,8 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
   #sort table
   parse_indel = parse_indel[order(parse_indel$START_POS_REF),]
   parse_indel = parse_indel[order(parse_indel$Chr),]
+  
+  parse_indel = parse_indel[!duplicated(parse_indel),]
   
   return(list(snv=parse_snv, indel=parse_indel))
 }
