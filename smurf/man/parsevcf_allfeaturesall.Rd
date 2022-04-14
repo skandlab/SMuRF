@@ -4,13 +4,13 @@
 \alias{parsevcf_allfeaturesall}
 \title{parsevcf}
 \usage{
-parsevcf_allfeaturesall(x, roi = F, roi.dir = NULL, t.label = NULL)
+parsevcf_allfeaturesall(x, tbi, t.label = NULL)
 }
 \arguments{
 \item{x}{List object containing the four vcf.gz files from 
-callers MuTect2, Freebayes, VarDict and VarScan.}
+callers Strelka2, MuTect2, Freebayes, VarDict and VarScan.}
 
-\item{t.label}{Default='-T'. Identify your tumour sample label correctly.}
+\item{t.label}{Default='-T'. Identify your tumour label based on your default vcf tumour sample.}
 }
 \description{
 Step 1 Initial parse and filtering

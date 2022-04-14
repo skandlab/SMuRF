@@ -4,8 +4,7 @@
 \alias{newcutoffs}
 \title{newcutoffs}
 \usage{
-newcutoffs(parse.dir = NULL, snv.cutoff = "default",
-  indel.cutoff = "default")
+newcutoffs(parse.dir = NULL, snv.cutoff = "default", indel.cutoff = "default")
 }
 \arguments{
 \item{parse.dir}{Directory to parse files}
