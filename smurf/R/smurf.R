@@ -49,7 +49,7 @@
 #' @param check.packages Default as TRUE. For debug mode.
 #' 
 #' @param file.exclude Additional keywords in file directory names to be filtered.
-#' 
+#' @export
 #' @examples
 #' myresults = smurf(directory="/path/to/directory..",
 #'                   mode="indel",build='hg19')
@@ -89,7 +89,7 @@
 #' myresults = smurf(directory=dir.list, 
 #'                   model="combined",build='hg19')
 #'                                    
-#' @export
+
 smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL, parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
@@ -98,7 +98,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv2.0.10 (14th Apr 2022)")
+  print("SMuRFv2.0.11 (4th Jul 2022)")
   
 
   if(is.null(directory)){
@@ -158,7 +158,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     vardict <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz"))
     strelka2 <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz"))
     
-    #'germline' file filter
+    # germline file filter
     # warning('VCF file names containing "germline" will be excluded.')
     
     keywords=c("germline")
@@ -200,7 +200,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       stop('Directory contains missing or duplicated vcf files. Alternatively, you may specify your path to caller files as a list object manually.')
     }
     
-    #'germline' file filter
+    # germline file filter
     # warning('VCF file names containing "germline" will be excluded.')
     
     # if(length(grep("strelka", strelka2))!=1) {
@@ -225,7 +225,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
       strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
       
-      #'germline' file filter
+      # germline file filter
       # warning('VCF file names containing "germline" will be excluded.')
       
       mutect2.tbi = dir.check(mutect2.tbi,'MuTect2', keywords)
@@ -264,7 +264,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       vardict.tbi <- Sys.glob(paste0(directory,"/*vardict*.vcf.gz.tbi"))
       strelka2.tbi <- Sys.glob(paste0(directory,"/*strelka*.vcf.gz.tbi"))
       
-      #'germline' file filter
+      # germline file filter
       # warning('VCF file names containing "germline" will be excluded.')
       mutect2.tbi = dir.check(mutect2.tbi,'MuTect2', keywords)
       freebayes.tbi = dir.check(freebayes.tbi,'FreeBayes', keywords)
