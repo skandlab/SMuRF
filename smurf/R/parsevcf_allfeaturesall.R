@@ -397,7 +397,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
   meta_data$N_refDepth <- round(rowMeans(meta_data[, c("N_refDepth_Mutect2", "N_refDepth_Freebayes", "N_refDepth_Varscan", "N_refDepth_Vardict","N_refDepth_Strelka2")],na.rm = TRUE))
   meta_data$N_altDepth <- round(rowMeans(meta_data[, c("N_altDepth_Mutect2", "N_altDepth_Freebayes", "N_altDepth_Varscan", "N_altDepth_Vardict","N_altDepth_Strelka2")],na.rm = TRUE))
   meta_data$T_refDepth <- round(rowMeans(meta_data[, c("T_refDepth_Mutect2", "T_refDepth_Freebayes", "T_refDepth_Varscan", "T_refDepth_Vardict","T_refDepth_Strelka2")],na.rm = TRUE))
-  meta_data$T_altDepth <- round(rowMeans(meta_data[, c("T_altDepth_Mutect2", "T_altDepth_Freebayes", "T_altDepth_Varscan", "T_altDepth_Vardict","T_refDepth_Strelka2")],na.rm = TRUE))
+  meta_data$T_altDepth <- round(rowMeans(meta_data[, c("T_altDepth_Mutect2", "T_altDepth_Freebayes", "T_altDepth_Varscan", "T_altDepth_Vardict","T_altDepth_Strelka2")],na.rm = TRUE))
   
   meta_data$N_refDepth[is.nan(meta_data$N_refDepth)] <- 0
   meta_data$N_altDepth[is.nan(meta_data$N_altDepth)] <- 0
