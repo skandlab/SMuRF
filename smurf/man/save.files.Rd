@@ -14,7 +14,3 @@ save.files(myresults, output.dir)
 \description{
 save.files
 }
-\examples{
-
-
-}

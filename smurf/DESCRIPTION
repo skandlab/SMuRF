@@ -1,10 +1,12 @@
 Package: smurf
 Title: Somatic Mutation Calling using a RandomForest Model
-Version: 2.0
-Authors@R: person("Weitai", "Huang", email = "huangwt@a-star.edu.sg", role = c("aut","cre"))
+Version: 3.0.0
+Authors@R: c(
+    person("Mengyuan", "Pang", email =  "pangmy@gis.a-star.edu.sg", role = c("ctb", "cre")),
+    person("Weitai", "Huang",role = c("aut")))	
 Description: https://github.com/skandlab/SMuRF
-Depends: R (>= 3.3.1)
+Depends: R (>= 3.5.0)
 License: MIT
 Encoding: UTF-8
-LazyData: true
-RoxygenNote: 7.1.2
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3.9000

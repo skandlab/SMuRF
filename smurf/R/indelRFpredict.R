@@ -25,14 +25,16 @@ indelRFpredict = function(parsevcf, indel.cutoff, fixed.indel.cutoff=F){
   
   # smurfmodeldir <- paste0(smurfdir, "/data/smurf-indel-model-v6") #SMuRFv1.6
   # indel_model <- h2o.loadModel(path = smurfmodeldir)
-  smurfmodeldir <- paste0(smurfdir, "/data/indel-v7.zip") #SMuRFv2.0
+#  smurfmodeldir <- paste0(smurfdir, "/data/indel-v7.zip") #SMuRFv2.0
+  smurfmodeldir <- paste0(smurfdir, "/data/indel-v3-version7.zip") #SMuRFv3.0.0
   indel_model <- h2o.import_mojo(smurfmodeldir)
   
   #Define cutoffs
   if (indel.cutoff == 'default') {
     # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1") #0.4220476
     # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(indel_model), "f1") #0.4794521
-    cutoff = 0.2272 #High sensitivity Recall >0.90 v7-2
+    #cutoff = 0.2272 #High sensitivity Recall >0.90 v7-2, version 2.0
+     cutoff =  0.206274634032831 	  
     # cutoff = 0.28175877 #High sensitivity Recall >0.90
     # cutoff = 0.1875 #High sensitivity Recall >0.95
   } else if (indel.cutoff != 'default') {
