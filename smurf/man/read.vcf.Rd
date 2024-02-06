@@ -7,7 +7,7 @@
 read.vcf(x, roi = F, roi.dir = NULL, t.label)
 }
 \arguments{
-\item{x}{List object containing the four vcf.gz files from 
+\item{x}{List object containing the four vcf.gz files from
 callers MuTect2, Freebayes, VarDict and VarScan.}
 
 \item{roi}{set to TRUE to enable this function. Alternatively read.vcf is a VCF parser in development.}
@@ -18,8 +18,4 @@ callers MuTect2, Freebayes, VarDict and VarScan.}
 }
 \description{
 Step 1 Initial parse and filtering
-}
-\examples{
-
-
 }

@@ -419,6 +419,7 @@ read.vcf = function(x, roi=F, roi.dir=NULL, t.label){
   meta_data$FILTER_Varscan[meta_data$FILTER_Varscan == "PASS"] <- TRUE
   meta_data$FILTER_Varscan <- as.logical(meta_data$FILTER_Varscan)
   
+
   # get all 4 ref/alternates
   meta_data$REF_MFVdVs<-paste(meta_data$REF_Mutect2,meta_data$REF_Freebayes,meta_data$REF_Vardict,meta_data$REF_Varscan, sep ="/")
   meta_data$ALT_MFVdVs	<-paste(meta_data$ALT_Mutect2,meta_data$ALT_Freebayes,meta_data$ALT_Vardict,meta_data$ALT_Varscan, sep ="/")

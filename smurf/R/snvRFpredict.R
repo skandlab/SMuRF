@@ -25,14 +25,16 @@ snvRFpredict = function(parsevcf, snv.cutoff, fixed.snv.cutoff=F){
   
   # smurfmodeldir <- paste0(smurfdir, "/data/smurf-snv-model-v6") #SMuRFv1.6
   # snv_model <- h2o.loadModel(path = smurfmodeldir)
-  smurfmodeldir <- paste0(smurfdir, "/data/snv-v7.zip") #SMuRFv2.0
+  #smurfmodeldir <- paste0(smurfdir, "/data/snv-v7.zip") #SMuRFv2.0
+  smurfmodeldir <- paste0(smurfdir, "/data/snv-v3-version3.zip") #SMuRFv3.0
   snv_model <- h2o.import_mojo(smurfmodeldir)
   
   #Define cutoffs
   if (snv.cutoff == 'default') {
     # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.4627947 v7-2
     # cutoff = h2o.find_threshold_by_max_metric(h2o.performance(snv_model), "f1") #0.4587242
-    cutoff = 0.0822 #High sensitivity Recall >0.99 v7-2
+    #cutoff = 0.0822 #High sensitivity Recall >0.99 v7-2, version 2
+     cutoff = 0.351791676448298	  
     # cutoff = 0.12760258 #High sensitivity Recall >0.99 
   } else if (snv.cutoff != 'default') {
     cutoff = snv.cutoff

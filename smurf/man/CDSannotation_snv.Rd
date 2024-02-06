@@ -8,7 +8,7 @@ Step 3 Annotations}
 CDSannotation_snv(x, tbi, predicted, build, change.build)
 }
 \arguments{
-\item{x}{List object containing the four vcf.gz files from 
+\item{x}{List object containing the four vcf.gz files from
 callers Strelka2, MuTect2, Freebayes, VarDict and VarScan.}
 
 \item{tbi}{TabixFile intance of VCF file}
@@ -22,8 +22,4 @@ callers Strelka2, MuTect2, Freebayes, VarDict and VarScan.}
 \description{
 snvRF-Annotations
 Step 3 Annotations
-}
-\examples{
-
-
 }

@@ -1,4 +1,4 @@
-#' SMuRF v2.0
+#' SMuRF v3.0.0
 #'
 #' Somatic mutation consensus calling based on five callers:
 #' MuTect2, Freebayes, VarDict, VarScan and Strelka2
@@ -6,7 +6,7 @@
 #'
 #' @note
 #' Input files containing variant calls should be ".vcf.gz" format of each caller.
-#' Supported for R >= 3.3.1, Java version 7 (up to 11) is supported. 
+#' Supported for R >= 3.5.0, Java version 7 (up to 11) is supported. 
 #' 
 #' @param directory Choose directory where the Variant Caller Format(VCF) files are located. 
 #' Alternatively, provide a list object containing the path to the 5 VCF files labeled: mutect, freebayes, vardict, varscan and strelka.
@@ -25,9 +25,9 @@
 #' 
 #' @param annotation TRUE or FALSE (default). Provide gene annotations for each variant call.
 #' 
-#' @param snv.cutoff Default SNV model cutoff, unless a number between 0 to 1 is stated. 
+#' @param snv.cutoff Default SNV model cutoff, 0.351791676448298 in SMuRF v3.0.0,  unless a number between 0 to 1 is stated. 
 #' 
-#' @param indel.cutoff Default indel model cutoff, unless a number between 0 to 1 is stated.
+#' @param indel.cutoff Default indel model cutoff, 0.206274634032831 in SMuRF v3.0.0, unless a number between 0 to 1 is stated.
 #' 
 #' @param output.dir Path to output directory (if saving files as .txt)
 #' 
@@ -98,9 +98,8 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv2.0.12 (4th Nov 2022)")
-  
-
+  print("SMuRFv3.0.0, Jan 2024")
+  suppressWarnings(suppressMessages(library(data.table)))
   if(is.null(directory)){
     # stop('directory path not specified')
     return(write("smurf(directory=NULL, mode=NULL, nthreads = -1,
@@ -277,15 +276,17 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     }
 
       
-  if (!is.null(mode)){
-    if (mode != "combined" & 
+  if(is.null(mode)){
+    stop('mode is not provided')
+}
+  if (mode != "combined" & 
         mode != "snv" & 
         mode != "indel" & 
         mode != "featureselectionall"
     ) {
       stop('mode unrecognized')
     }
-  }
+  
   
   
   #check for existing and required packages
@@ -338,6 +339,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
     suppressWarnings(suppressMessages(library(VariantAnnotation)))
 
     suppressWarnings(suppressMessages(library(h2o)))
+    
     #nthreads = -1
     if(exists('nthreads')==F) {nthreads = -1}
     suppressWarnings(h2o.init(nthreads = nthreads))
@@ -408,9 +410,9 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
             
             save.files(myresults,
                        output.dir)
-          }
+          }else{
           
-          return(myresults)
+          return(myresults)}
           
         } else if (annotation == T) {
           
@@ -443,10 +445,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                                       "smurf_indel_annotation"=indelannotation,
                                       "time.taken"=time.taken),
                        output.dir)
-          }
+          }else{
           
           return(list(myresults, "smurf_snv_annotation"=snvannotation, "smurf_indel_annotation"=indelannotation, "time.taken"=time.taken))
-          
+	  }
         }
         
       }
@@ -470,9 +472,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                                     # "smurf_indel"=indelpredict,
                                     "time.taken"=time.taken),
                      output.dir)
-        }
+        }else{
         
         return(list("smurf_snv"=snvpredict, "time.taken"=time.taken))
+	}
       
       } else if (annotation == T) {
         
@@ -495,10 +498,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                                     # "smurf_indel_annotation"=indelannotation,
                                     "time.taken"=time.taken),
                      output.dir)
-        }
+        }else{
         
         return(list("smurf_snv"=snvpredict, "smurf_snv_annotation"=snvannotation, "time.taken"=time.taken))
-
+         }
         }
       
       #### indel ####            
@@ -519,9 +522,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
             "smurf_indel"=indelpredict,
             "time.taken"=time.taken),
             output.dir)
-        }
+        }else{
         
         return(list("smurf_indel"=indelpredict, "time.taken"=time.taken))
+	}
         
       } else if (annotation == T) {
         
@@ -545,11 +549,11 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                                     "smurf_indel_annotation"=indelannotation,
                                     "time.taken"=time.taken),
                      output.dir)
-        }
+        }else{
         
         
         return(list("smurf_indel"=indelpredict, "smurf_indel_annotation"=indelannotation, "time.taken"=time.taken))
-        
+	}
       }
 
       #### combined ####            
@@ -572,9 +576,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                                     "smurf_indel"=indelpredict,
                                     "time.taken"=time.taken),
                      output.dir)
-        }
+        }else{
       
       return(list("smurf_snv"=snvpredict, "smurf_indel"=indelpredict, "time.taken"=time.taken))
+	}
 
       } else if (annotation == T) {
         
@@ -606,17 +611,17 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                                     "smurf_indel_annotation"=indelannotation,
                                     "time.taken"=time.taken),
                      output.dir)
-        }
+        }else{
         
         return(list("smurf_snv"=snvpredict, "smurf_indel"=indelpredict, "smurf_snv_annotation"=snvannotation, "smurf_indel_annotation"=indelannotation, "time.taken"=time.taken))
-        
+	}
       }
 
       #### featureselectionall ####            
 
     } else if (mode == "featureselectionall") { #debug mode, only parse feature matrix
       
-      parsevcf<-parsevcf_allfeaturesall(x, t.label=t.label)
+      parsevcf<-parsevcf_allfeaturesall(x, tbi, t.label=t.label)
       
       end.time <- Sys.time()
       time.taken <- end.time - start.time
@@ -626,10 +631,10 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
         save.files(myresults=list("parsevcf_featureselection"=parsevcf,
                                   "time.taken"=time.taken),
                    output.dir)
-      }
+      }else{
       
       return(list("parsevcf_featureselection"=parsevcf, "time.taken"=time.taken))
-      
+      }
     }
     
     # write("DONE",stdout())

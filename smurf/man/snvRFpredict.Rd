@@ -17,7 +17,3 @@ snvRFpredict(parsevcf, snv.cutoff, fixed.snv.cutoff = F)
 snv prediction model
 Step 2 Predict
 }
-\examples{
-
-
-}

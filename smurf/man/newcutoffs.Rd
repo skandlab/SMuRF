@@ -18,7 +18,3 @@ newcutoffs(parse.dir = NULL, snv.cutoff = "default", indel.cutoff = "default")
 \description{
 newcutoffs
 }
-\examples{
-
-
-}
