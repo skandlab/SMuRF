@@ -28,10 +28,10 @@ CDSannotation_indel = function(x, tbi, predicted, build, change.build){
     # read in mutect2/freebayes/varscan/vardict/strelka2
     # vcf=readVcf(filename,"hg19",param=mut.subset)
     vcf=readVcf(filename,genome = build,param=mut.subset)
-    vcf_pass=vcf@fixed$FILTER=="PASS" | vcf@fixed$FILTER=="MinAF"
+    vcf_pass=vcf@fixed$FILTER=="PASS" #| vcf@fixed$FILTER=="MinAF"
     vcf=vcf[vcf_pass]
     gr=rowRanges(vcf)
-    gr=gr[gr$FILTER=="PASS"|gr$FILTER=="MinAF"]
+    gr=gr[gr$FILTER=="PASS"]
     
     if(length(gr)==length(mut.subset)){
       gr$ANN=info(vcf)$ANN

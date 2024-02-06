@@ -1,5 +1,5 @@
-# SMuRF v2.0
-by [Huang Weitai](https://www.researchgate.net/profile/Weitai_Huang) 
+# SMuRF v3.0
+By [Skandlab](https://github.com/skandlab) 
 
 Genome Institute of Singapore, A*STAR
 
@@ -37,7 +37,7 @@ ____________________________________________________
 
 #### <br/>Input from bcbio-nextgen pipeline
 
-Before running _SMuRF_, you require output data from the [bcbio-nextgen pipeline](http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling) that generates the VCF output for the variant callers: MuTect2, FreeBayes, VarDict, VarScan and the latest Strelka2. An additional caller Strelka2, has been added to SMuRF 2.0  and the information is documented on our [wiki page](https://github.com/skandlab/SMuRF/wiki/SMuRF-2.0). 
+Before running _SMuRF_, you require output data from the [bcbio-nextgen pipeline](http://bcbio-nextgen.readthedocs.io/en/latest/contents/pipelines.html#cancer-variant-calling) that generates the VCF output for the variant callers: MuTect2, FreeBayes, VarDict, VarScan and the latest Strelka2. An additional caller Strelka2, has been added since SMuRF 2.0  and the information is documented on our [wiki page](https://github.com/skandlab/SMuRF/wiki/SMuRF-3.0). 
 
 SMuRF v1.6.4 is still available here: [SMuRFv1.6.4](https://github.com/skandlab/SMuRF/releases/tag/SMuRFv1.6.4)
 </br>SMuRF v1.6.4 wiki page: [readme file](https://github.com/skandlab/SMuRF/wiki/SMuRF-v1.6.4-vignette)
@@ -66,7 +66,7 @@ Refer to the installation and instructions for each caller:
 
 #### <br/>Test Dataset
 
-In this vignette, we utilise a [partial output dataset](https://github.com/skandlab/SMuRF/tree/master/test) derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. The test dataset is provided in the SMuRF package.
+In this vignette, we utilise a [partial output dataset](https://github.com/skandlab/SMuRF/tree/master/test) derived from the chronic lymphocytic leukemia (CLL) data downloaded from the European Genome-phenome Archive (EGA) under the accession number EGAS00001001539. The dataset for testing the package is provided in the SMuRF package.
 
 
 <a name="requirements"></a>
@@ -109,7 +109,7 @@ library("smurf") #load SMuRF package
 
 smurf() #check version and parameters
 
-# "SMuRFv2.0.9 (16th Apr 2021)"
+# "SMuRFv3.0.0 (16th Jan 2024)"
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
@@ -139,8 +139,8 @@ file.exclude|(Optional) Additional keywords in file directory names to be filter
 build|Specify your human genome build: build="hg19" or build="hg38"
 change.build|TRUE or FALSE (default). For conversion of your genomic coordinates
 find.build|TRUE or FALSE (default). Additional genome build check for the annotation step.
-snv.cutoff|Default SNV model cutoff, unless a number between 0 to 1 is stated
-indel.cutoff|Default indel model cutoff, unless a number between 0 to 1 is stated
+snv.cutoff|Default SMuRF_score cutoff for the SNV model unless a number between 0 to 1 is stated
+indel.cutoff|Default SMuRF_score cutoff for the INDEL model unless a number between 0 to 1 is stated
 re.tabIndex|TRUE or FALSE (default). Set to TRUE to create tab-indexed (.tbi) files for each vcf
 check.packages=T|Developer mode
 
@@ -239,7 +239,7 @@ myresults = smurf(directory = paste0(find.package("smurf"), "/data"),
 
 </br> The genome build for your sample must be specified ( _build='hg19'_ or _build='hg38'_ ). 
 
-hg19 also refers to the Genome Reference Consortium Human Build 37 (GRCh37) &
+hg19 also refers to the Genome Reference Consortium Human Build 37 (GRCh37) 
 </br>hg38 also refers to the Genome Reference Consortium Human Build 38 (GRCh38)
 
 The genome build stated in _SMuRF_ will be cross-checked with the build used in your VCF files. 
@@ -303,7 +303,7 @@ myresults = smurf(directory = paste0(find.package("smurf"), "/data"),
 <a name="cutoff"></a>
 
 #### </br>Running SMuRF: Tweaking SMuRF score cut-off
-</br>_SMuRF_ is fine-tuned to achieve higher sensitivity. The snv and indel cut-offs in our model are defined to achieve 99% sensitivity in our test dataset.  
+</br>_SMuRF_ v3.0.0 is fine-tuned to achieve the max f1 score in our test set. 
 
 Re-adjust the stringency of the prediction with a specific cut-off value. 
 Use parameters _snv.cutoff_ or _indel.cutoff_ to adjust the thresholds (higher cut-off provide a smaller set of calls with better confidence).
@@ -335,13 +335,13 @@ hist(as.numeric(myresults$smurf_indel$predicted_indel[,'SMuRF_score']), main = '
 
 Output files available include:
 
-1. Variant statistics (_stats_) 
+1. Parsed-raw file (_parse_)
 
-2. Predicted reads (_predicted_)
+2. Predicted positive mutations (_predicted_)
 
-3. Parsed-raw file (_parse_)
+3. Predicted positive mutations with annotations (_annotated_)* #for smurf's "cdsannotation" function only
 
-4. Predicted reads with annotations (_annotated_)* #for smurf's "cdsannotation" function only
+4. Variant statistics (_stats_) 
 
 5. Time taken (_time_)
 
@@ -361,7 +361,7 @@ Chr         | Chromosome number
 START_POS_REF/END_POS_REF         | Start and End nucleotide position of the somatic mutation
 REF/ALT     | Consensus Ref and Alt nucleotide changes of the highest likelihood
 REF_MFVdVs/ALT_MFVdVs        | Reference and Alternative nucleotide changes from each caller; Mutect2 (M), Freebayes (F), Vardict (Vd), Varscan (Vs) and Strelka2 (not abbreviated to preserve column name)
-FILTER | Passed (TRUE) or Reject (FALSE) [boolean] mutation calls from the individual callers
+FILTER | Pass (TRUE) or Reject (FALSE) [boolean] mutation calls from the individual callers
 Sample_Name | Sample name is extracted based on your labeled samples in the vcf files
 Alt_Allele_Freq | Mean Variant allele frequency calculated from the tumor reads of the callers
 Depth ref/alt N/T | Mean read depth from the N/T sample for ref/alt alleles

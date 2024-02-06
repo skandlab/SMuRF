@@ -19,8 +19,9 @@ newcutoffs = function(parse.dir=NULL, snv.cutoff='default', indel.cutoff='defaul
   if (!is.null(snv.cutoff) & snv.cutoff == 'default') {
     print('Using default snv.cutoff')
     # snv.cutoff = 0.4627947 #default v7.2
-    snv.cutoff = 0.0822 #High sensitivity Recall >0.99 v7-2
+    #snv.cutoff = 0.0822 #High sensitivity Recall >0.99 v7-2, version 2.0
     # snv.cutoff = 0.4587242 #default v7
+     snv.cutoff = 0.351791676448298 # version 3.0.0, max f1 threshold in the test set.
   } else if (snv.cutoff != 'default' & snv.cutoff !=0) {
     print("Assigning new snv.cutoff")
     snv.cutoff = snv.cutoff
@@ -31,8 +32,9 @@ newcutoffs = function(parse.dir=NULL, snv.cutoff='default', indel.cutoff='defaul
   #Define cutoffs
   if (!is.null(indel.cutoff) & indel.cutoff == 'default') {
     # indel.cutoff = 0.4220476 #default v7.2
-    indel.cutoff = 0.2272 #High sensitivity Recall >0.90 v7-2
-    # indel.cutoff = 0.28175877 #default v7
+   # indel.cutoff = 0.2272 #High sensitivity Recall >0.90 v7-2
+    indel.cutoff = 0.206274634032831 # version 3.0.0, max f1 threshold in test set 
+   # indel.cutoff = 0.28175877 #default v7
   } else if (indel.cutoff != 'default') {
     indel.cutoff = indel.cutoff
   } else if (indel.cutoff == 0) {

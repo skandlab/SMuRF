@@ -23,7 +23,12 @@ save.files = function (myresults, output.dir) {
   
   a<- myresults$smurf_indel$parse_indel
   if(!is.null(a)){
-    write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
+    a = data.frame(a)
+    a = dplyr::select(a, -predict)  
+    smurfdir <- find.package("smurf")
+    comments<- readRDS(paste0(smurfdir,'/data/parse_header_file.RDS'))
+    writeLines(comments, paste0(output.dir, "/indel-parse.txt"))		       	 
+    write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".", append = TRUE)
   }
   
   a<- myresults$smurf_snv$stats_snv
@@ -38,7 +43,12 @@ save.files = function (myresults, output.dir) {
   
   a<- myresults$smurf_snv$parse_snv
   if(!is.null(a)){
-    write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
+    a = data.frame(a)
+    a = dplyr::select(a, -predict)
+    smurfdir <- find.package("smurf")
+    comments<-readRDS(paste0(smurfdir,'/data/parse_header_file.RDS'))
+    writeLines(comments, paste0(output.dir, "/snv-parse.txt"))  
+    write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".", append = TRUE)
   }
   
   a<- myresults$smurf_snv_annotation$annotated

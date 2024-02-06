@@ -17,7 +17,3 @@ indelRFpredict(parsevcf, indel.cutoff, fixed.indel.cutoff = F)
 Indel prediction model
 Step 2 Predict
 }
-\examples{
-
-
-}
