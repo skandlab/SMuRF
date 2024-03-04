@@ -1,4 +1,4 @@
-#' SMuRF v3.0.0
+#' SMuRF v3.0.1
 #'
 #' Somatic mutation consensus calling based on five callers:
 #' MuTect2, Freebayes, VarDict, VarScan and Strelka2
@@ -25,9 +25,9 @@
 #' 
 #' @param annotation TRUE or FALSE (default). Provide gene annotations for each variant call.
 #' 
-#' @param snv.cutoff Default SNV model cutoff, 0.351791676448298 in SMuRF v3.0.0,  unless a number between 0 to 1 is stated. 
+#' @param snv.cutoff Default SNV model cutoff, 0.351791676448298 in SMuRF v3.0,  unless a number between 0 to 1 is stated. 
 #' 
-#' @param indel.cutoff Default indel model cutoff, 0.206274634032831 in SMuRF v3.0.0, unless a number between 0 to 1 is stated.
+#' @param indel.cutoff Default indel model cutoff, 0.206274634032831 in SMuRF v3.0, unless a number between 0 to 1 is stated.
 #' 
 #' @param output.dir Path to output directory (if saving files as .txt)
 #' 
@@ -98,7 +98,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv3.0.0, Jan 2024")
+  print("SMuRFv3.0.1, Feb 2024")
   suppressWarnings(suppressMessages(library(data.table)))
   if(is.null(directory)){
     # stop('directory path not specified')

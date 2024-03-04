@@ -717,9 +717,24 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     #                                                                                                      "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")], as.numeric)   
     #
     #
+    for (i in colnames(meta_data) ){
+      #print(class(meta_data[[i]]))
+
+      if(class(meta_data[[i]]) %in% c('AsIs', 'list')){
+        #meta_data[,i][sapply(meta_data[,i], is.null)] <- NA
+        j1 <- which(lengths(meta_data[[i]]) == 0)
+        set(meta_data, i = j1, j = i, value = list(NA))
+        meta_data[[i]] = unlist(meta_data[[i]])
+      }
+    }
+ 
+   
     ind <- match(cols_to_convert , names(meta_data))
     
+
     for (i in seq_along(ind)) {
+     # print(i)
+     # print(meta_data[[ind[i]]])    
       set(meta_data, NULL, ind[i], as.numeric(meta_data[[ind[i]]]))
     }  
     rm(ind) 
@@ -792,9 +807,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     
     end.time=Sys.time()
     print(end.time-start.time)
-    #add in indel cases from snv matrix
-    meta_indel <- rbind(meta_indel,meta_indel_cases)
-    rm(meta_indel_cases)  
+    
     for (i in colnames(meta_indel) ){
       #print(class(meta_indel[[i]]))
       
@@ -805,8 +818,22 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
         meta_indel[[i]] = unlist(meta_indel[[i]])
       }
     }
-    
-    
+    for (i in colnames(meta_indel_cases) ){
+      #print(class(meta_indel[[i]]))
+      
+      if(class(meta_indel_cases[[i]])=='AsIs'){
+        #meta_indel[,i][sapply(meta_indel[,i], is.null)] <- NA
+        j1 <- which(lengths(meta_indel_cases[[i]]) == 0) 
+        set(meta_indel_cases, i = j1, j = i, value = list(NA)) 
+        meta_indel_cases[[i]] = unlist(meta_indel_cases[[i]])
+      }
+    }
+     
+    #add in indel cases from snv matrix
+   
+    meta_indel <- rbind(meta_indel,meta_indel_cases)
+    rm(meta_indel_cases)  
+ 
     meta_indel <- unique(meta_indel) #remove all duplicate snv/indel cases
     
     print("Formating for INDEL")
@@ -859,7 +886,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     for (i in colnames(meta_indel) ){
       #print(class(meta_indel[[i]]))
       
-      if(class(meta_indel[[i]])=='AsIs'){
+      if(class(meta_indel[[i]]) %in% c('AsIs', 'list')){
         #meta_indel[,i][sapply(meta_indel[,i], is.null)] <- NA
         j1 <- which(lengths(meta_indel[[i]]) == 0) 
         set(meta_indel, i = j1, j = i, value = list(NA)) 
@@ -1059,9 +1086,22 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     #                                                                                                       "AF",
     #                                                                                                       "N_refDepth","N_altDepth","T_refDepth","T_altDepth","relcov")], as.numeric)
     #
+    for (i in colnames(meta_indel) ){
+      #print(class(meta_data[[i]]))
+
+      if(class(meta_indel[[i]]) %in% c('AsIs', 'list')){
+        #meta_data[,i][sapply(meta_data[,i], is.null)] <- NA
+        j1 <- which(lengths(meta_indel[[i]]) == 0)
+        set(meta_indel, i = j1, j = i, value = list(NA))
+        meta_indel[[i]] = unlist(meta_indel[[i]])
+      }
+    }
+
     ind <- match(cols_to_convert , names(meta_indel))
     
     for (i in seq_along(ind)) {
+     # print(i)
+     # print(meta_indel[[ind[i]]])    
       set(meta_indel, NULL, ind[i], as.numeric(meta_indel[[ind[i]]]))
     }
     rm(ind)

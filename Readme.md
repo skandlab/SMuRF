@@ -109,7 +109,7 @@ library("smurf") #load SMuRF package
 
 smurf() #check version and parameters
 
-# "SMuRFv3.0.0 (16th Jan 2024)"
+# "SMuRFv3.0 (16th Jan 2024)"
 smurf(directory=NULL, mode=NULL, nthreads = -1,
                  annotation=F, output.dir=NULL,  parse.dir=NULL,
                  snv.cutoff = 'default', indel.cutoff = 'default',
@@ -303,7 +303,7 @@ myresults = smurf(directory = paste0(find.package("smurf"), "/data"),
 <a name="cutoff"></a>
 
 #### </br>Running SMuRF: Tweaking SMuRF score cut-off
-</br>_SMuRF_ v3.0.0 is fine-tuned to achieve the max f1 score in our test set. 
+</br>_SMuRF_ v3.0 is fine-tuned to achieve the max f1 score in our test set. 
 
 Re-adjust the stringency of the prediction with a specific cut-off value. 
 Use parameters _snv.cutoff_ or _indel.cutoff_ to adjust the thresholds (higher cut-off provide a smaller set of calls with better confidence).
