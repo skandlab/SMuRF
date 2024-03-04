@@ -93,7 +93,7 @@ install.packages<span class="token punctuation">(</span><span class="token strin
 
 smurf<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">#check version and parameters</span>
 
-<span class="token comment"># "SMuRFv3.0.0 (16th Jan 2024)"</span>
+<span class="token comment"># "SMuRFv3.0 (16th Jan 2024)"</span>
 smurf<span class="token punctuation">(</span>directory<span class="token operator">=</span><span class="token keyword keyword-NULL">NULL</span><span class="token punctuation">,</span> mode<span class="token operator">=</span><span class="token keyword keyword-NULL">NULL</span><span class="token punctuation">,</span> nthreads <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span>
                  annotation<span class="token operator">=</span>F<span class="token punctuation">,</span> output.dir<span class="token operator">=</span><span class="token keyword keyword-NULL">NULL</span><span class="token punctuation">,</span>  parse.dir<span class="token operator">=</span><span class="token keyword keyword-NULL">NULL</span><span class="token punctuation">,</span>
                  snv.cutoff <span class="token operator">=</span> <span class="token string">'default'</span><span class="token punctuation">,</span> indel.cutoff <span class="token operator">=</span> <span class="token string">'default'</span><span class="token punctuation">,</span>
@@ -291,7 +291,7 @@ myresults <span class="token operator">=</span> smurf<span class="token punctuat
 </code></pre><p><a href="#home">back to top</a></p>
 <p><a name="cutoff" href=""></a></p>
 <h4 id="brrunning-smurf-tweaking-smurf-score-cut-off"><br>Running SMuRF: Tweaking SMuRF score cut-off </h4>
-<p><br><em>SMuRF</em> v3.0.0 is fine-tuned to achieve the max f1 score in our test set.</p>
+<p><br><em>SMuRF</em> v3.0 is fine-tuned to achieve the max f1 score in our test set.</p>
 <p>Re-adjust the stringency of the prediction with a specific cut-off value.<br>
 Use parameters <em>snv.cutoff</em> or <em>indel.cutoff</em> to adjust the thresholds (higher cut-off provide a smaller set of calls with better confidence).</p>
 <p>To re-adjust the cut-off value of an <strong>existing</strong> SMuRF output, simply provide the <em>parse.dir</em> to the snv-parse and indel-parse files for re-processing.</p>
