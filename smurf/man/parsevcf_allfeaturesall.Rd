@@ -8,7 +8,7 @@ parsevcf_allfeaturesall(x, tbi, t.label = NULL)
 }
 \arguments{
 \item{x}{List object containing the four vcf.gz files from
-callers Strelka2, MuTect2, Freebayes, VarDict and VarScan.}
+callers Strelka2, MuTect2, Freebayes, VarDict and varscan.}
 
 \item{t.label}{Default='-T'. Identify your tumour label based on your default vcf tumour sample.}
 }

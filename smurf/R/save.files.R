@@ -28,7 +28,7 @@ save.files = function (myresults, output.dir) {
     smurfdir <- find.package("smurf")
     comments<- readRDS(paste0(smurfdir,'/data/parse_header_file.RDS'))
     writeLines(comments, paste0(output.dir, "/indel-parse.txt"))		       	 
-    write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".", append = TRUE)
+   suppressWarnings( write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".", append = TRUE))
   }
   
   a<- myresults$smurf_snv$stats_snv
@@ -48,7 +48,7 @@ save.files = function (myresults, output.dir) {
     smurfdir <- find.package("smurf")
     comments<-readRDS(paste0(smurfdir,'/data/parse_header_file.RDS'))
     writeLines(comments, paste0(output.dir, "/snv-parse.txt"))  
-    write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".", append = TRUE)
+    suppressWarnings(write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".", append = TRUE))
   }
   
   a<- myresults$smurf_snv_annotation$annotated
@@ -73,12 +73,12 @@ save.files = function (myresults, output.dir) {
   
   a<- myresults$parsevcf_featureselection$snv
   if(!is.null(a)){
-    write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
+    suppressWarnings(write.table(a , file = paste0(output.dir, "/snv-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = "."))
   }
 
   a<- myresults$parsevcf_featureselection$indel
   if(!is.null(a)){
-    write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = ".")
+   suppressWarnings(write.table(a , file = paste0(output.dir, "/indel-parse.txt"), sep = "\t", quote = FALSE, row.names = FALSE, na = "."))
   }
   
   #show time taken for run
