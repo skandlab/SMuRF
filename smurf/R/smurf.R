@@ -416,7 +416,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
           
         } else if (annotation == T) {
           
-          if (nrow(snvpredict$predicted_snv)>1 && !is.null(snvpredict$predicted_snv)) {
+          if (nrow(snvpredict$predicted_snv)>=1 && !is.null(snvpredict$predicted_snv)) {
             print("SNV annotation")
             snvannotation<-CDSannotation_snv(x,myresults$smurf_snv$predicted_snv,build=build,change.build=change.build)
           } else {
@@ -424,7 +424,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
             snvannotation=NULL
           }
           
-          if (nrow(indelpredict$predicted_indel)>1 && !is.null(indelpredict$predicted_indel)) {
+          if (nrow(indelpredict$predicted_indel)>=1 && !is.null(indelpredict$predicted_indel)) {
             print("Indel annotation")
             indelannotation<-CDSannotation_indel(x,myresults$smurf_indel$predicted_indel,build=build,change.build=change.build)
           } else {
@@ -479,7 +479,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
       
       } else if (annotation == T) {
         
-        if (nrow(snvpredict$predicted_snv)>1 && !is.null(snvpredict$predicted_snv)) {
+        if (nrow(snvpredict$predicted_snv)>=1 && !is.null(snvpredict$predicted_snv)) {
           print("SNV annotation")
           snvannotation<-CDSannotation_snv(x,tbi,snvpredict,build=build,change.build=change.build)
         } else {
@@ -529,7 +529,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
         
       } else if (annotation == T) {
         
-        if (nrow(indelpredict$predicted_indel)>1 && !is.null(indelpredict$predicted_indel)) {
+        if (nrow(indelpredict$predicted_indel)>=1 && !is.null(indelpredict$predicted_indel)) {
           print("Indel annotation")
           indelannotation<-CDSannotation_indel(x,tbi,indelpredict,build=build,change.build=change.build)
         } else {
@@ -583,7 +583,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
 
       } else if (annotation == T) {
         
-        if (nrow(snvpredict$predicted_snv)>1 && !is.null(snvpredict$predicted_snv)) {
+        if (nrow(snvpredict$predicted_snv)>=1 && !is.null(snvpredict$predicted_snv)) {
           print("SNV annotation")
           snvannotation<-CDSannotation_snv(x,tbi,snvpredict,build=build,change.build=change.build)
         } else {
@@ -591,7 +591,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
           snvannotation=NULL
         }
         
-        if (nrow(indelpredict$predicted_indel)>1 && !is.null(indelpredict$predicted_indel)) {
+        if (nrow(indelpredict$predicted_indel)>=1 && !is.null(indelpredict$predicted_indel)) {
           print("Indel annotation")
           indelannotation<-CDSannotation_indel(x,tbi,indelpredict,build=build,change.build=change.build)
         } else {
