@@ -123,7 +123,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     
     #mutect2 SNV
     if (length(snv.m2.index)!=0) {
-      m2.na=F
+      m2.na.snv=F
       
       # convert vcf to VRanges then to Granges, keep metadata columns
       vr_m2<- as(vcf_m2[snv.m2.index], "VRanges")
@@ -139,7 +139,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       rm(snv.m2.index, gr_m2)
     } else {
       print("Warning: There are no passed SNVs from MuTect2.")
-      m2.na=T
+      m2.na.snv=T
     }
     
     #mutect2 indel
@@ -178,7 +178,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     indel.f.index <- subjectHits(findOverlaps(indel_pass, rowRanges(vcf_f), type="equal"))
     
     if (length(snv.f.index)!=0) {
-      f.na=F  
+      f.na.snv=F  
       vr_f<- suppressWarnings(as(vcf_f[snv.f.index], "VRanges"))
       vr_f=GenomicRanges::split(vr_f, vr_f@sampleNames)
       gr_f=GRanges(vr_f[[sampleid.t]])
@@ -192,7 +192,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       rm(snv.f.index, gr_f)  
     } else {
       print("Warning: There are no passed SNVs from FreeBayes.")
-      f.na=T
+      f.na.snv=T
     }
     
     
@@ -234,7 +234,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     
     #For varscan SNV
     if (length(snv.vs.index)!=0) {
-      vs.na=F  
+      vs.na.snv=F  
       vr_vs<- suppressWarnings(as(vcf_vs[snv.vs.index], "VRanges"))
       vr_vs=GenomicRanges::split(vr_vs, vr_vs@sampleNames)
       gr_vs=GRanges(vr_vs[[sampleid.t]])
@@ -249,7 +249,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       rm(snv.vs.index, gr_vs)
     } else {
       print("Warning: There are no passed SNVs from VarScan.")
-      vs.na=T
+      vs.na.snv=T
     }
     
     #For Varscan Indel
@@ -290,7 +290,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     
     
     if (length(snv.vd.index)!=0) {
-      vd.na=F  
+      vd.na.snv = F  
       vr_vd<- suppressWarnings(as(vcf_vd[snv.vd.index], "VRanges"))
       vr_vd=GenomicRanges::split(vr_vd, vr_vd@sampleNames)
       gr_vd=GRanges(vr_vd[[sampleid.t]])
@@ -304,7 +304,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       rm(snv.vd.index, gr_vd)
     } else {
       print("Warning: There are no passed SNVs from VarDict.")
-      vd.na=T
+      vd.na.snv=T
     }
     
     #Vardict indel
@@ -343,7 +343,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     indel.s2.index <- subjectHits(findOverlaps(indel_pass, rowRanges(vcf_s2), type="equal"))
     #For SNV
     if (length(snv.s2.index)!=0) {
-      s2.na=F
+      s2.na.snv=F
       
       # convert vcf to VRanges then to Granges, keep metadata columns
       vr_s2<- as(vcf_s2[snv.s2.index], "VRanges")
@@ -359,7 +359,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       rm(snv.s2.index, gr_s2)
     } else {
       print("Warning: There are no passed SNVs from Strelka2.")
-      s2.na=T
+      s2.na.snv=T
     }
     
     #For indel
@@ -400,7 +400,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     #meta_data[c(names_m2,names_f,names_vs,names_vd,names_s2)]=NA
     
     #do not merge when index=0, caller.na=T
-    if (m2.na==F) {
+    if (m2.na.snv==F) {
       #print(m2.na)
       meta_data[Biostrings::match(gr_m2_snv, snv_pass), names_m2]=data.frame(mcols(gr_m2_snv)[,m2.cols])
       rm(gr_m2_snv)
@@ -408,28 +408,43 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       #print(colnames(mcols(gr_m2)))
       #print(m2.cols)
       #print(head(data.frame(mcols(gr_m2)[,m2.cols])))
+    }else{
+      meta_data[,names_m2] = NA
+
     }
-    if (f.na==F) {
+
+    if (f.na.snv==F) {
       meta_data[Biostrings::match(gr_f_snv, snv_pass), names_f]=data.frame(mcols(gr_f_snv)[,f.cols])
       rm(gr_f_snv)
       #meta_data[Biostrings::match(gr_f, snv_pass), names_f:=data.frame(mcols(gr_f)[,f.cols])]
+    }else{
+      meta_data[, names_f] = NA
     }
-    if (vs.na==F) {
+
+    if (vs.na.snv==F) {
       meta_data[Biostrings::match(gr_vs_snv, snv_pass), names_vs]=data.frame(mcols(gr_vs_snv)[,vs.cols])
       rm(gr_vs_snv)
       #meta_data[Biostrings::match(gr_vs, snv_pass), names_vs:=data.frame(mcols(gr_vs)[,vs.cols])]
+    }else{
+      meta_data[, names_vs] = NA
     }
-    if (vd.na==F) {
+
+    if (vd.na.snv==F) {
       #meta_data[Biostrings::match(gr_vd, snv_pass), names_vd:=data.frame(mcols(gr_vd)[,vd.cols])]
       meta_data[Biostrings::match(gr_vd_snv, snv_pass), names_vd]=data.frame(mcols(gr_vd_snv)[,vd.cols])
       rm(gr_vd_snv)
+    }else{
+      meta_data[, names_vd] = NA 
     }
-    if (s2.na==F) {
+
+    if (s2.na.snv==F) {
       meta_data[Biostrings::match(gr_s2_snv, snv_pass), names_s2]=data.frame(mcols(gr_s2_snv)[,s2.cols])
       # meta_data[Biostrings::match(gr_s2, snv_pass), names_s2:=data.frame(mcols(gr_s2)[,s2.cols])]
       rm(gr_s2_snv)
+    }else{
+      meta_data[, names_s2] = NA
     }
-    
+    #print(meta_data) 
     # #do not merge when the 1st row is all NAs + last column PASSED/REJECT
     # if ((rowSums(is.na(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))!=ncol(data.frame(mcols(gr_m2)[1,1:length(mcols(gr_m2))-1])))==TRUE) {
     #   meta_data[Biostrings::match(gr_m2, snv_pass), names_m2]=data.frame(mcols(gr_m2)[,-1])
@@ -785,22 +800,36 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     if (m2.na==F) {
       meta_indel[Biostrings::match(gr_m2, indel_pass), names_m2]=data.frame(mcols(gr_m2)[,m2.cols])
       rm(gr_m2)
+    }else{
+      meta_indel[,names_m2] = NA
     }
+
     if (f.na==F) {
       meta_indel[Biostrings::match(gr_f, indel_pass), names_f]=data.frame(mcols(gr_f)[,f.cols])
       rm(gr_f)  
+    }else{
+      meta_indel[, names_f] = NA	   
     }
+
     if (vs.na==F) {
       meta_indel[Biostrings::match(gr_vs, indel_pass), names_vs]=data.frame(mcols(gr_vs)[,vs.cols])
       rm(gr_vs)  
+    }else{
+      meta_indel[, names_vs] = NA
     }
+
     if (vd.na==F) {
       meta_indel[Biostrings::match(gr_vd, indel_pass), names_vd]=data.frame(mcols(gr_vd)[,vd.cols])
       rm(gr_vd)
+    }else{
+      meta_indel[, names_vd] = NA
     }
+
     if (s2.na==F) {
       meta_indel[Biostrings::match(gr_s2, indel_pass), names_s2]=data.frame(mcols(gr_s2)[,s2.cols])
       rm(gr_s2)
+    }else{
+     meta_indel[, names_s2] = NA
     }
     
     rm(indel_pass) 
@@ -811,7 +840,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     for (i in colnames(meta_indel) ){
       #print(class(meta_indel[[i]]))
       
-      if(class(meta_indel[[i]])=='AsIs'){
+      if(class(meta_indel[[i]]) %in% c('AsIs', 'list')){
         #meta_indel[,i][sapply(meta_indel[,i], is.null)] <- NA
         j1 <- which(lengths(meta_indel[[i]]) == 0) 
         set(meta_indel, i = j1, j = i, value = list(NA)) 
@@ -819,9 +848,8 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
       }
     }
     for (i in colnames(meta_indel_cases) ){
-      #print(class(meta_indel[[i]]))
       
-      if(class(meta_indel_cases[[i]])=='AsIs'){
+      if(class(meta_indel_cases[[i]]) %in% c('AsIs', 'list')){
         #meta_indel[,i][sapply(meta_indel[,i], is.null)] <- NA
         j1 <- which(lengths(meta_indel_cases[[i]]) == 0) 
         set(meta_indel_cases, i = j1, j = i, value = list(NA)) 
@@ -831,7 +859,7 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
      
     #add in indel cases from snv matrix
    
-    meta_indel <- rbind(meta_indel,meta_indel_cases)
+    meta_indel <- dplyr::bind_rows(meta_indel,meta_indel_cases)
     rm(meta_indel_cases)  
  
     meta_indel <- unique(meta_indel) #remove all duplicate snv/indel cases
@@ -1141,6 +1169,10 @@ parsevcf_allfeaturesall = function(x, tbi, t.label=NULL){
     
     parse_snv = as.data.frame(parse_snv) 
     parse_indel = as.data.frame(parse_indel)
+    #print(parse_snv)
+
+    #print('this is indel')
+    #print(parse_indel)
     return(list(snv=parse_snv, indel=parse_indel))
 
 }

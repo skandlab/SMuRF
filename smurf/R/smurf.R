@@ -1,4 +1,4 @@
-#' SMuRF v3.0.1
+#' SMuRF v3.0.2
 #'
 #' Somatic mutation consensus calling based on five callers:
 #' MuTect2, Freebayes, VarDict, VarScan and Strelka2
@@ -98,7 +98,7 @@ smurf = function(directory=NULL, mode=NULL, nthreads = -1,
                  check.packages=T, file.exclude=NULL){
   
   #SMuRF version announcement
-  print("SMuRFv3.0.1, Feb 2024")
+  print("SMuRFv3.0.2, Feb 2025")
   suppressWarnings(suppressMessages(library(data.table)))
   if(is.null(directory)){
     # stop('directory path not specified')
