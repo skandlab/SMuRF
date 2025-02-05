@@ -33,7 +33,7 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
     gr=rowRanges(vcf)
     gr=gr[gr$FILTER=="PASS"]
 
-    if(length(gr)==length(mut.subset)){
+    if(length(gr)==length(vcf)){
       gr$ANN=info(vcf)$ANN
     } else if (length(unlist(gr$ALT))==length(gr)) {
       # z=which(gr$FILTER=="PASS" & nchar(as.character(gr$REF))==1 & nchar(as.character(unlist(gr$ALT)))==1)
@@ -47,7 +47,7 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
       ann=as.data.frame(ann)
       colnames(ann) <- c("Allele","Annotation", "Impact", "Gene_name", "Gene_ID", "Feature_Type", "Feature_ID", "Transcript_BioType", "Rank",
                          "HGVS.c", "HGVS.p", "cDNA.pos", "CDS.pos", "AA.pos", "Distance")
-      mut.subset <- cbind(mut.subset,ann)
+      mut.subset <- cbind(as.data.frame(mut.subset),ann)
       return(mut.subset)
     }
 
@@ -65,6 +65,11 @@ CDSannotation_snv = function(x, tbi, predicted, build, change.build){
       )
       ann <- do.call(rbind,ann)
       ann=as.data.frame(ann)
+
+      if(is.null(dim(ann))){
+      ann = data.frame(matrix(NA, nrow = 1, ncol = 15))
+      }
+
       colnames(ann) <- c("Allele","Annotation", "Impact", "Gene_name", "Gene_ID", "Feature_Type", "Feature_ID", "Transcript_BioType", "Rank",
                          "HGVS.c", "HGVS.p", "cDNA.pos", "CDS.pos", "AA.pos", "Distance")
       #colnames(ann)=colnames(mutations.orig)[16:30]

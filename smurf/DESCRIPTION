@@ -1,6 +1,6 @@
 Package: smurf
 Title: Somatic Mutation Calling using a RandomForest Model
-Version: 3.0.1
+Version: 3.0.2
 Authors@R: c(
     person("Mengyuan", "Pang", email =  "pangmy@gis.a-star.edu.sg", role = c("ctb", "cre")),
     person("Weitai", "Huang",role = c("aut")))	

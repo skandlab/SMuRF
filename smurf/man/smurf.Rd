@@ -2,7 +2,7 @@
 % Please edit documentation in R/smurf.R
 \name{smurf}
 \alias{smurf}
-\title{SMuRF v3.0.1}
+\title{SMuRF v3.0.2}
 \usage{
 smurf(
   directory = NULL,
